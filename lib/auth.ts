@@ -1,23 +1,27 @@
-// Auth helpers — session management and guards
-// TODO: Implement when auth approach is chosen (Auth.js v5 or custom sessions)
+import { cookies } from 'next/headers';
+import { SESSION_COOKIE_NAME } from '@/features/auth/constants';
+import { verifyToken } from '@/features/auth/service';
+import type { Session } from '@/features/auth/types';
 
-/**
- * Get the current user session. Returns null if not authenticated.
- * Call from Server Components or Server Actions.
- */
-export async function getSession() {
-  // TODO: implement
-  return null;
+export async function getSession(): Promise<Session | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!token) return null;
+  return verifyToken(token);
 }
 
-/**
- * Require authentication. Throws/redirects if no valid session.
- * Call from Server Actions before performing mutations.
- */
-export async function requireAuth() {
+export async function requireAuth(): Promise<Session> {
   const session = await getSession();
   if (!session) {
     throw new Error('Unauthorized');
+  }
+  return session;
+}
+
+export async function requireAdmin(): Promise<Session> {
+  const session = await requireAuth();
+  if (session.role !== 'admin') {
+    throw new Error('Forbidden');
   }
   return session;
 }

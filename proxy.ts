@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Auth middleware — redirect unauthenticated users to login
-// TODO: Implement session check when auth is built
+import { SESSION_COOKIE_NAME } from '@/features/auth/constants';
+import { verifyJWT } from '@/lib/jwt';
 
 const publicPaths = ['/login'];
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Allow public paths
     if (publicPaths.some((path) => pathname.startsWith(path))) {
         return NextResponse.next();
     }
 
-    // TODO: Check session cookie/token here
-    // const session = ...
-    // if (!session) {
-    //   return NextResponse.redirect(new URL('/login', request.url));
-    // }
+    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+    if (!token) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    const payload = await verifyJWT(token);
+    if (!payload) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
 
     return NextResponse.next();
 }
