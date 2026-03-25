@@ -1,5 +1,7 @@
 import { getSession } from '@/lib/auth';
-import { logout } from '@/features/auth/actions';
+import { SidebarProvider } from '@/components/layout/sidebar-context';
+import { Sidebar } from '@/components/layout/sidebar';
+import { Header } from '@/components/layout/header';
 
 export default async function DashboardLayout({
   children,
@@ -9,33 +11,14 @@ export default async function DashboardLayout({
   const session = await getSession();
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="border-border bg-surface w-64 border-r p-4">
-        <nav className="space-y-1">
-          <p className="text-muted text-sm font-medium">Navigation</p>
-        </nav>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1">
-        <header className="border-border bg-surface flex items-center justify-between border-b px-6 py-4">
-          <p className="text-sm">
-            {session ? `${session.employeeId} — ${session.email}` : 'Not signed in'}
-          </p>
-          {session && (
-            <form action={logout}>
-              <button
-                type="submit"
-                className="text-muted hover:text-foreground text-sm"
-              >
-                Sign out
-              </button>
-            </form>
-          )}
-        </header>
-        <main className="p-6">{children}</main>
+    <SidebarProvider>
+      <div className="bg-background flex min-h-screen">
+        <Sidebar />
+        <div className="flex flex-1 flex-col">
+          <Header session={session} />
+          <main className="flex-1 p-4 md:p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

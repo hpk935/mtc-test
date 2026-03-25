@@ -2,16 +2,16 @@ import { z } from 'zod/v4';
 import { USER_ROLES } from '@/features/users/constants';
 
 export const loginSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+    email: z.email(),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const registerSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  role: z.enum(USER_ROLES).default('employee'),
+    email: z.email(),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    role: z.enum(USER_ROLES).default('employee'),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

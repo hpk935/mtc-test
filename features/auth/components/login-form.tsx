@@ -28,7 +28,9 @@ export function LoginForm() {
       <CardContent>
         <form action={formAction} className="space-y-4">
           {state.success === false && state.error && (
-            <p className="text-sm text-destructive text-center">{state.error}</p>
+            <p className="text-destructive text-center text-sm">
+              {state.error}
+            </p>
           )}
 
           <div className="space-y-2">
