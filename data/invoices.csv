@@ -1,0 +1,10 @@
+Invoices,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+invoice_number,order_number,customer_number,salesperson_code,invoice_date,customer_po_reference,freight_term,ship_to_id,ship_to_name,ship_to_address_1,ship_to_address_2,ship_to_city,ship_to_state_code,ship_to_postal_code,term_code,territory_code,sales_tax_amount,subtotal_amount,freight_amount,total_amount,cost_amount,invoice_status,shipping_note
+INV-20001,SO-10001,22-174,E085,2026-03-05,PO-90841,10% Freight,ST-0001,Main Store,2214 N Hwy 77,,Waxahachie,TX,75165,30,TX-10,$0.00,"$1,840.00",$184.00,"$2,024.00","$1,298.00",posted,Billed same day as shipment
+INV-20002,SO-10002,13-5821,E030,2026-03-06,PO-77102,8% Freight,ST-0003,Back Warehouse,4310 N Central Ave,Dock B,Phoenix,AZ,85012,CH,AZ-54,$0.00,$920.00,$73.60,$993.60,$650.00,paid,Paid by card at order release
+INV-20003,SO-10003,03-501,E083,2026-03-07,REF-EDDIE-14,Free Freight,ST-0004,Chicago Retail,8801 S Cottage Grove Ave,,Chicago,IL,60619,60,IL-44,$18.50,"$1,225.00",$0.00,"$1,243.50",$882.00,open,Tax applied on local delivery items only
+INV-20004,SO-10004,20-832,E074,2026-03-08,PO-55983,Freight Prepaid,ST-0005,Family Main,6243 Pacific Ave,,Stockton,CA,95207,30,CA-19,$0.00,$610.00,$0.00,$610.00,$431.00,voided,Invoice created in error and later voided
+INV-20005,SO-10005,19-968,E001,2026-03-06,PO-19887,5% Freight,ST-0007,Montclair Store,4120 E Mission Blvd,,Montclair,CA,91763,30,CA-55,$0.00,"$1,488.00",$74.40,"$1,562.40","$1,060.00",posted,Standard route release
+INV-20006,SO-10006,18-447,E083,2026-03-07,PO-66117,7% Freight,ST-0008,Cicero Store,5531 W Cermak Rd,,Cicero,IL,60804,30,IL-44,$0.00,"$1,710.00",$119.70,"$1,829.70","$1,216.00",open,UPS 100 reference copied from shipping note
+INV-20007,SO-10007,10-743,E002,2026-03-11,PO-RICH-330,10% Freight,ST-0009,Freedom Main,1706 Freedom Blvd,,Freedom,CA,95019,30,CA-05,$0.00,"$2,140.00",$214.00,"$2,354.00","$1,568.00",posted,Zone 2 charge included in freight

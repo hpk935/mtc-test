@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import {
     boolean,
     pgEnum,
@@ -7,6 +8,9 @@ import {
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
+import { customers } from '@/features/customers/schema';
+import { orders } from '@/features/orders/schema';
+import { invoices } from '@/features/invoices/schema';
 import { USER_ROLES } from './constants';
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLES);
@@ -23,3 +27,11 @@ export const users = pgTable('users', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// Relations
+
+export const usersRelations = relations(users, ({ many }) => ({
+    customers: many(customers),
+    orders: many(orders),
+    invoices: many(invoices),
+}));
