@@ -1,10 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
 import { customers } from './schema';
 import { findCustomerByNumber } from './queries';
-import { createCustomerSchema } from './validation';
+import { createCustomerSchema, updateCustomerSchema } from './validation';
 import type { ActionResult } from '@/types';
 
 export async function createCustomer(
@@ -57,4 +59,64 @@ export async function createCustomer(
     });
 
     redirect(`/customers`);
+}
+
+export async function updateCustomer(
+    _prevState: ActionResult,
+    formData: FormData,
+): Promise<ActionResult> {
+    const customerNumber = formData.get('customerNumber') as string;
+    if (!customerNumber) {
+        return { success: false, error: 'Customer number is required.' };
+    }
+
+    const raw = Object.fromEntries(formData);
+    const parsed = updateCustomerSchema.safeParse(raw);
+
+    if (!parsed.success) {
+        const firstError = parsed.error.issues[0]?.message;
+        return {
+            success: false,
+            error: firstError ?? 'Please check all fields and try again.',
+        };
+    }
+
+    const existing = await findCustomerByNumber(customerNumber);
+    if (!existing) {
+        return { success: false, error: 'Customer not found.' };
+    }
+
+    const data = parsed.data;
+
+    await db
+        .update(customers)
+        .set({
+            customerName: data.customerName,
+            primaryContactName: data.primaryContactName,
+            billingAddress1: data.billingAddress1,
+            billingAddress2: data.billingAddress2 || null,
+            billingCity: data.billingCity,
+            billingStateCode: data.billingStateCode,
+            billingPostalCode: data.billingPostalCode,
+            countryCode: data.countryCode || 'US',
+            mainPhone: data.mainPhone,
+            phoneExtension: data.phoneExtension || null,
+            faxNumber: data.faxNumber || null,
+            mainEmail: data.mainEmail,
+            taxId: data.taxId || null,
+            termCode: data.termCode,
+            territoryCode: data.territoryCode,
+            salespersonCode: data.salespersonCode,
+            defaultFreightTerm: data.defaultFreightTerm,
+            accountStatus: data.accountStatus ?? 'active',
+            accountOpenDate: data.accountOpenDate,
+            customerNote: data.customerNote || null,
+            updatedAt: new Date(),
+        })
+        .where(eq(customers.customerNumber, customerNumber));
+
+    revalidatePath(`/customers/${customerNumber}`);
+    revalidatePath('/customers');
+
+    return { success: true, data: undefined };
 }
