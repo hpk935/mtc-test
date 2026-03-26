@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
-import { DM_Sans, Nunito_Sans, Geist_Mono } from 'next/font/google';
+import { Figtree, Inter, Geist_Mono } from 'next/font/google';
+import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 
-const dmSans = DM_Sans({
+const figtree = Figtree({
   subsets: ['latin'],
   variable: '--font-heading',
 });
 
-const nunitoSans = Nunito_Sans({
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
 });
@@ -28,10 +29,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${nunitoSans.variable} ${geistMono.variable} font-sans antialiased`}>
-        {children}
+        className={`${figtree.variable} ${inter.variable} ${geistMono.variable} font-sans antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

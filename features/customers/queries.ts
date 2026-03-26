@@ -1,6 +1,7 @@
-import { ilike, or, count, asc } from 'drizzle-orm';
+import { ilike, or, count, asc, eq } from 'drizzle-orm';
 import db from '@/lib/db';
 import { customers } from './schema';
+import { users } from '@/features/users/schema';
 
 const PAGE_SIZE_DEFAULT = 20;
 
@@ -54,3 +55,24 @@ export async function getCustomers({
 export type CustomerListItem = Awaited<
     ReturnType<typeof getCustomers>
 >['customers'][number];
+
+export async function getSalespersons() {
+    return db
+        .select({
+            employeeId: users.employeeId,
+            firstName: users.firstName,
+            lastName: users.lastName,
+        })
+        .from(users)
+        .where(eq(users.isActive, true))
+        .orderBy(asc(users.lastName), asc(users.firstName));
+}
+
+export async function findCustomerByNumber(customerNumber: string) {
+    const [customer] = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.customerNumber, customerNumber))
+        .limit(1);
+    return customer ?? null;
+}
