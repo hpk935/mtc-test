@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { DateDisplay } from '@/features/dashboard/components/date-display';
 import {
   SidebarInset,
   SidebarProvider,
@@ -29,7 +30,10 @@ export default async function DashboardLayout({
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-3">
+              <DateDisplay />
+              <ThemeToggle />
+            </div>
           </header>
           <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
             {children}

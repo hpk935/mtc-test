@@ -1,8 +1,13 @@
 import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
-import { customers } from './schema';
-import { findCustomerByNumber } from './queries';
-import type { CreateCustomerInput, UpdateCustomerInput } from './validation';
+import { customers, shipToAddresses } from './schema';
+import { findCustomerByNumber, findShipToAddress } from './queries';
+import type {
+    CreateCustomerInput,
+    UpdateCustomerInput,
+    CreateShipToInput,
+    UpdateShipToInput,
+} from './validation';
 
 function normalizeOptional(value: string | undefined): string | null {
     return value && value.trim() !== '' ? value : null;
@@ -79,6 +84,85 @@ export async function updateCustomerRecord(
             updatedAt: new Date(),
         })
         .where(eq(customers.customerNumber, customerNumber));
+
+    return { success: true as const, data: undefined };
+}
+
+export async function createShipToRecord(input: CreateShipToInput) {
+    const existing = await findShipToAddress(input.shipToId);
+    if (existing) {
+        return {
+            success: false as const,
+            error: 'A shipping address with this ID already exists.',
+        };
+    }
+
+    await db.insert(shipToAddresses).values({
+        shipToId: input.shipToId,
+        customerNumber: input.customerNumber,
+        locationName: input.locationName,
+        locationStatus: input.locationStatus ?? 'active',
+        address1: input.address1,
+        address2: normalizeOptional(input.address2),
+        city: input.city,
+        stateCode: input.stateCode,
+        postalCode: input.postalCode,
+        countryCode: input.countryCode || 'US',
+        contactName: normalizeOptional(input.contactName),
+        mainPhone: normalizeOptional(input.mainPhone),
+        isDefault: input.isDefault ?? false,
+        customerNote: normalizeOptional(input.customerNote),
+    });
+
+    return { success: true as const, data: input.shipToId };
+}
+
+export async function updateShipToRecord(
+    shipToId: string,
+    input: UpdateShipToInput,
+) {
+    const existing = await findShipToAddress(shipToId);
+    if (!existing) {
+        return {
+            success: false as const,
+            error: 'Shipping address not found.',
+        };
+    }
+
+    await db
+        .update(shipToAddresses)
+        .set({
+            locationName: input.locationName,
+            locationStatus: input.locationStatus ?? 'active',
+            address1: input.address1,
+            address2: normalizeOptional(input.address2),
+            city: input.city,
+            stateCode: input.stateCode,
+            postalCode: input.postalCode,
+            countryCode: input.countryCode || 'US',
+            contactName: normalizeOptional(input.contactName),
+            mainPhone: normalizeOptional(input.mainPhone),
+            isDefault: input.isDefault ?? false,
+            customerNote: normalizeOptional(input.customerNote),
+            updatedAt: new Date(),
+        })
+        .where(eq(shipToAddresses.shipToId, shipToId));
+
+    return { success: true as const, data: undefined };
+}
+
+export async function deleteShipToRecord(shipToId: string) {
+    const existing = await findShipToAddress(shipToId);
+    if (!existing) {
+        return {
+            success: false as const,
+            error: 'Shipping address not found.',
+        };
+    }
+
+    await db
+        .delete(shipToAddresses)
+        .where(eq(shipToAddresses.shipToId, shipToId));
 
     return { success: true as const, data: undefined };
 }

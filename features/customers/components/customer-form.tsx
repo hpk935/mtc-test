@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -122,10 +123,21 @@ export function CustomerForm({
     defaultFreightTerm: customer?.defaultFreightTerm ?? '',
     taxId: customer?.taxId ?? '',
     customerNote: customer?.customerNote ?? '',
+    // Shipping address fields (create mode only)
+    shipLocationName: '',
+    shipAddress1: '',
+    shipAddress2: '',
+    shipCity: '',
+    shipStateCode: '',
+    shipPostalCode: '',
+    shipCountryCode: 'US',
+    shipContactName: '',
+    shipPhone: '',
   });
 
   const [formValues, setFormValues] = useState(buildInitialValues);
   const [savedValues, setSavedValues] = useState(buildInitialValues);
+  const [sameAsBilling, setSameAsBilling] = useState(true);
 
   const isDirty =
     isEdit &&
@@ -376,6 +388,147 @@ export function CustomerForm({
       </FormSection>
 
       <Separator />
+
+      {/* Shipping Address — create mode only */}
+      {!isEdit && (
+        <>
+          <FormSection
+            title="Shipping Address"
+            description="The default location where orders will be shipped.">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="shipLocationName">Location Name</Label>
+              <Input
+                id="shipLocationName"
+                name="shipLocationName"
+                placeholder="e.g. Main Store, Warehouse"
+                value={formValues.shipLocationName}
+                onChange={handleChange}
+                required
+                maxLength={255}
+              />
+            </div>
+            <div className="flex items-center gap-2 sm:col-span-2">
+              <Checkbox
+                id="sameAsBilling"
+                name="sameAsBilling"
+                checked={sameAsBilling}
+                onCheckedChange={(checked) =>
+                  setSameAsBilling(checked === true)
+                }
+              />
+              <Label htmlFor="sameAsBilling" className="text-sm font-normal">
+                Same as billing address
+              </Label>
+            </div>
+            {/* Hidden field to pass sameAsBilling to server action */}
+            {sameAsBilling && (
+              <input type="hidden" name="sameAsBilling" value="true" />
+            )}
+            {!sameAsBilling && (
+              <>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="shipAddress1">Street Address</Label>
+                  <Input
+                    id="shipAddress1"
+                    name="shipAddress1"
+                    placeholder="Street address"
+                    value={formValues.shipAddress1}
+                    onChange={handleChange}
+                    required
+                    maxLength={255}
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="shipAddress2">
+                    Address Line 2 <OptionalTag />
+                  </Label>
+                  <Input
+                    id="shipAddress2"
+                    name="shipAddress2"
+                    placeholder="Suite, unit, dock, etc."
+                    value={formValues.shipAddress2}
+                    onChange={handleChange}
+                    maxLength={255}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipCity">City</Label>
+                  <Input
+                    id="shipCity"
+                    name="shipCity"
+                    value={formValues.shipCity}
+                    onChange={handleChange}
+                    required
+                    maxLength={100}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipStateCode">State</Label>
+                  <Input
+                    id="shipStateCode"
+                    name="shipStateCode"
+                    placeholder="e.g. TX"
+                    value={formValues.shipStateCode}
+                    onChange={handleChange}
+                    required
+                    maxLength={10}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipPostalCode">ZIP / Postal Code</Label>
+                  <Input
+                    id="shipPostalCode"
+                    name="shipPostalCode"
+                    placeholder="e.g. 75165"
+                    value={formValues.shipPostalCode}
+                    onChange={handleChange}
+                    required
+                    maxLength={20}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shipCountryCode">Country Code</Label>
+                  <Input
+                    id="shipCountryCode"
+                    name="shipCountryCode"
+                    value={formValues.shipCountryCode}
+                    onChange={handleChange}
+                    maxLength={5}
+                  />
+                </div>
+              </>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="shipContactName">
+                Site Contact <OptionalTag />
+              </Label>
+              <Input
+                id="shipContactName"
+                name="shipContactName"
+                placeholder="Name at this location"
+                value={formValues.shipContactName}
+                onChange={handleChange}
+                maxLength={255}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="shipPhone">
+                Site Phone <OptionalTag />
+              </Label>
+              <Input
+                id="shipPhone"
+                name="shipPhone"
+                placeholder="(555) 123-4567"
+                value={formValues.shipPhone}
+                onChange={handleChange}
+                maxLength={20}
+              />
+            </div>
+          </FormSection>
+
+          <Separator />
+        </>
+      )}
 
       {/* Account & Sales */}
       <FormSection

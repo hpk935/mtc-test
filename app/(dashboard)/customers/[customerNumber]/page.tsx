@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import {
   findCustomerByNumber,
   getSalespersons,
+  getShipToAddresses,
 } from '@/features/customers/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
+import { ShipToList } from '@/features/customers/components/ship-to-list';
 
 export default async function CustomerDetailPage({
   params,
@@ -15,9 +17,10 @@ export default async function CustomerDetailPage({
 }) {
   const { customerNumber } = await params;
 
-  const [customer, salespersons] = await Promise.all([
+  const [customer, salespersons, shipToAddresses] = await Promise.all([
     findCustomerByNumber(customerNumber),
     getSalespersons(),
+    getShipToAddresses(customerNumber),
   ]);
 
   if (!customer) {
@@ -69,6 +72,7 @@ export default async function CustomerDetailPage({
         customer={customerData}
         mode="edit"
       />
+      <ShipToList addresses={shipToAddresses} customerNumber={customerNumber} />
     </div>
   );
 }

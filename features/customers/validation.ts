@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { ACCOUNT_STATUSES } from './constants';
+import { ACCOUNT_STATUSES, LOCATION_STATUSES } from './constants';
 
 export const createCustomerSchema = z.object({
     customerNumber: z.string().min(1, 'Customer number is required').max(20),
@@ -30,8 +30,57 @@ export const createCustomerSchema = z.object({
 
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 
+export const createCustomerWithShipToSchema = createCustomerSchema.extend({
+    sameAsBilling: z
+        .string()
+        .optional()
+        .transform((v) => v === 'on' || v === 'true'),
+    shipLocationName: z.string().min(1, 'Location name is required').max(255),
+    shipAddress1: z.string().max(255).optional().default(''),
+    shipAddress2: z.string().max(255).optional().default(''),
+    shipCity: z.string().max(100).optional().default(''),
+    shipStateCode: z.string().max(10).optional().default(''),
+    shipPostalCode: z.string().max(20).optional().default(''),
+    shipCountryCode: z.string().max(5).optional().default('US'),
+    shipContactName: z.string().max(255).optional().default(''),
+    shipPhone: z.string().max(20).optional().default(''),
+});
+
+export type CreateCustomerWithShipToInput = z.infer<
+    typeof createCustomerWithShipToSchema
+>;
+
 export const updateCustomerSchema = createCustomerSchema.omit({
     customerNumber: true,
 });
 
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
+
+export const createShipToSchema = z.object({
+    shipToId: z.string().min(1, 'Ship-to ID is required').max(20),
+    customerNumber: z.string().min(1, 'Customer number is required').max(20),
+    locationName: z.string().min(1, 'Location name is required').max(255),
+    locationStatus: z.enum(LOCATION_STATUSES).optional().default('active'),
+    address1: z.string().min(1, 'Address is required').max(255),
+    address2: z.string().max(255).optional().default(''),
+    city: z.string().min(1, 'City is required').max(100),
+    stateCode: z.string().min(1, 'State is required').max(10),
+    postalCode: z.string().min(1, 'Postal code is required').max(20),
+    countryCode: z.string().max(5).optional().default('US'),
+    contactName: z.string().max(255).optional().default(''),
+    mainPhone: z.string().max(20).optional().default(''),
+    isDefault: z
+        .string()
+        .optional()
+        .transform((v) => v === 'on' || v === 'true'),
+    customerNote: z.string().optional().default(''),
+});
+
+export type CreateShipToInput = z.infer<typeof createShipToSchema>;
+
+export const updateShipToSchema = createShipToSchema.omit({
+    shipToId: true,
+    customerNumber: true,
+});
+
+export type UpdateShipToInput = z.infer<typeof updateShipToSchema>;

@@ -1,6 +1,6 @@
 import { ilike, or, count, asc, eq } from 'drizzle-orm';
 import db from '@/lib/db';
-import { customers } from './schema';
+import { customers, shipToAddresses } from './schema';
 import { users } from '@/features/users/schema';
 
 const PAGE_SIZE_DEFAULT = 20;
@@ -75,4 +75,21 @@ export async function findCustomerByNumber(customerNumber: string) {
         .where(eq(customers.customerNumber, customerNumber))
         .limit(1);
     return customer ?? null;
+}
+
+export async function getShipToAddresses(customerNumber: string) {
+    return db
+        .select()
+        .from(shipToAddresses)
+        .where(eq(shipToAddresses.customerNumber, customerNumber))
+        .orderBy(asc(shipToAddresses.locationName));
+}
+
+export async function findShipToAddress(shipToId: string) {
+    const [address] = await db
+        .select()
+        .from(shipToAddresses)
+        .where(eq(shipToAddresses.shipToId, shipToId))
+        .limit(1);
+    return address ?? null;
 }
