@@ -10,6 +10,13 @@ import {
   RecentOrders,
   RecentInvoices,
 } from '@/features/dashboard/components/recent-activity';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 export default async function DashboardPage() {
   const [stats, recentOrders, recentInvoices] = await Promise.all([
     getDashboardStats(),
@@ -19,20 +26,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-10 pt-28 pb-16">
-        <div className="text-center">
-          <h1 className="font-heading text-3xl font-bold tracking-tight">
+      <Card className="overflow-visible py-8">
+        <CardHeader className="items-center text-center">
+          <CardTitle className="font-heading text-3xl font-bold tracking-tight">
             MTC Trading
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
+          </CardTitle>
+          <CardDescription className="text-sm">
             Overview of your business at a glance.
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <DashboardSearch />
+        </CardContent>
+      </Card>
 
-        <DashboardSearch />
-      </div>
-
-      <div className="pt-2">
+      <div>
         <QuickActions />
       </div>
 
