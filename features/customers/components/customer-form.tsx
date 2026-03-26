@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useCallback, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,61 +97,70 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const action = mode === 'edit' ? updateCustomer : createCustomer;
   const [state, formAction, pending] = useActionState(action, initialState);
-  const [isDirty, setIsDirty] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const today = new Date().toISOString().split('T')[0];
   const isEdit = mode === 'edit';
+  const today = new Date().toISOString().split('T')[0];
 
-  // Build a snapshot of the initial form values for dirty-checking
-  const initialValues = useRef<Record<string, string>>(
-    isEdit && customer
-      ? {
-          customerName: customer.customerName,
-          primaryContactName: customer.primaryContactName,
-          accountOpenDate: customer.accountOpenDate,
-          mainEmail: customer.mainEmail,
-          mainPhone: customer.mainPhone,
-          phoneExtension: customer.phoneExtension ?? '',
-          faxNumber: customer.faxNumber ?? '',
-          billingAddress1: customer.billingAddress1,
-          billingAddress2: customer.billingAddress2 ?? '',
-          billingCity: customer.billingCity,
-          billingStateCode: customer.billingStateCode,
-          billingPostalCode: customer.billingPostalCode,
-          countryCode: customer.countryCode,
-          salespersonCode: customer.salespersonCode,
-          accountStatus: customer.accountStatus,
-          termCode: customer.termCode,
-          territoryCode: customer.territoryCode,
-          defaultFreightTerm: customer.defaultFreightTerm,
-          taxId: customer.taxId ?? '',
-          customerNote: customer.customerNote ?? '',
-        }
-      : {},
-  );
+  const buildInitialValues = () => ({
+    customerNumber: customer?.customerNumber ?? '',
+    customerName: customer?.customerName ?? '',
+    primaryContactName: customer?.primaryContactName ?? '',
+    accountOpenDate: customer?.accountOpenDate ?? today,
+    mainEmail: customer?.mainEmail ?? '',
+    mainPhone: customer?.mainPhone ?? '',
+    phoneExtension: customer?.phoneExtension ?? '',
+    faxNumber: customer?.faxNumber ?? '',
+    billingAddress1: customer?.billingAddress1 ?? '',
+    billingAddress2: customer?.billingAddress2 ?? '',
+    billingCity: customer?.billingCity ?? '',
+    billingStateCode: customer?.billingStateCode ?? '',
+    billingPostalCode: customer?.billingPostalCode ?? '',
+    countryCode: customer?.countryCode ?? 'US',
+    salespersonCode: customer?.salespersonCode ?? '',
+    accountStatus: customer?.accountStatus ?? 'active',
+    termCode: customer?.termCode ?? '',
+    territoryCode: customer?.territoryCode ?? '',
+    defaultFreightTerm: customer?.defaultFreightTerm ?? '',
+    taxId: customer?.taxId ?? '',
+    customerNote: customer?.customerNote ?? '',
+  });
 
-  const checkDirty = useCallback(() => {
-    if (!isEdit || !formRef.current) return;
-    const formData = new FormData(formRef.current);
-    const current: Record<string, string> = {};
-    for (const [key, value] of formData.entries()) {
-      if (key !== 'customerNumber') {
-        current[key] = value as string;
-      }
-    }
-    const changed = Object.keys(initialValues.current).some(
-      (key) => (current[key] ?? '') !== (initialValues.current[key] ?? ''),
+  const [formValues, setFormValues] = useState(buildInitialValues);
+  const [savedValues, setSavedValues] = useState(buildInitialValues);
+
+  const isDirty =
+    isEdit &&
+    Object.keys(savedValues).some(
+      (key) =>
+        formValues[key as keyof typeof formValues] !==
+        savedValues[key as keyof typeof savedValues],
     );
-    setIsDirty(changed);
-  }, [isEdit]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Update saved baseline after successful edit
+  const formValuesRef = useRef(formValues);
+
+  useEffect(() => {
+    formValuesRef.current = formValues;
+  });
+
+  useEffect(() => {
+    if (state.success && isEdit) {
+      setSavedValues({ ...formValuesRef.current });
+    }
+  }, [state, isEdit]);
 
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      onChange={checkDirty}
-      className="space-y-8">
+    <form action={formAction} className="space-y-8">
       {/* Hidden customerNumber for edit mode */}
       {isEdit && customer && (
         <input
@@ -183,7 +192,8 @@ export function CustomerForm({
             id="customerNumber"
             name={isEdit ? undefined : 'customerNumber'}
             placeholder="e.g. 22-174"
-            defaultValue={customer?.customerNumber ?? ''}
+            value={formValues.customerNumber}
+            onChange={handleChange}
             required={!isEdit}
             readOnly={isEdit}
             disabled={isEdit}
@@ -196,7 +206,8 @@ export function CustomerForm({
             id="customerName"
             name="customerName"
             placeholder="Full business name"
-            defaultValue={customer?.customerName ?? ''}
+            value={formValues.customerName}
+            onChange={handleChange}
             required
             maxLength={255}
           />
@@ -207,7 +218,8 @@ export function CustomerForm({
             id="primaryContactName"
             name="primaryContactName"
             placeholder="First and last name"
-            defaultValue={customer?.primaryContactName ?? ''}
+            value={formValues.primaryContactName}
+            onChange={handleChange}
             required
             maxLength={255}
           />
@@ -218,7 +230,8 @@ export function CustomerForm({
             id="accountOpenDate"
             name="accountOpenDate"
             type="date"
-            defaultValue={customer?.accountOpenDate ?? today}
+            value={formValues.accountOpenDate}
+            onChange={handleChange}
             required
           />
         </div>
@@ -237,7 +250,8 @@ export function CustomerForm({
             name="mainEmail"
             type="email"
             placeholder="orders@example.com"
-            defaultValue={customer?.mainEmail ?? ''}
+            value={formValues.mainEmail}
+            onChange={handleChange}
             required
             maxLength={255}
           />
@@ -249,7 +263,8 @@ export function CustomerForm({
             name="mainPhone"
             type="tel"
             placeholder="(555) 123-4567"
-            defaultValue={customer?.mainPhone ?? ''}
+            value={formValues.mainPhone}
+            onChange={handleChange}
             required
             maxLength={20}
           />
@@ -262,7 +277,8 @@ export function CustomerForm({
             id="phoneExtension"
             name="phoneExtension"
             placeholder="e.g. 204"
-            defaultValue={customer?.phoneExtension ?? ''}
+            value={formValues.phoneExtension}
+            onChange={handleChange}
             maxLength={10}
           />
         </div>
@@ -274,7 +290,8 @@ export function CustomerForm({
             id="faxNumber"
             name="faxNumber"
             placeholder="(555) 123-4568"
-            defaultValue={customer?.faxNumber ?? ''}
+            value={formValues.faxNumber}
+            onChange={handleChange}
             maxLength={20}
           />
         </div>
@@ -292,7 +309,8 @@ export function CustomerForm({
             id="billingAddress1"
             name="billingAddress1"
             placeholder="Street address, P.O. Box"
-            defaultValue={customer?.billingAddress1 ?? ''}
+            value={formValues.billingAddress1}
+            onChange={handleChange}
             required
             maxLength={255}
           />
@@ -305,7 +323,8 @@ export function CustomerForm({
             id="billingAddress2"
             name="billingAddress2"
             placeholder="Suite, unit, building, floor, etc."
-            defaultValue={customer?.billingAddress2 ?? ''}
+            value={formValues.billingAddress2}
+            onChange={handleChange}
             maxLength={255}
           />
         </div>
@@ -314,7 +333,8 @@ export function CustomerForm({
           <Input
             id="billingCity"
             name="billingCity"
-            defaultValue={customer?.billingCity ?? ''}
+            value={formValues.billingCity}
+            onChange={handleChange}
             required
             maxLength={100}
           />
@@ -325,7 +345,8 @@ export function CustomerForm({
             id="billingStateCode"
             name="billingStateCode"
             placeholder="e.g. TX"
-            defaultValue={customer?.billingStateCode ?? ''}
+            value={formValues.billingStateCode}
+            onChange={handleChange}
             required
             maxLength={10}
           />
@@ -336,7 +357,8 @@ export function CustomerForm({
             id="billingPostalCode"
             name="billingPostalCode"
             placeholder="e.g. 75165"
-            defaultValue={customer?.billingPostalCode ?? ''}
+            value={formValues.billingPostalCode}
+            onChange={handleChange}
             required
             maxLength={20}
           />
@@ -346,7 +368,8 @@ export function CustomerForm({
           <Input
             id="countryCode"
             name="countryCode"
-            defaultValue={customer?.countryCode ?? 'US'}
+            value={formValues.countryCode}
+            onChange={handleChange}
             maxLength={5}
           />
         </div>
@@ -363,8 +386,8 @@ export function CustomerForm({
           <Select
             name="salespersonCode"
             required
-            defaultValue={customer?.salespersonCode}
-            onValueChange={checkDirty}>
+            value={formValues.salespersonCode}
+            onValueChange={(v) => handleSelectChange('salespersonCode', v)}>
             <SelectTrigger id="salespersonCode">
               <SelectValue placeholder="Select a salesperson" />
             </SelectTrigger>
@@ -381,8 +404,8 @@ export function CustomerForm({
           <Label htmlFor="accountStatus">Account Status</Label>
           <Select
             name="accountStatus"
-            defaultValue={customer?.accountStatus ?? 'active'}
-            onValueChange={checkDirty}>
+            value={formValues.accountStatus}
+            onValueChange={(v) => handleSelectChange('accountStatus', v)}>
             <SelectTrigger id="accountStatus">
               <SelectValue />
             </SelectTrigger>
@@ -401,7 +424,8 @@ export function CustomerForm({
             id="termCode"
             name="termCode"
             placeholder="e.g. 30, 60, CH"
-            defaultValue={customer?.termCode ?? ''}
+            value={formValues.termCode}
+            onChange={handleChange}
             required
             maxLength={10}
           />
@@ -412,7 +436,8 @@ export function CustomerForm({
             id="territoryCode"
             name="territoryCode"
             placeholder="e.g. TX-10"
-            defaultValue={customer?.territoryCode ?? ''}
+            value={formValues.territoryCode}
+            onChange={handleChange}
             required
             maxLength={20}
           />
@@ -423,7 +448,8 @@ export function CustomerForm({
             id="defaultFreightTerm"
             name="defaultFreightTerm"
             placeholder="e.g. 10% Freight"
-            defaultValue={customer?.defaultFreightTerm ?? ''}
+            value={formValues.defaultFreightTerm}
+            onChange={handleChange}
             required
             maxLength={50}
           />
@@ -436,7 +462,8 @@ export function CustomerForm({
             id="taxId"
             name="taxId"
             placeholder="e.g. 38-3079207"
-            defaultValue={customer?.taxId ?? ''}
+            value={formValues.taxId}
+            onChange={handleChange}
             maxLength={20}
           />
         </div>
@@ -456,7 +483,8 @@ export function CustomerForm({
             id="customerNote"
             name="customerNote"
             placeholder="e.g. Prefers emailed invoices, special delivery instructions..."
-            defaultValue={customer?.customerNote ?? ''}
+            value={formValues.customerNote}
+            onChange={handleChange}
             rows={3}
           />
         </div>

@@ -2,17 +2,17 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
-import db from '@/lib/db';
-import { customers } from './schema';
-import { findCustomerByNumber } from './queries';
+import { requireAuth } from '@/lib/auth';
 import { createCustomerSchema, updateCustomerSchema } from './validation';
+import { createCustomerRecord, updateCustomerRecord } from './service';
 import type { ActionResult } from '@/types';
 
 export async function createCustomer(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
+    await requireAuth();
+
     const raw = Object.fromEntries(formData);
     const parsed = createCustomerSchema.safeParse(raw);
 
@@ -24,47 +24,20 @@ export async function createCustomer(
         };
     }
 
-    const data = parsed.data;
-
-    const existing = await findCustomerByNumber(data.customerNumber);
-    if (existing) {
-        return {
-            success: false,
-            error: 'A customer with this number already exists.',
-        };
+    const result = await createCustomerRecord(parsed.data);
+    if (!result.success) {
+        return result;
     }
 
-    await db.insert(customers).values({
-        customerNumber: data.customerNumber,
-        customerName: data.customerName,
-        primaryContactName: data.primaryContactName,
-        billingAddress1: data.billingAddress1,
-        billingAddress2: data.billingAddress2 || null,
-        billingCity: data.billingCity,
-        billingStateCode: data.billingStateCode,
-        billingPostalCode: data.billingPostalCode,
-        countryCode: data.countryCode || 'US',
-        mainPhone: data.mainPhone,
-        phoneExtension: data.phoneExtension || null,
-        faxNumber: data.faxNumber || null,
-        mainEmail: data.mainEmail,
-        taxId: data.taxId || null,
-        termCode: data.termCode,
-        territoryCode: data.territoryCode,
-        salespersonCode: data.salespersonCode,
-        defaultFreightTerm: data.defaultFreightTerm,
-        accountStatus: data.accountStatus ?? 'active',
-        accountOpenDate: data.accountOpenDate,
-        customerNote: data.customerNote || null,
-    });
-
-    redirect(`/customers`);
+    redirect('/customers');
 }
 
 export async function updateCustomer(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
+    await requireAuth();
+
     const customerNumber = formData.get('customerNumber') as string;
     if (!customerNumber) {
         return { success: false, error: 'Customer number is required.' };
@@ -81,39 +54,10 @@ export async function updateCustomer(
         };
     }
 
-    const existing = await findCustomerByNumber(customerNumber);
-    if (!existing) {
-        return { success: false, error: 'Customer not found.' };
+    const result = await updateCustomerRecord(customerNumber, parsed.data);
+    if (!result.success) {
+        return result;
     }
-
-    const data = parsed.data;
-
-    await db
-        .update(customers)
-        .set({
-            customerName: data.customerName,
-            primaryContactName: data.primaryContactName,
-            billingAddress1: data.billingAddress1,
-            billingAddress2: data.billingAddress2 || null,
-            billingCity: data.billingCity,
-            billingStateCode: data.billingStateCode,
-            billingPostalCode: data.billingPostalCode,
-            countryCode: data.countryCode || 'US',
-            mainPhone: data.mainPhone,
-            phoneExtension: data.phoneExtension || null,
-            faxNumber: data.faxNumber || null,
-            mainEmail: data.mainEmail,
-            taxId: data.taxId || null,
-            termCode: data.termCode,
-            territoryCode: data.territoryCode,
-            salespersonCode: data.salespersonCode,
-            defaultFreightTerm: data.defaultFreightTerm,
-            accountStatus: data.accountStatus ?? 'active',
-            accountOpenDate: data.accountOpenDate,
-            customerNote: data.customerNote || null,
-            updatedAt: new Date(),
-        })
-        .where(eq(customers.customerNumber, customerNumber));
 
     revalidatePath(`/customers/${customerNumber}`);
     revalidatePath('/customers');
