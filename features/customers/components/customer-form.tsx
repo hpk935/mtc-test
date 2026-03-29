@@ -198,20 +198,18 @@ export function CustomerForm({
       <FormSection
         title="Customer Information"
         description="Basic details used to identify this customer account.">
-        <div className="space-y-2">
-          <Label htmlFor="customerNumber">Customer Number</Label>
-          <Input
-            id="customerNumber"
-            name={isEdit ? undefined : 'customerNumber'}
-            placeholder="e.g. 22-174"
-            value={formValues.customerNumber}
-            onChange={handleChange}
-            required={!isEdit}
-            readOnly={isEdit}
-            disabled={isEdit}
-            maxLength={20}
-          />
-        </div>
+        {isEdit && (
+          <div className="space-y-2">
+            <Label htmlFor="customerNumber">Customer Number</Label>
+            <Input
+              id="customerNumber"
+              value={formValues.customerNumber}
+              readOnly
+              disabled
+              maxLength={20}
+            />
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="customerName">Customer Name</Label>
           <Input

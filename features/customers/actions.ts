@@ -11,6 +11,7 @@ import {
 } from './validation';
 import {
     createCustomerRecord,
+    generateCustomerNumber,
     updateCustomerRecord,
     createShipToRecord,
     updateShipToRecord,
@@ -49,6 +50,8 @@ export async function createCustomer(
         ...customerData
     } = parsed.data;
 
+    const customerNumber = await generateCustomerNumber();
+
     // Validate shipping address fields when not same as billing
     if (!sameAsBilling) {
         if (!shipAddress1) {
@@ -71,14 +74,17 @@ export async function createCustomer(
         }
     }
 
-    const customerResult = await createCustomerRecord(customerData);
+    const customerResult = await createCustomerRecord({
+        ...customerData,
+        customerNumber,
+    });
     if (!customerResult.success) {
         return customerResult;
     }
 
     const shipToResult = await createShipToRecord({
-        shipToId: `ST-${customerData.customerNumber}`,
-        customerNumber: customerData.customerNumber,
+        shipToId: `ST-${customerNumber}`,
+        customerNumber,
         locationName: shipLocationName,
         locationStatus: 'active',
         address1: sameAsBilling ? customerData.billingAddress1 : shipAddress1,

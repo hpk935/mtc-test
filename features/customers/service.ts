@@ -1,7 +1,11 @@
 import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
 import { customers, shipToAddresses } from './schema';
-import { findCustomerByNumber, findShipToAddress } from './queries';
+import {
+    findCustomerByNumber,
+    findShipToAddress,
+    getMaxNumericCustomerNumber,
+} from './queries';
 import type {
     CreateCustomerInput,
     UpdateCustomerInput,
@@ -13,7 +17,17 @@ function normalizeOptional(value: string | undefined): string | null {
     return value && value.trim() !== '' ? value : null;
 }
 
-export async function createCustomerRecord(input: CreateCustomerInput) {
+const NEW_CUSTOMER_NUMBER_START = 10001;
+
+export async function generateCustomerNumber(): Promise<string> {
+    const maxExisting = await getMaxNumericCustomerNumber();
+    const next = Math.max(NEW_CUSTOMER_NUMBER_START, maxExisting + 1);
+    return next.toString();
+}
+
+export async function createCustomerRecord(
+    input: CreateCustomerInput & { customerNumber: string },
+) {
     const existing = await findCustomerByNumber(input.customerNumber);
     if (existing) {
         return {

@@ -2,7 +2,6 @@ import { z } from 'zod/v4';
 import { ACCOUNT_STATUSES, LOCATION_STATUSES } from './constants';
 
 export const createCustomerSchema = z.object({
-    customerNumber: z.string().min(1, 'Customer number is required').max(20),
     customerName: z.string().min(1, 'Customer name is required').max(255),
     primaryContactName: z
         .string()
@@ -50,9 +49,7 @@ export type CreateCustomerWithShipToInput = z.infer<
     typeof createCustomerWithShipToSchema
 >;
 
-export const updateCustomerSchema = createCustomerSchema.omit({
-    customerNumber: true,
-});
+export const updateCustomerSchema = createCustomerSchema;
 
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
 

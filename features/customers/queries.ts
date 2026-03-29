@@ -1,4 +1,4 @@
-import { ilike, or, count, asc, eq } from 'drizzle-orm';
+import { ilike, or, count, asc, eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { customers, shipToAddresses } from './schema';
 import { users } from '@/features/users/schema';
@@ -92,4 +92,14 @@ export async function findShipToAddress(shipToId: string) {
         .where(eq(shipToAddresses.shipToId, shipToId))
         .limit(1);
     return address ?? null;
+}
+
+export async function getMaxNumericCustomerNumber(): Promise<number> {
+    const [result] = await db
+        .select({
+            maxNum: sql<number>`max(cast(${customers.customerNumber} as integer))`,
+        })
+        .from(customers)
+        .where(sql`${customers.customerNumber} ~ '^[0-9]+$'`);
+    return result?.maxNum ?? 0;
 }
