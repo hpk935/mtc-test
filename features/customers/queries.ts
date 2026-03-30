@@ -19,7 +19,8 @@ export async function getCustomers({
     const whereClause = search
         ? or(
               ilike(customers.customerName, `%${search}%`),
-              ilike(customers.mainEmail, `%${search}%`),
+              ilike(customers.customerNumber, `%${search}%`),
+              ilike(customers.billingPostalCode, `%${search}%`),
           )
         : undefined;
 
@@ -101,5 +102,15 @@ export async function getMaxNumericCustomerNumber(): Promise<number> {
         })
         .from(customers)
         .where(sql`${customers.customerNumber} ~ '^[0-9]+$'`);
+    return result?.maxNum ?? 0;
+}
+
+export async function getMaxShipToId(): Promise<number> {
+    const [result] = await db
+        .select({
+            maxNum: sql<number>`max(cast(substring(${shipToAddresses.shipToId} from 3) as integer))`,
+        })
+        .from(shipToAddresses)
+        .where(sql`${shipToAddresses.shipToId} ~ '^ST[0-9]+$'`);
     return result?.maxNum ?? 0;
 }

@@ -12,6 +12,7 @@ import {
 import {
     createCustomerRecord,
     generateCustomerNumber,
+    generateShipToId,
     updateCustomerRecord,
     createShipToRecord,
     updateShipToRecord,
@@ -83,7 +84,7 @@ export async function createCustomer(
     }
 
     const shipToResult = await createShipToRecord({
-        shipToId: `ST-${customerNumber}`,
+        shipToId: await generateShipToId(),
         customerNumber,
         locationName: shipLocationName,
         locationStatus: 'active',
@@ -164,7 +165,10 @@ export async function createShipTo(
         };
     }
 
-    const result = await createShipToRecord(parsed.data);
+    const result = await createShipToRecord({
+        shipToId: await generateShipToId(),
+        ...parsed.data,
+    });
     if (!result.success) {
         return result;
     }

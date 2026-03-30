@@ -27,7 +27,7 @@ export default async function CustomersPage({
       <CustomersHeader />
 
       <Suspense fallback={null}>
-        <DataTableSearch placeholder="Search by name or email..." />
+        <DataTableSearch placeholder="Search by name, zip code, or customer number..." />
       </Suspense>
 
       <div className="rounded-lg border">

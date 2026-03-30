@@ -5,6 +5,7 @@ import {
     findCustomerByNumber,
     findShipToAddress,
     getMaxNumericCustomerNumber,
+    getMaxShipToId,
 } from './queries';
 import type {
     CreateCustomerInput,
@@ -23,6 +24,12 @@ export async function generateCustomerNumber(): Promise<string> {
     const maxExisting = await getMaxNumericCustomerNumber();
     const next = Math.max(NEW_CUSTOMER_NUMBER_START, maxExisting + 1);
     return next.toString();
+}
+
+export async function generateShipToId(): Promise<string> {
+    const maxExisting = await getMaxShipToId();
+    const next = maxExisting + 1;
+    return `ST${next.toString().padStart(4, '0')}`;
 }
 
 export async function createCustomerRecord(
@@ -102,7 +109,9 @@ export async function updateCustomerRecord(
     return { success: true as const, data: undefined };
 }
 
-export async function createShipToRecord(input: CreateShipToInput) {
+export async function createShipToRecord(
+    input: CreateShipToInput & { shipToId: string },
+) {
     const existing = await findShipToAddress(input.shipToId);
     if (existing) {
         return {

@@ -54,7 +54,6 @@ export const updateCustomerSchema = createCustomerSchema;
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
 
 export const createShipToSchema = z.object({
-    shipToId: z.string().min(1, 'Ship-to ID is required').max(20),
     customerNumber: z.string().min(1, 'Customer number is required').max(20),
     locationName: z.string().min(1, 'Location name is required').max(255),
     locationStatus: z.enum(LOCATION_STATUSES).optional().default('active'),
@@ -76,7 +75,6 @@ export const createShipToSchema = z.object({
 export type CreateShipToInput = z.infer<typeof createShipToSchema>;
 
 export const updateShipToSchema = createShipToSchema.omit({
-    shipToId: true,
     customerNumber: true,
 });
 

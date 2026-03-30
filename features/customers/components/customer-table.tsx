@@ -65,6 +65,9 @@ export function CustomerTable({ customers }: CustomerTableProps) {
                 className="block group-hover:underline">
                 {customer.customerName}
               </Link>
+              <span className="text-muted-foreground text-xs">
+                {customer.customerNumber}
+              </span>
             </TableCell>
             <TableCell>{customer.primaryContactName}</TableCell>
             <TableCell>{customer.mainEmail}</TableCell>

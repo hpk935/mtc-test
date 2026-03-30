@@ -3,14 +3,8 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { MapPin, Plus, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { MapPin, Pencil, Plus, Star } from 'lucide-react';
 import type { ShipToAddress } from '../types';
 import { ShipToForm } from './ship-to-form';
 
@@ -35,92 +29,83 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
     setShowForm(true);
   };
 
-  const handleClose = () => {
-    setShowForm(false);
-    setEditingAddress(null);
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setShowForm(false);
+      setEditingAddress(null);
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Shipping Addresses</h2>
-          <p className="text-muted-foreground text-sm">
-            Manage where orders can be shipped for this customer.
+    <>
+      {addresses.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-6">
+          <MapPin className="text-muted-foreground mb-2 size-6" />
+          <p className="text-muted-foreground mb-3 text-sm">
+            No shipping addresses yet.
           </p>
+          <Button size="sm" variant="outline" onClick={handleAdd}>
+            <Plus className="mr-2 size-4" />
+            Add Address
+          </Button>
         </div>
-        <Button size="sm" onClick={handleAdd}>
-          <Plus className="mr-2 size-4" />
-          Add Address
-        </Button>
-      </div>
-
-      {showForm && (
-        <ShipToForm
-          customerNumber={customerNumber}
-          address={editingAddress}
-          mode={editingAddress ? 'edit' : 'create'}
-          onClose={handleClose}
-        />
-      )}
-
-      {addresses.length === 0 && !showForm ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <MapPin className="text-muted-foreground mb-2 size-8" />
-            <p className="text-muted-foreground text-sm">
-              No shipping addresses yet.
-            </p>
-          </CardContent>
-        </Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {addresses.map((addr) => (
-            <Card
-              key={addr.shipToId}
-              className="hover:border-foreground/20 cursor-pointer transition-colors"
-              onClick={() => handleEdit(addr)}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
+        <div className="space-y-3">
+          <div className="divide-y rounded-lg border">
+            {addresses.map((addr) => (
+              <div
+                key={addr.shipToId}
+                className="hover:bg-muted/50 flex cursor-pointer items-start justify-between gap-3 px-3 py-2.5 transition-colors"
+                onClick={() => handleEdit(addr)}>
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium">
+                    <span className="truncate text-sm font-medium">
                       {addr.locationName}
-                    </CardTitle>
+                    </span>
                     {addr.isDefault && (
-                      <Star className="size-3.5 fill-yellow-500 text-yellow-500" />
+                      <Star className="size-3 shrink-0 fill-yellow-500 text-yellow-500" />
                     )}
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'shrink-0 px-1.5 py-0 text-[10px]',
+                        addr.locationStatus === 'active'
+                          ? 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-400'
+                          : 'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400',
+                      )}>
+                      {addr.locationStatus === 'active' ? 'Active' : 'Inactive'}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      addr.locationStatus === 'active'
-                        ? 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-400'
-                        : 'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400'
-                    }>
-                    {addr.locationStatus === 'active' ? 'Active' : 'Inactive'}
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">
-                  {addr.shipToId}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <p>{addr.address1}</p>
-                {addr.address2 && <p>{addr.address2}</p>}
-                <p>
-                  {addr.city}, {addr.stateCode} {addr.postalCode}
-                </p>
-                {addr.contactName && (
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {addr.contactName}
-                    {addr.mainPhone ? ` · ${addr.mainPhone}` : ''}
+                  <p className="text-muted-foreground mt-0.5 text-xs">
+                    {addr.address1}
+                    {addr.address2 ? `, ${addr.address2}` : ''} &middot;{' '}
+                    {addr.city}, {addr.stateCode} {addr.postalCode}
                   </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {addr.contactName && (
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      {addr.contactName}
+                      {addr.mainPhone ? ` · ${addr.mainPhone}` : ''}
+                    </p>
+                  )}
+                </div>
+                <Pencil className="text-muted-foreground mt-1 size-3.5 shrink-0" />
+              </div>
+            ))}
+          </div>
+          <Button size="sm" variant="outline" onClick={handleAdd}>
+            <Plus className="mr-2 size-4" />
+            Add Address
+          </Button>
         </div>
       )}
-    </div>
+
+      <ShipToForm
+        customerNumber={customerNumber}
+        address={editingAddress}
+        mode={editingAddress ? 'edit' : 'create'}
+        open={showForm}
+        onOpenChange={handleOpenChange}
+      />
+    </>
   );
 }

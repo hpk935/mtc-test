@@ -17,6 +17,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { createCustomer, updateCustomer } from '../actions';
 import { ACCOUNT_STATUSES } from '../constants';
+import { ShipToList } from './ship-to-list';
+import type { ShipToAddress } from '../types';
 import type { ActionResult } from '@/types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -59,6 +61,7 @@ interface CustomerFormProps {
   salespersons: Salesperson[];
   customer?: CustomerData;
   mode?: 'create' | 'edit';
+  shipToAddresses?: ShipToAddress[];
 }
 
 function FormSection({
@@ -95,6 +98,7 @@ export function CustomerForm({
   salespersons,
   customer,
   mode = 'create',
+  shipToAddresses,
 }: CustomerFormProps) {
   const action = mode === 'edit' ? updateCustomer : createCustomer;
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -520,6 +524,24 @@ export function CustomerForm({
                 value={formValues.shipPhone}
                 onChange={handleChange}
                 maxLength={20}
+              />
+            </div>
+          </FormSection>
+
+          <Separator />
+        </>
+      )}
+
+      {/* Shipping Addresses — edit mode only */}
+      {isEdit && shipToAddresses && (
+        <>
+          <FormSection
+            title="Shipping Addresses"
+            description="Locations where orders can be shipped for this customer.">
+            <div className="sm:col-span-2">
+              <ShipToList
+                addresses={shipToAddresses}
+                customerNumber={customer!.customerNumber}
               />
             </div>
           </FormSection>

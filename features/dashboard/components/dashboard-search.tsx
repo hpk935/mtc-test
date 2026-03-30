@@ -76,7 +76,7 @@ export function DashboardSearch() {
         <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           type="search"
-          placeholder="Search for a customer..."
+          placeholder="Search by name, zip code, or customer number..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}

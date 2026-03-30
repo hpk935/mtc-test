@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import db from '../../lib/db';
 import { users } from '../../features/users/schema';
-import { customers, shipToAddresses } from '../../features/customers/schema';
+import { customers } from '../../features/customers/schema';
 import { orders } from '../../features/orders/schema';
 import { invoices, accountReceivables } from '../../features/invoices/schema';
 import { hashPassword } from '../../features/auth/service';
@@ -140,32 +140,6 @@ async function seedCustomers() {
     console.log(`  Customers: ${values.length} rows`);
 }
 
-// --- Seed ship-to addresses ---
-
-async function seedShipToAddresses() {
-    const rows = readCsv('ship-to-addresses.csv');
-
-    const values = rows.map((r) => ({
-        shipToId: r.ship_to_id,
-        customerNumber: r.customer_number,
-        locationName: r.location_name,
-        locationStatus: r.location_status as 'active' | 'inactive',
-        address1: r.address_1,
-        address2: emptyToNull(r.address_2),
-        city: r.city,
-        stateCode: r.state_code,
-        postalCode: r.postal_code,
-        countryCode: r.country_code || 'US',
-        contactName: emptyToNull(r.contact_name),
-        mainPhone: emptyToNull(r.main_phone),
-        isDefault: parseBoolean(r.is_default),
-        customerNote: emptyToNull(r.customer_note),
-    }));
-
-    await db.insert(shipToAddresses).values(values).onConflictDoNothing();
-    console.log(`  Ship-to addresses: ${values.length} rows`);
-}
-
 // --- Seed orders ---
 
 async function seedOrders() {
@@ -285,7 +259,6 @@ async function main() {
     // Insert in dependency order
     await seedSalespersons(salespersonCodes);
     await seedCustomers();
-    await seedShipToAddresses();
     await seedOrders();
     await seedInvoices();
     await seedAccountReceivables();

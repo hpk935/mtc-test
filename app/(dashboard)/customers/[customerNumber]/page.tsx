@@ -8,7 +8,6 @@ import {
   getShipToAddresses,
 } from '@/features/customers/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
-import { ShipToList } from '@/features/customers/components/ship-to-list';
 
 export default async function CustomerDetailPage({
   params,
@@ -71,8 +70,8 @@ export default async function CustomerDetailPage({
         salespersons={salespersons}
         customer={customerData}
         mode="edit"
+        shipToAddresses={shipToAddresses}
       />
-      <ShipToList addresses={shipToAddresses} customerNumber={customerNumber} />
     </div>
   );
 }
