@@ -104,7 +104,7 @@ export async function createCustomer(
             : (shipCountryCode ?? 'US'),
         contactName: shipContactName,
         mainPhone: shipPhone,
-        isDefault: true,
+        isFavorite: true,
         customerNote: '',
     });
 

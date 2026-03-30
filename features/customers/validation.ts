@@ -65,7 +65,7 @@ export const createShipToSchema = z.object({
     countryCode: z.string().max(5).optional().default('US'),
     contactName: z.string().max(255).optional().default(''),
     mainPhone: z.string().max(20).optional().default(''),
-    isDefault: z
+    isFavorite: z
         .string()
         .optional()
         .transform((v) => v === 'on' || v === 'true'),

@@ -133,7 +133,7 @@ export async function createShipToRecord(
         countryCode: input.countryCode || 'US',
         contactName: normalizeOptional(input.contactName),
         mainPhone: normalizeOptional(input.mainPhone),
-        isDefault: input.isDefault ?? false,
+        isFavorite: input.isFavorite ?? false,
         customerNote: normalizeOptional(input.customerNote),
     });
 
@@ -165,7 +165,7 @@ export async function updateShipToRecord(
             countryCode: input.countryCode || 'US',
             contactName: normalizeOptional(input.contactName),
             mainPhone: normalizeOptional(input.mainPhone),
-            isDefault: input.isDefault ?? false,
+            isFavorite: input.isFavorite ?? false,
             customerNote: normalizeOptional(input.customerNote),
             updatedAt: new Date(),
         })

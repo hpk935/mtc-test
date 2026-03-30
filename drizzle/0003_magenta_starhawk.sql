@@ -1,0 +1,1 @@
+ALTER TABLE "ship_to_addresses" RENAME COLUMN "is_default" TO "is_favorite";

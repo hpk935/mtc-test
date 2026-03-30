@@ -64,7 +64,7 @@ export function ShipToForm({
     countryCode: address?.countryCode ?? 'US',
     contactName: address?.contactName ?? '',
     mainPhone: address?.mainPhone ?? '',
-    isDefault: address?.isDefault ?? false,
+    isFavorite: address?.isFavorite ?? false,
     customerNote: address?.customerNote ?? '',
   });
 
@@ -260,18 +260,18 @@ export function ShipToForm({
 
             <div className="flex items-center gap-2">
               <Checkbox
-                id="isDefault"
-                name="isDefault"
-                checked={formValues.isDefault}
+                id="isFavorite"
+                name="isFavorite"
+                checked={formValues.isFavorite}
                 onCheckedChange={(checked) =>
                   setFormValues((prev) => ({
                     ...prev,
-                    isDefault: checked === true,
+                    isFavorite: checked === true,
                   }))
                 }
               />
-              <Label htmlFor="isDefault" className="text-sm font-normal">
-                Set as default shipping address
+              <Label htmlFor="isFavorite" className="text-sm font-normal">
+                Mark as favorite
               </Label>
             </div>
 

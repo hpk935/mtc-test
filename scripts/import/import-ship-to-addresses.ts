@@ -353,9 +353,9 @@ function transformRows(
             ? ('inactive' as const)
             : ('active' as const);
 
-        // isDefault: first valid address per customer
-        const isDefault = !firstSeenPerCustomer.has(custNumber);
-        if (isDefault) {
+        // isFavorite: first valid address per customer
+        const isFavorite = !firstSeenPerCustomer.has(custNumber);
+        if (isFavorite) {
             firstSeenPerCustomer.add(custNumber);
         }
 
@@ -404,7 +404,7 @@ function transformRows(
                 rowId,
                 warnings,
             ),
-            isDefault,
+            isFavorite,
             customerNote: null,
         });
     }

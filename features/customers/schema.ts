@@ -72,7 +72,7 @@ export const shipToAddresses = pgTable('ship_to_addresses', {
     countryCode: varchar('country_code', { length: 5 }).notNull().default('US'),
     contactName: varchar('contact_name', { length: 255 }),
     mainPhone: varchar('main_phone', { length: 20 }),
-    isDefault: boolean('is_default').notNull().default(false),
+    isFavorite: boolean('is_favorite').notNull().default(false),
     customerNote: text('customer_note'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
