@@ -1,28 +1,42 @@
-import { ilike, or, count, asc, eq, sql } from 'drizzle-orm';
+import { ilike, or, and, count, asc, eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { customers, shipToAddresses } from './schema';
 import { users } from '@/features/users/schema';
+import type { AccountStatus } from './constants';
 
 const PAGE_SIZE_DEFAULT = 20;
 
 export async function getCustomers({
     search,
+    status,
     page = 1,
     pageSize = PAGE_SIZE_DEFAULT,
 }: {
     search?: string;
+    status?: AccountStatus;
     page?: number;
     pageSize?: number;
 } = {}) {
     const offset = (page - 1) * pageSize;
 
-    const whereClause = search
-        ? or(
-              ilike(customers.customerName, `%${search}%`),
-              ilike(customers.customerNumber, `%${search}%`),
-              ilike(customers.billingPostalCode, `%${search}%`),
-          )
-        : undefined;
+    const conditions = [];
+
+    if (status) {
+        conditions.push(eq(customers.accountStatus, status));
+    }
+
+    if (search) {
+        conditions.push(
+            or(
+                ilike(customers.customerName, `%${search}%`),
+                ilike(customers.customerNumber, `%${search}%`),
+                ilike(customers.billingPostalCode, `%${search}%`),
+                ilike(customers.primaryContactName, `%${search}%`),
+            )!,
+        );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [data, [{ total }]] = await Promise.all([
         db

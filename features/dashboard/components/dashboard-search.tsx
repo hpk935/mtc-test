@@ -9,6 +9,7 @@ import Link from 'next/link';
 interface SearchResult {
   customerNumber: string;
   customerName: string;
+  primaryContactName: string | null;
   mainEmail: string;
 }
 
@@ -76,7 +77,7 @@ export function DashboardSearch() {
         <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           type="search"
-          placeholder="Search by name, zip code, or customer number..."
+          placeholder="Name, contact, zip, or customer #..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
@@ -94,6 +95,11 @@ export function DashboardSearch() {
               onClick={() => handleSelect(r.customerNumber)}>
               <div>
                 <div className="font-medium">{r.customerName}</div>
+                {r.primaryContactName && (
+                  <div className="text-muted-foreground text-xs">
+                    {r.primaryContactName}
+                  </div>
+                )}
                 <div className="text-muted-foreground text-xs">
                   {r.mainEmail}
                 </div>
