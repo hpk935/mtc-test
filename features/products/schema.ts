@@ -55,11 +55,9 @@ export const products = pgTable('products', {
     upcomingShipmentArrival: date('upcoming_shipment_arrival'),
     upcomingShipmentQty: integer('upcoming_shipment_qty'),
     nob: integer('nob'),
-    alternateItemNumber: varchar('alternate_item_number', { length: 50 }),
     isDiscontinued: boolean('is_discontinued').notNull().default(false),
-    icard: varchar('icard', { length: 50 }),
-    bagType: varchar('bag_type', { length: 50 }),
     htsCode: varchar('hts_code', { length: 20 }),
+    leadTime: varchar('lead_time', { length: 50 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

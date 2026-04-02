@@ -36,6 +36,13 @@
       "when": 1775087874747,
       "tag": "0004_material_puck",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775110828929,
+      "tag": "0005_bright_rogue",
+      "breakpoints": true
     }
   ]
 }

@@ -61,6 +61,7 @@ export default async function CustomersPage({
           totalPages={totalPages}
           totalCount={totalCount}
           pageSize={PAGE_SIZE}
+          label="customers"
         />
         <CustomerTable customers={customers} />
       </div>

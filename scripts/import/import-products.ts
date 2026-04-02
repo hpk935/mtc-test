@@ -205,10 +205,7 @@ function transformRows(rows: Record<string, string>[]) {
                 ? parseIntOrDefault(r['UpcomingShipmentQty'])
                 : null,
             nob: r['NOB']?.trim() ? parseIntOrDefault(r['NOB']) : null,
-            alternateItemNumber: emptyToNull(r['Alt/SuperNumber']),
             isDiscontinued: r['Discontinued']?.trim() === '1',
-            icard: emptyToNull(r['ICard']),
-            bagType: emptyToNull(r['BagType']),
             htsCode: emptyToNull(r['HTSCode']),
         });
     }

@@ -9,6 +9,26 @@ interface DataTablePaginationProps {
   totalPages: number;
   totalCount: number;
   pageSize: number;
+  label?: string;
+}
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | '...')[] = [1];
+
+  if (current > 3) pages.push('...');
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  if (current < total - 2) pages.push('...');
+
+  pages.push(total);
+  return pages;
 }
 
 export function DataTablePagination({
@@ -16,6 +36,7 @@ export function DataTablePagination({
   totalPages,
   totalCount,
   pageSize,
+  label = 'records',
 }: DataTablePaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -34,15 +55,14 @@ export function DataTablePagination({
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  const pages = getPageNumbers(currentPage, totalPages);
+
   return (
     <div className="text-muted-foreground flex items-center justify-between px-4 py-3 text-sm">
       <span>
-        Showing {showingFrom}–{showingTo} of {totalCount} customers
+        Showing {showingFrom}–{showingTo} of {totalCount} {label}
       </span>
-      <div className="flex items-center gap-2">
-        <span>
-          Page {currentPage} of {totalPages || 1}
-        </span>
+      <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="icon-sm"
@@ -51,6 +71,22 @@ export function DataTablePagination({
           <ChevronLeft className="size-4" />
           <span className="sr-only">Previous page</span>
         </Button>
+        {pages.map((p, i) =>
+          p === '...' ? (
+            <span key={`ellipsis-${i}`} className="px-1.5">
+              &hellip;
+            </span>
+          ) : (
+            <Button
+              key={p}
+              variant={p === currentPage ? 'default' : 'outline'}
+              size="icon-sm"
+              onClick={() => goToPage(p)}
+              disabled={p === currentPage}>
+              {p}
+            </Button>
+          ),
+        )}
         <Button
           variant="outline"
           size="icon-sm"
