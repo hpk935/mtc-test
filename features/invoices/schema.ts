@@ -10,7 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '@/features/users/schema';
 import { customers, shipToAddresses } from '@/features/customers/schema';
-import { orders } from '@/features/orders/schema';
+import { orders, orderItems } from '@/features/orders/schema';
 import { INVOICE_STATUSES, PAYMENT_STATUSES } from './constants';
 
 export const invoiceStatusEnum = pgEnum('invoice_status', INVOICE_STATUSES);
@@ -94,7 +94,7 @@ export const accountReceivables = pgTable('account_receivables', {
 
 // Relations
 
-export const invoicesRelations = relations(invoices, ({ one }) => ({
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
     order: one(orders, {
         fields: [invoices.orderNumber],
         references: [orders.orderNumber],
@@ -115,6 +115,7 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
         fields: [invoices.invoiceNumber],
         references: [accountReceivables.invoiceNumber],
     }),
+    items: many(orderItems),
 }));
 
 export const accountReceivablesRelations = relations(

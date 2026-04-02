@@ -1,9 +1,11 @@
 import { relations } from 'drizzle-orm';
 import {
     date,
+    integer,
     numeric,
     pgEnum,
     pgTable,
+    serial,
     text,
     timestamp,
     varchar,
@@ -11,6 +13,7 @@ import {
 import { users } from '@/features/users/schema';
 import { customers, shipToAddresses } from '@/features/customers/schema';
 import { invoices } from '@/features/invoices/schema';
+import { products } from '@/features/products/schema';
 import { ORDER_STATUSES } from './constants';
 
 export const orderStatusEnum = pgEnum('order_status', ORDER_STATUSES);
@@ -57,6 +60,35 @@ export const orders = pgTable('orders', {
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const orderItems = pgTable('order_items', {
+    id: serial('id').primaryKey(),
+    orderNumber: varchar('order_number', { length: 20 })
+        .notNull()
+        .references(() => orders.orderNumber),
+    invoiceNumber: varchar('invoice_number', { length: 20 }).references(
+        () => invoices.invoiceNumber,
+    ),
+    itemNumber: varchar('item_number', { length: 50 })
+        .notNull()
+        .references(() => products.itemNumber),
+    unitPrice: numeric('unit_price', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    qtyOrdered: integer('qty_ordered').notNull().default(0),
+    qtyShipped: integer('qty_shipped').notNull().default(0),
+    discount: numeric('discount', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    unitCost: numeric('unit_cost', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    lineTotal: numeric('line_total', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Relations
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -73,4 +105,20 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
         references: [shipToAddresses.shipToId],
     }),
     invoices: many(invoices),
+    items: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+    order: one(orders, {
+        fields: [orderItems.orderNumber],
+        references: [orders.orderNumber],
+    }),
+    invoice: one(invoices, {
+        fields: [orderItems.invoiceNumber],
+        references: [invoices.invoiceNumber],
+    }),
+    product: one(products, {
+        fields: [orderItems.itemNumber],
+        references: [products.itemNumber],
+    }),
 }));
