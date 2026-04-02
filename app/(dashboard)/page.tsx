@@ -45,9 +45,10 @@ export default async function DashboardPage() {
       </div>
 
       <StatsCards
-        totalOrders={stats.totalOrders}
-        pendingInvoices={stats.pendingInvoices}
+        openOrders={stats.openOrders}
+        invoicedCount={stats.invoicedCount}
         totalCustomers={stats.totalCustomers}
+        totalProducts={stats.totalProducts}
       />
 
       <div className="grid gap-4 lg:grid-cols-2">

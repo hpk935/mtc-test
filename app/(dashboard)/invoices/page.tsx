@@ -30,7 +30,7 @@ export default async function InvoicesPage({
       ? undefined
       : (INVOICE_STATUSES as readonly string[]).includes(params.status ?? '')
         ? (params.status as InvoiceStatus)
-        : undefined;
+        : 'posted';
 
   const { invoices, totalCount, totalPages } = await getInvoices({
     search: search || undefined,
@@ -49,6 +49,7 @@ export default async function InvoicesPage({
           <DataTableFilter
             options={STATUS_OPTIONS}
             paramName="status"
+            defaultValue="posted"
             allLabel="All Statuses"
           />
         </div>

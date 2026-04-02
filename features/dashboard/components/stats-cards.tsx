@@ -9,34 +9,36 @@ import {
 } from '@/components/ui/card';
 
 interface StatsCardsProps {
-  totalOrders: number;
-  pendingInvoices: number;
+  openOrders: number;
+  invoicedCount: number;
   totalCustomers: number;
+  totalProducts: number;
 }
 
 export function StatsCards({
-  totalOrders,
-  pendingInvoices,
+  openOrders,
+  invoicedCount,
   totalCustomers,
+  totalProducts,
 }: StatsCardsProps) {
   const stats = [
     {
-      label: 'Total Orders',
-      value: totalOrders.toLocaleString(),
+      label: 'Open Orders',
+      value: openOrders.toLocaleString(),
       icon: ShoppingCart,
-      description: 'All time',
+      description: 'Active orders',
       href: '/orders',
     },
     {
-      label: 'Pending Invoices',
-      value: pendingInvoices.toLocaleString(),
+      label: 'Invoiced',
+      value: invoicedCount.toLocaleString(),
       icon: FileText,
       description: 'Awaiting payment',
-      href: '/invoices',
+      href: '/invoices?status=posted',
     },
     {
       label: 'Products',
-      value: '—',
+      value: totalProducts.toLocaleString(),
       icon: Package,
       description: 'Active catalog',
       href: '/products',

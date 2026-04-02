@@ -32,7 +32,6 @@ const ORDER_STATUS_STYLES: Record<string, string> = {
 };
 
 const INVOICE_STATUS_STYLES: Record<string, string> = {
-  open: 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-400',
   posted:
     'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400',
   paid: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
@@ -127,7 +126,7 @@ export function RecentInvoices({ invoices }: { invoices: RecentInvoice[] }) {
                     variant="outline"
                     className={
                       INVOICE_STATUS_STYLES[invoice.invoiceStatus] ??
-                      INVOICE_STATUS_STYLES.open
+                      INVOICE_STATUS_STYLES.posted
                     }>
                     {capitalize(invoice.invoiceStatus)}
                   </Badge>

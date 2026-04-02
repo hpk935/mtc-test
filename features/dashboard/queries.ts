@@ -3,19 +3,31 @@ import db from '@/lib/db';
 import { orders } from '@/features/orders/schema';
 import { invoices } from '@/features/invoices/schema';
 import { customers } from '@/features/customers/schema';
+import { products } from '@/features/products/schema';
 
 export async function getDashboardStats() {
-    const [[{ totalOrders }], [{ pendingInvoices }], [{ totalCustomers }]] =
-        await Promise.all([
-            db.select({ totalOrders: count() }).from(orders),
-            db
-                .select({ pendingInvoices: count() })
-                .from(invoices)
-                .where(eq(invoices.invoiceStatus, 'open')),
-            db.select({ totalCustomers: count() }).from(customers),
-        ]);
+    const [
+        [{ openOrders }],
+        [{ invoicedCount }],
+        [{ totalCustomers }],
+        [{ totalProducts }],
+    ] = await Promise.all([
+        db
+            .select({ openOrders: count() })
+            .from(orders)
+            .where(eq(orders.orderStatus, 'open')),
+        db
+            .select({ invoicedCount: count() })
+            .from(invoices)
+            .where(eq(invoices.invoiceStatus, 'posted')),
+        db.select({ totalCustomers: count() }).from(customers),
+        db
+            .select({ totalProducts: count() })
+            .from(products)
+            .where(eq(products.isDiscontinued, false)),
+    ]);
 
-    return { totalOrders, pendingInvoices, totalCustomers };
+    return { openOrders, invoicedCount, totalCustomers, totalProducts };
 }
 
 export async function getRecentOrders(limit = 5) {

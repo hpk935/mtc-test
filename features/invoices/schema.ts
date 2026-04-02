@@ -57,7 +57,7 @@ export const invoices = pgTable('invoices', {
         .default('0'),
     invoiceStatus: invoiceStatusEnum('invoice_status')
         .notNull()
-        .default('open'),
+        .default('posted'),
     shippingNote: text('shipping_note'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

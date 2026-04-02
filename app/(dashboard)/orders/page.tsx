@@ -27,7 +27,7 @@ export default async function OrdersPage({
       ? undefined
       : (ORDER_STATUSES as readonly string[]).includes(params.status ?? '')
         ? (params.status as OrderStatus)
-        : undefined;
+        : 'open';
 
   const { orders, totalCount, totalPages } = await getOrders({
     search: search || undefined,
@@ -46,6 +46,7 @@ export default async function OrdersPage({
           <DataTableFilter
             options={STATUS_OPTIONS}
             paramName="status"
+            defaultValue="open"
             allLabel="All Statuses"
           />
         </div>

@@ -18,14 +18,12 @@ import type {
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> =
   {
-    open: 'default',
     posted: 'secondary',
     paid: 'default',
     voided: 'destructive',
   };
 
 const STATUS_LABEL: Record<string, string> = {
-  open: 'Open',
   posted: 'Posted',
   paid: 'Paid',
   voided: 'Voided',
