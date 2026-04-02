@@ -1,4 +1,4 @@
-import { ilike, or, and, count, asc, eq } from 'drizzle-orm';
+import { ilike, or, and, count, asc, eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { products } from './schema';
 
@@ -67,3 +67,30 @@ export async function getProducts({
 export type ProductListItem = Awaited<
     ReturnType<typeof getProducts>
 >['products'][number];
+
+export async function findProductById(productId: number) {
+    const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.productId, productId))
+        .limit(1);
+    return product ?? null;
+}
+
+export async function findProductByItemNumber(itemNumber: string) {
+    const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.itemNumber, itemNumber))
+        .limit(1);
+    return product ?? null;
+}
+
+export async function getMaxProductId(): Promise<number> {
+    const [result] = await db
+        .select({
+            maxId: sql<number>`coalesce(max(${products.productId}), 0)`,
+        })
+        .from(products);
+    return result?.maxId ?? 0;
+}

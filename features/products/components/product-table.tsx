@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -41,8 +42,14 @@ export function ProductTable({ products }: ProductTableProps) {
       </TableHeader>
       <TableBody>
         {products.map((product) => (
-          <TableRow key={product.productId}>
-            <TableCell className="font-medium">{product.itemNumber}</TableCell>
+          <TableRow key={product.productId} className="cursor-pointer">
+            <TableCell className="font-medium">
+              <Link
+                href={`/products/${product.productId}`}
+                className="hover:underline">
+                {product.itemNumber}
+              </Link>
+            </TableCell>
             <TableCell className="max-w-75 truncate">
               {product.description}
             </TableCell>
