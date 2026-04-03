@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FileText, Pencil, Trash2 } from 'lucide-react';
+import { Ban, FileText, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { deleteOrder, postToInvoice } from '../actions';
+import { deleteOrder, voidOrder, postToInvoice } from '../actions';
 
 interface OrderActionsProps {
   orderNumber: string;
@@ -22,8 +22,10 @@ interface OrderActionsProps {
 
 export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [voidOpen, setVoidOpen] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isVoiding, setIsVoiding] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,6 +51,18 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
       setIsPosting(false);
     }
     // redirect happens in the action on success
+  }
+
+  async function handleVoid() {
+    setIsVoiding(true);
+    setError('');
+    const result = await voidOrder(orderNumber);
+    if (!result.success) {
+      setError(result.error);
+      setIsVoiding(false);
+    } else {
+      setVoidOpen(false);
+    }
   }
 
   return (
@@ -85,6 +99,40 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
             </Button>
             <Button onClick={handlePost} disabled={isPosting}>
               {isPosting ? 'Posting...' : 'Post to Invoice'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={voidOpen} onOpenChange={setVoidOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Ban className="mr-2 size-4" />
+            Void
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Void Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to void order {orderNumber}? The order will
+              be kept for records but can no longer be edited, deleted, or
+              invoiced.
+            </DialogDescription>
+          </DialogHeader>
+          {error && <p className="text-destructive text-sm">{error}</p>}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setVoidOpen(false)}
+              disabled={isVoiding}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleVoid}
+              disabled={isVoiding}>
+              {isVoiding ? 'Voiding...' : 'Void Order'}
             </Button>
           </DialogFooter>
         </DialogContent>

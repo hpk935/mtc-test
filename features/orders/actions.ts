@@ -8,6 +8,7 @@ import {
     createOrderRecord,
     updateOrderRecord,
     deleteOrderRecord,
+    voidOrderRecord,
     postOrderToInvoice,
 } from './service';
 import type { ActionResult } from '@/types';
@@ -97,6 +98,20 @@ export async function deleteOrder(orderNumber: string): Promise<ActionResult> {
     }
 
     redirect('/orders');
+}
+
+export async function voidOrder(orderNumber: string): Promise<ActionResult> {
+    await requireAuth();
+
+    const result = await voidOrderRecord(orderNumber);
+
+    if (!result.success) {
+        return result;
+    }
+
+    revalidatePath(`/orders/${orderNumber}`);
+    revalidatePath('/orders');
+    return { success: true, data: undefined };
 }
 
 export async function postToInvoice(

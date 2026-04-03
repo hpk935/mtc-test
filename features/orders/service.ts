@@ -291,6 +291,28 @@ export async function deleteOrderRecord(orderNumber: string) {
     return { success: true as const };
 }
 
+// --- Void ---
+
+export async function voidOrderRecord(orderNumber: string) {
+    const existing = await findRawOrder(orderNumber);
+    if (!existing) {
+        return { success: false as const, error: 'Order not found.' };
+    }
+    if (existing.orderStatus !== 'open') {
+        return {
+            success: false as const,
+            error: 'Only open orders can be voided.',
+        };
+    }
+
+    await db
+        .update(orders)
+        .set({ orderStatus: 'voided', updatedAt: new Date() })
+        .where(eq(orders.orderNumber, orderNumber));
+
+    return { success: true as const };
+}
+
 // --- Post to Invoice ---
 
 async function getMaxInvoiceNumber(): Promise<number> {
