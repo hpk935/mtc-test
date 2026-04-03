@@ -92,12 +92,68 @@ export async function findCustomerByNumber(customerNumber: string) {
     return customer ?? null;
 }
 
-export async function getShipToAddresses(customerNumber: string) {
-    return db
+export async function getShipToAddresses(
+    customerNumber: string,
+    options?: {
+        search?: string;
+        limit?: number;
+        offset?: number;
+        favoritesOnly?: boolean;
+    },
+) {
+    const conditions = [eq(shipToAddresses.customerNumber, customerNumber)];
+
+    if (options?.search && options.search.trim().length > 0) {
+        const term = `%${options.search.trim()}%`;
+        conditions.push(
+            or(
+                ilike(shipToAddresses.locationName, term),
+                ilike(shipToAddresses.address1, term),
+                ilike(shipToAddresses.city, term),
+                ilike(shipToAddresses.stateCode, term),
+                ilike(shipToAddresses.postalCode, term),
+            )!,
+        );
+    }
+
+    if (options?.favoritesOnly) {
+        conditions.push(eq(shipToAddresses.isFavorite, true));
+    }
+
+    const where = and(...conditions);
+
+    let query = db
         .select()
         .from(shipToAddresses)
-        .where(eq(shipToAddresses.customerNumber, customerNumber))
-        .orderBy(asc(shipToAddresses.locationName));
+        .where(where)
+        .orderBy(
+            sql`${shipToAddresses.isFavorite} desc`,
+            asc(shipToAddresses.locationName),
+        );
+
+    if (options?.limit) {
+        query = query.limit(options.limit) as typeof query;
+    }
+    if (options?.offset) {
+        query = query.offset(options.offset) as typeof query;
+    }
+
+    const [rows, [countResult]] = await Promise.all([
+        query,
+        db.select({ total: count() }).from(shipToAddresses).where(where),
+    ]);
+
+    return { rows, filteredTotal: countResult?.total ?? 0 };
+}
+
+export async function countShipToAddresses(
+    customerNumber: string,
+): Promise<number> {
+    const [result] = await db
+        .select({ total: count() })
+        .from(shipToAddresses)
+        .where(eq(shipToAddresses.customerNumber, customerNumber));
+    return result?.total ?? 0;
 }
 
 export async function findShipToAddress(shipToId: string) {

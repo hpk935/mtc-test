@@ -82,7 +82,8 @@ export function DataTablePagination({
               variant={p === currentPage ? 'default' : 'outline'}
               size="icon-sm"
               onClick={() => goToPage(p)}
-              disabled={p === currentPage}>
+              aria-current={p === currentPage ? 'page' : undefined}
+              className={p === currentPage ? 'pointer-events-none' : ''}>
               {p}
             </Button>
           ),

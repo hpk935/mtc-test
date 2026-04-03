@@ -16,7 +16,7 @@ export default async function CustomerDetailPage({
 }) {
   const { customerNumber } = await params;
 
-  const [customer, salespersons, shipToAddresses] = await Promise.all([
+  const [customer, salespersons, shipToResult] = await Promise.all([
     findCustomerByNumber(customerNumber),
     getSalespersons(),
     getShipToAddresses(customerNumber),
@@ -25,6 +25,8 @@ export default async function CustomerDetailPage({
   if (!customer) {
     notFound();
   }
+
+  const shipToAddresses = shipToResult.rows;
 
   const customerData = {
     customerNumber: customer.customerNumber,

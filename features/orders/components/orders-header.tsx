@@ -1,3 +1,7 @@
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
 export function OrdersHeader() {
   return (
     <div className="flex items-start justify-between">
@@ -7,6 +11,12 @@ export function OrdersHeader() {
           View and track all customer orders
         </p>
       </div>
+      <Button asChild>
+        <Link href="/orders/new">
+          <Plus className="mr-2 size-4" />
+          New Order
+        </Link>
+      </Button>
     </div>
   );
 }

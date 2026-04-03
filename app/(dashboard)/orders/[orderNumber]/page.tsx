@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { findOrderByNumber, getOrderItems } from '@/features/orders/queries';
 import { OrderDetailView } from '@/features/orders/components/order-detail';
+import { OrderActions } from '@/features/orders/components/order-actions';
 
 export default async function OrderDetailPage({
   params,
@@ -33,13 +34,19 @@ export default async function OrderDetailPage({
           Back to Orders
         </Link>
       </Button>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Order {orderNumber}
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {order.customerName} &middot; {order.orderDate}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Order {orderNumber}
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {order.customerName} &middot; {order.orderDate}
+          </p>
+        </div>
+        <OrderActions
+          orderNumber={orderNumber}
+          orderStatus={order.orderStatus}
+        />
       </div>
       <OrderDetailView
         order={order}

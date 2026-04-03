@@ -1,4 +1,4 @@
-import { ilike, or, and, count, desc, eq, asc } from 'drizzle-orm';
+import { ilike, or, and, count, desc, eq, asc, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { orders, orderItems } from './schema';
 import { customers } from '@/features/customers/schema';
@@ -177,3 +177,49 @@ export async function getOrderItems({
 export type OrderItemDetail = Awaited<
     ReturnType<typeof getOrderItems>
 >['items'][number];
+
+export async function getMaxOrderNumber(): Promise<number> {
+    const [result] = await db
+        .select({
+            maxNum: sql<number>`coalesce(max(cast(${orders.orderNumber} as integer)), 0)`,
+        })
+        .from(orders)
+        .where(sql`${orders.orderNumber} ~ '^[0-9]+$'`);
+    return result?.maxNum ?? 0;
+}
+
+export async function getOrderForEdit(orderNumber: string) {
+    const [row] = await db
+        .select({
+            order: orders,
+            customerName: customers.customerName,
+        })
+        .from(orders)
+        .leftJoin(
+            customers,
+            eq(orders.customerNumber, customers.customerNumber),
+        )
+        .where(eq(orders.orderNumber, orderNumber))
+        .limit(1);
+
+    if (!row) return null;
+
+    const items = await db
+        .select({
+            itemNumber: orderItems.itemNumber,
+            description: products.description,
+            qtyOrdered: orderItems.qtyOrdered,
+            unitPrice: orderItems.unitPrice,
+            discount: orderItems.discount,
+        })
+        .from(orderItems)
+        .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))
+        .where(eq(orderItems.orderNumber, orderNumber))
+        .orderBy(asc(orderItems.id));
+
+    return { order: row.order, customerName: row.customerName, items };
+}
+
+export type OrderForEdit = NonNullable<
+    Awaited<ReturnType<typeof getOrderForEdit>>
+>;
