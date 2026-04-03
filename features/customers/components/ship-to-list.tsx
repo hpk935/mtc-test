@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -80,12 +80,12 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
     setShowForm(true);
   };
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setShowForm(false);
       setEditingAddress(null);
     }
-  };
+  }, []);
 
   return (
     <>
@@ -211,6 +211,7 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
       )}
 
       <ShipToForm
+        key={editingAddress ? `edit-${editingAddress.shipToId}` : 'create'}
         customerNumber={customerNumber}
         address={editingAddress}
         mode={editingAddress ? 'edit' : 'create'}
