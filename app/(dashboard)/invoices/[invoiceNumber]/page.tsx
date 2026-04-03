@@ -7,6 +7,7 @@ import {
   getInvoiceItems,
 } from '@/features/invoices/queries';
 import { InvoiceDetailView } from '@/features/invoices/components/invoice-detail';
+import type { InvoiceStatus } from '@/features/invoices/constants';
 
 export default async function InvoiceDetailPage({
   params,
@@ -36,16 +37,19 @@ export default async function InvoiceDetailPage({
           Back to Invoices
         </Link>
       </Button>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Invoice {invoiceNumber}
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {invoice.customerName} &middot; {invoice.invoiceDate}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Invoice {invoiceNumber}
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {invoice.customerName} &middot; {invoice.invoiceDate}
+          </p>
+        </div>
       </div>
       <InvoiceDetailView
         invoice={invoice}
+        invoiceStatus={invoice.invoiceStatus as InvoiceStatus}
         items={items}
         currentPage={itemsPage}
         totalPages={totalPages}

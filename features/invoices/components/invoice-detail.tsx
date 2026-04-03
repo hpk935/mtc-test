@@ -11,10 +11,12 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { DataTablePagination } from '@/components/data/data-table-pagination';
+import { InvoiceStatusAction } from './invoice-status-action';
 import type {
   InvoiceDetail,
   InvoiceItemDetail,
 } from '@/features/invoices/queries';
+import type { InvoiceStatus } from '@/features/invoices/constants';
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> =
   {
@@ -58,6 +60,7 @@ function DetailRow({
 
 interface InvoiceDetailViewProps {
   invoice: InvoiceDetail;
+  invoiceStatus: InvoiceStatus;
   items: InvoiceItemDetail[];
   currentPage: number;
   totalPages: number;
@@ -68,6 +71,7 @@ const ITEMS_PAGE_SIZE = 20;
 
 export function InvoiceDetailView({
   invoice,
+  invoiceStatus,
   items,
   currentPage,
   totalPages,
@@ -88,10 +92,10 @@ export function InvoiceDetailView({
           </CardHeader>
           <CardContent className="space-y-3">
             <DetailRow label="Status">
-              <Badge
-                variant={STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'}>
-                {STATUS_LABEL[invoice.invoiceStatus] ?? invoice.invoiceStatus}
-              </Badge>
+              <InvoiceStatusAction
+                invoiceNumber={invoice.invoiceNumber}
+                currentStatus={invoiceStatus}
+              />
             </DetailRow>
             <DetailRow label="Date">
               {formatDate(invoice.invoiceDate)}
