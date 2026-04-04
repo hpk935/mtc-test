@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DataTablePaginationProps {
@@ -11,25 +13,6 @@ interface DataTablePaginationProps {
   pageSize: number;
   label?: string;
   paramName?: string;
-}
-
-function getPageNumbers(current: number, total: number): (number | '...')[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  const pages: (number | '...')[] = [1];
-
-  if (current > 3) pages.push('...');
-
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-
-  if (current < total - 2) pages.push('...');
-
-  pages.push(total);
-  return pages;
 }
 
 export function DataTablePagination({
@@ -57,14 +40,15 @@ export function DataTablePagination({
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  const pages = getPageNumbers(currentPage, totalPages);
-
   return (
     <div className="text-muted-foreground flex items-center justify-between px-4 py-3 text-sm">
       <span>
         Showing {showingFrom}–{showingTo} of {totalCount} {label}
       </span>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        {totalPages > 2 && (
+          <GoToPageInput totalPages={totalPages} onGoToPage={goToPage} />
+        )}
         <Button
           variant="outline"
           size="icon-sm"
@@ -73,23 +57,9 @@ export function DataTablePagination({
           <ChevronLeft className="size-4" />
           <span className="sr-only">Previous page</span>
         </Button>
-        {pages.map((p, i) =>
-          p === '...' ? (
-            <span key={`ellipsis-${i}`} className="px-1.5">
-              &hellip;
-            </span>
-          ) : (
-            <Button
-              key={p}
-              variant={p === currentPage ? 'default' : 'outline'}
-              size="icon-sm"
-              onClick={() => goToPage(p)}
-              aria-current={p === currentPage ? 'page' : undefined}
-              className={p === currentPage ? 'pointer-events-none' : ''}>
-              {p}
-            </Button>
-          ),
-        )}
+        <span className="text-foreground min-w-[4.5rem] text-center text-sm tabular-nums">
+          {currentPage} of {totalPages}
+        </span>
         <Button
           variant="outline"
           size="icon-sm"
@@ -100,5 +70,38 @@ export function DataTablePagination({
         </Button>
       </div>
     </div>
+  );
+}
+
+function GoToPageInput({
+  totalPages,
+  onGoToPage,
+}: {
+  totalPages: number;
+  onGoToPage: (page: number) => void;
+}) {
+  const [value, setValue] = useState('');
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const page = Number(value);
+    if (page >= 1 && page <= totalPages) {
+      onGoToPage(page);
+      setValue('');
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="ml-2 flex items-center gap-1.5">
+      <span className="text-muted-foreground text-sm">Page</span>
+      <Input
+        type="number"
+        min={1}
+        max={totalPages}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="h-full w-full text-center text-sm tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+    </form>
   );
 }
