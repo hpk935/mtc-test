@@ -71,7 +71,11 @@ export function OrderTable({ orders }: OrderTableProps) {
               </Link>
             </TableCell>
             <TableCell>
-              {order.customerName}
+              <Link
+                href={`/customers/${order.customerNumber}`}
+                className="hover:underline">
+                {order.customerName}
+              </Link>
               <span className="text-muted-foreground ml-1 text-xs">
                 {order.customerNumber}
               </span>

@@ -223,3 +223,37 @@ export async function getOrderForEdit(orderNumber: string) {
 export type OrderForEdit = NonNullable<
     Awaited<ReturnType<typeof getOrderForEdit>>
 >;
+
+export async function getOrdersByCustomer(
+    customerNumber: string,
+    { page = 1, pageSize = 10 }: { page?: number; pageSize?: number } = {},
+) {
+    const offset = (page - 1) * pageSize;
+    const where = eq(orders.customerNumber, customerNumber);
+
+    const [data, [{ total }]] = await Promise.all([
+        db
+            .select({
+                orderNumber: orders.orderNumber,
+                orderDate: orders.orderDate,
+                totalAmount: orders.totalAmount,
+                orderStatus: orders.orderStatus,
+            })
+            .from(orders)
+            .where(where)
+            .orderBy(desc(orders.createdAt))
+            .limit(pageSize)
+            .offset(offset),
+        db.select({ total: count() }).from(orders).where(where),
+    ]);
+
+    return {
+        orders: data,
+        totalCount: total,
+        totalPages: Math.ceil(total / pageSize),
+    };
+}
+
+export type CustomerOrderItem = Awaited<
+    ReturnType<typeof getOrdersByCustomer>
+>['orders'][number];

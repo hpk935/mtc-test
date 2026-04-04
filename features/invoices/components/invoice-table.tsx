@@ -72,7 +72,11 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
             </TableCell>
             <TableCell>{invoice.orderNumber}</TableCell>
             <TableCell>
-              {invoice.customerName}
+              <Link
+                href={`/customers/${invoice.customerNumber}`}
+                className="hover:underline">
+                {invoice.customerName}
+              </Link>
               <span className="text-muted-foreground ml-1 text-xs">
                 {invoice.customerNumber}
               </span>

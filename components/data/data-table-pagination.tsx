@@ -10,6 +10,7 @@ interface DataTablePaginationProps {
   totalCount: number;
   pageSize: number;
   label?: string;
+  paramName?: string;
 }
 
 function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -37,6 +38,7 @@ export function DataTablePagination({
   totalCount,
   pageSize,
   label = 'records',
+  paramName = 'page',
 }: DataTablePaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,9 +50,9 @@ export function DataTablePagination({
   function goToPage(page: number) {
     const params = new URLSearchParams(searchParams.toString());
     if (page <= 1) {
-      params.delete('page');
+      params.delete(paramName);
     } else {
-      params.set('page', String(page));
+      params.set(paramName, String(page));
     }
     router.push(`${pathname}?${params.toString()}`);
   }
