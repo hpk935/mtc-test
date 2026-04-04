@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,6 @@ export function InvoiceStatusAction({
   const [pendingStatus, setPendingStatus] = useState<InvoiceStatus | null>(
     null,
   );
-  const [error, setError] = useState('');
 
   const allowedStatuses = VALID_TRANSITIONS[currentStatus];
 
@@ -66,10 +66,13 @@ export function InvoiceStatusAction({
     startTransition(async () => {
       const result = await updateInvoiceStatus(invoiceNumber, pendingStatus);
       if (result.success) {
+        toast.success(
+          `Invoice status changed to ${STATUS_LABEL[pendingStatus].toLowerCase()}.`,
+        );
         setPendingStatus(null);
         router.refresh();
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
     });
   }
@@ -101,7 +104,6 @@ export function InvoiceStatusAction({
               key={status}
               onClick={() => {
                 setPendingStatus(status);
-                setError('');
               }}>
               <Badge variant={STATUS_VARIANT[status]} className="font-normal">
                 {STATUS_LABEL[status]}
@@ -116,7 +118,6 @@ export function InvoiceStatusAction({
         onOpenChange={(open) => {
           if (!open) {
             setPendingStatus(null);
-            setError('');
           }
         }}>
         <DialogContent>
@@ -146,17 +147,11 @@ export function InvoiceStatusAction({
               )}
             </DialogDescription>
           </DialogHeader>
-          {error && (
-            <div className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
-              {error}
-            </div>
-          )}
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
                 setPendingStatus(null);
-                setError('');
               }}
               disabled={isPending}>
               Cancel

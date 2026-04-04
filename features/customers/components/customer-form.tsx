@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -172,6 +173,9 @@ export function CustomerForm({
   useEffect(() => {
     if (state.success && isEdit) {
       setSavedValues({ ...formValuesRef.current });
+      toast.success('Customer updated successfully.');
+    } else if (!state.success && state.error) {
+      toast.error(state.error);
     }
   }, [state, isEdit]);
 
@@ -184,18 +188,6 @@ export function CustomerForm({
           name="customerNumber"
           value={customer.customerNumber}
         />
-      )}
-
-      {!state.success && state.error && (
-        <div className="bg-destructive/10 text-destructive border-destructive/20 rounded-lg border px-4 py-3 text-sm">
-          {state.error}
-        </div>
-      )}
-
-      {state.success && isEdit && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-          Customer updated successfully.
-        </div>
       )}
 
       {/* Customer Information */}

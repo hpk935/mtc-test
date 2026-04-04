@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +20,12 @@ const initialState: ActionResult = { success: false, error: '' };
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(login, initialState);
 
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error(state.error);
+    }
+  }, [state]);
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
@@ -27,12 +34,6 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-4">
-          {state.success === false && state.error && (
-            <p className="text-destructive text-center text-sm">
-              {state.error}
-            </p>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

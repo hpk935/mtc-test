@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   ChevronLeft,
   ChevronRight,
@@ -572,6 +573,13 @@ export function OrderForm({
   const tax = Number(salesTaxAmount) || 0;
   const total = subtotal + freight + tax;
 
+  // --- Toast for action results ---
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error(state.error);
+    }
+  }, [state]);
+
   // --- Submit handler ---
   function handleSubmit(formData: FormData) {
     const orderData = {
@@ -601,12 +609,6 @@ export function OrderForm({
 
   return (
     <form action={handleSubmit} className="space-y-8">
-      {!state.success && state.error && (
-        <div className="bg-destructive/10 text-destructive border-destructive/20 rounded-lg border px-4 py-3 text-sm">
-          {state.error}
-        </div>
-      )}
-
       {/* Customer Selection */}
       <FormSection
         title="Customer"

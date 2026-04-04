@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Ban, FileText, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,16 +28,14 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isVoiding, setIsVoiding] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
-  const [error, setError] = useState('');
 
   if (orderStatus !== 'open') return null;
 
   async function handleDelete() {
     setIsDeleting(true);
-    setError('');
     const result = await deleteOrder(orderNumber);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setIsDeleting(false);
     }
     // redirect happens in the action on success
@@ -44,10 +43,9 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
 
   async function handlePost() {
     setIsPosting(true);
-    setError('');
     const result = await postToInvoice(orderNumber);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setIsPosting(false);
     }
     // redirect happens in the action on success
@@ -55,13 +53,13 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
 
   async function handleVoid() {
     setIsVoiding(true);
-    setError('');
     const result = await voidOrder(orderNumber);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setIsVoiding(false);
     } else {
       setVoidOpen(false);
+      toast.success('Order voided successfully.');
     }
   }
 
@@ -89,7 +87,6 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
               order as invoiced. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {error && <p className="text-destructive text-sm">{error}</p>}
           <DialogFooter>
             <Button
               variant="outline"
@@ -120,7 +117,6 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
               invoiced.
             </DialogDescription>
           </DialogHeader>
-          {error && <p className="text-destructive text-sm">{error}</p>}
           <DialogFooter>
             <Button
               variant="outline"
@@ -154,7 +150,6 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
               cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {error && <p className="text-destructive text-sm">{error}</p>}
           <DialogFooter>
             <Button
               variant="outline"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,9 +89,16 @@ export function ShipToForm({
 
   useEffect(() => {
     if (state.success) {
+      toast.success(
+        mode === 'edit'
+          ? 'Address updated successfully.'
+          : 'Address added successfully.',
+      );
       onOpenChange(false);
+    } else if (state.error) {
+      toast.error(state.error);
     }
-  }, [state, onOpenChange]);
+  }, [state, onOpenChange, mode]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,12 +121,6 @@ export function ShipToForm({
           )}
 
           <div className="space-y-4">
-            {!state.success && state.error && (
-              <div className="bg-destructive/10 text-destructive border-destructive/20 rounded-lg border px-4 py-3 text-sm">
-                {state.error}
-              </div>
-            )}
-
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="locationName">Location Name</Label>
