@@ -399,22 +399,22 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           <Label htmlFor="qtyCommitted">Qty Committed</Label>
           <Input
             id="qtyCommitted"
-            name="qtyCommitted"
             type="number"
-            min={0}
             value={formValues.qtyCommitted}
-            onChange={handleChange}
+            readOnly
+            disabled
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="qtyAvailable">Qty Available</Label>
           <Input
             id="qtyAvailable"
-            name="qtyAvailable"
             type="number"
-            min={0}
-            value={formValues.qtyAvailable}
-            onChange={handleChange}
+            value={
+              Number(formValues.qtyInStock) - Number(formValues.qtyCommitted)
+            }
+            readOnly
+            disabled
           />
         </div>
         <div className="space-y-2">

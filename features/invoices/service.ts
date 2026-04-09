@@ -1,6 +1,8 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { invoices, payments } from './schema';
+import { orders, orderItems } from '@/features/orders/schema';
+import { products } from '@/features/products/schema';
 import type { InvoiceStatus } from './constants';
 import type { ActionResult } from '@/types';
 
@@ -77,10 +79,46 @@ export async function updateInvoiceStatusRecord(
         updateData.paidDate = null;
     }
 
-    await db
-        .update(invoices)
-        .set(updateData)
-        .where(eq(invoices.invoiceNumber, invoiceNumber));
+    await db.transaction(async (tx) => {
+        // Update invoice status
+        await tx
+            .update(invoices)
+            .set(updateData)
+            .where(eq(invoices.invoiceNumber, invoiceNumber));
+
+        // When voiding, restore inventory and void the linked order
+        if (newStatus === 'voided') {
+            // Get shipped items to restore stock
+            const items = await tx
+                .select({
+                    itemNumber: orderItems.itemNumber,
+                    qtyShipped: orderItems.qtyShipped,
+                    orderNumber: orderItems.orderNumber,
+                })
+                .from(orderItems)
+                .where(eq(orderItems.invoiceNumber, invoiceNumber));
+
+            // Restore qtyInStock and recalculate qtyAvailable
+            for (const item of items) {
+                await tx
+                    .update(products)
+                    .set({
+                        qtyInStock: sql`${products.qtyInStock} + ${item.qtyShipped}`,
+                        qtyAvailable: sql`${products.qtyInStock} + ${item.qtyShipped} - ${products.qtyCommitted}`,
+                        updatedAt: now,
+                    })
+                    .where(eq(products.itemNumber, item.itemNumber));
+            }
+
+            // Void the linked order
+            if (items.length > 0) {
+                await tx
+                    .update(orders)
+                    .set({ orderStatus: 'voided', updatedAt: now })
+                    .where(eq(orders.orderNumber, items[0].orderNumber));
+            }
+        }
+    });
 
     return { success: true, data: undefined };
 }

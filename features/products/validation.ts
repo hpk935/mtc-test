@@ -26,8 +26,6 @@ export const createProductSchema = z.object({
     casePrice: numericString,
     itemCostHk: numericString,
     qtyInStock: z.coerce.number().int().min(0).default(0),
-    qtyCommitted: z.coerce.number().int().min(0).default(0),
-    qtyAvailable: z.coerce.number().int().min(0).default(0),
     qtyOnOrder: z.coerce.number().int().min(0).default(0),
     upcomingShipmentNo: optionalString,
     upcomingShipmentArrival: z.string().optional().default(''),

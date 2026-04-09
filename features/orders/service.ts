@@ -5,6 +5,7 @@ import { getMaxOrderNumber } from './queries';
 import { findCustomerByNumber } from '@/features/customers/queries';
 import { findShipToAddress } from '@/features/customers/queries';
 import { findProductByItemNumber } from '@/features/products/queries';
+import { products } from '@/features/products/schema';
 import { invoices } from '@/features/invoices/schema';
 import type { CreateOrderInput, UpdateOrderInput } from './validation';
 
@@ -15,6 +16,70 @@ interface ValidatedItem {
     discount: string;
     unitCost: string;
     lineTotal: string;
+}
+
+// --- Inventory helpers ---
+
+async function commitInventory(
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+    items: { itemNumber: string; qty: number }[],
+) {
+    for (const item of items) {
+        await tx
+            .update(products)
+            .set({
+                qtyCommitted: sql`${products.qtyCommitted} + ${item.qty}`,
+                qtyAvailable: sql`${products.qtyInStock} - ${products.qtyCommitted} - ${item.qty}`,
+                updatedAt: new Date(),
+            })
+            .where(eq(products.itemNumber, item.itemNumber));
+    }
+}
+
+async function releaseInventory(
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+    items: { itemNumber: string; qty: number }[],
+) {
+    for (const item of items) {
+        await tx
+            .update(products)
+            .set({
+                qtyCommitted: sql`${products.qtyCommitted} - ${item.qty}`,
+                qtyAvailable: sql`${products.qtyInStock} - ${products.qtyCommitted} + ${item.qty}`,
+                updatedAt: new Date(),
+            })
+            .where(eq(products.itemNumber, item.itemNumber));
+    }
+}
+
+async function fulfillInventory(
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+    items: { itemNumber: string; qty: number }[],
+) {
+    for (const item of items) {
+        await tx
+            .update(products)
+            .set({
+                qtyInStock: sql`${products.qtyInStock} - ${item.qty}`,
+                qtyCommitted: sql`${products.qtyCommitted} - ${item.qty}`,
+                qtyAvailable: sql`${products.qtyInStock} - ${products.qtyCommitted}`,
+                updatedAt: new Date(),
+            })
+            .where(eq(products.itemNumber, item.itemNumber));
+    }
+}
+
+async function getOrderItemQuantities(
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+    orderNumber: string,
+) {
+    return tx
+        .select({
+            itemNumber: orderItems.itemNumber,
+            qtyOrdered: orderItems.qtyOrdered,
+        })
+        .from(orderItems)
+        .where(eq(orderItems.orderNumber, orderNumber));
 }
 
 async function findRawOrder(orderNumber: string) {
@@ -136,6 +201,15 @@ export async function createOrderRecord(input: CreateOrderInput) {
                     lineTotal: item.lineTotal,
                 })),
             );
+
+            // Commit inventory for ordered items
+            await commitInventory(
+                tx,
+                validatedItems.map((i) => ({
+                    itemNumber: i.itemNumber,
+                    qty: i.qtyOrdered,
+                })),
+            );
         }
     });
 
@@ -244,6 +318,18 @@ export async function updateOrderRecord(
             })
             .where(eq(orders.orderNumber, orderNumber));
 
+        // Release old inventory commitments
+        const oldItems = await getOrderItemQuantities(tx, orderNumber);
+        if (oldItems.length > 0) {
+            await releaseInventory(
+                tx,
+                oldItems.map((i) => ({
+                    itemNumber: i.itemNumber,
+                    qty: i.qtyOrdered,
+                })),
+            );
+        }
+
         // Delete old items and re-insert
         await tx
             .delete(orderItems)
@@ -259,6 +345,15 @@ export async function updateOrderRecord(
                     discount: item.discount,
                     unitCost: item.unitCost,
                     lineTotal: item.lineTotal,
+                })),
+            );
+
+            // Commit new inventory
+            await commitInventory(
+                tx,
+                validatedItems.map((i) => ({
+                    itemNumber: i.itemNumber,
+                    qty: i.qtyOrdered,
                 })),
             );
         }
@@ -282,6 +377,18 @@ export async function deleteOrderRecord(orderNumber: string) {
     }
 
     await db.transaction(async (tx) => {
+        // Release inventory commitments before deleting
+        const items = await getOrderItemQuantities(tx, orderNumber);
+        if (items.length > 0) {
+            await releaseInventory(
+                tx,
+                items.map((i) => ({
+                    itemNumber: i.itemNumber,
+                    qty: i.qtyOrdered,
+                })),
+            );
+        }
+
         await tx
             .delete(orderItems)
             .where(eq(orderItems.orderNumber, orderNumber));
@@ -305,10 +412,24 @@ export async function voidOrderRecord(orderNumber: string) {
         };
     }
 
-    await db
-        .update(orders)
-        .set({ orderStatus: 'voided', updatedAt: new Date() })
-        .where(eq(orders.orderNumber, orderNumber));
+    await db.transaction(async (tx) => {
+        // Release inventory commitments for voided order
+        const items = await getOrderItemQuantities(tx, orderNumber);
+        if (items.length > 0) {
+            await releaseInventory(
+                tx,
+                items.map((i) => ({
+                    itemNumber: i.itemNumber,
+                    qty: i.qtyOrdered,
+                })),
+            );
+        }
+
+        await tx
+            .update(orders)
+            .set({ orderStatus: 'voided', updatedAt: new Date() })
+            .where(eq(orders.orderNumber, orderNumber));
+    });
 
     return { success: true as const };
 }
@@ -370,8 +491,12 @@ export async function postOrderToInvoice(orderNumber: string) {
             freightAmount: order.freightAmount,
             totalAmount: order.totalAmount,
             costAmount: order.costAmount,
+            balanceDue: order.totalAmount,
             shippingNote: order.shippingNote,
         });
+
+        // Fetch order items for inventory fulfillment
+        const items = await getOrderItemQuantities(tx, orderNumber);
 
         // Link order items to this invoice and set qtyShipped = qtyOrdered
         await tx
@@ -382,6 +507,17 @@ export async function postOrderToInvoice(orderNumber: string) {
                 updatedAt: new Date(),
             })
             .where(eq(orderItems.orderNumber, orderNumber));
+
+        // Fulfill inventory: decrement qtyInStock, zero out qtyCommitted for these items
+        if (items.length > 0) {
+            await fulfillInventory(
+                tx,
+                items.map((i) => ({
+                    itemNumber: i.itemNumber,
+                    qty: i.qtyOrdered,
+                })),
+            );
+        }
 
         // Mark order as invoiced
         await tx

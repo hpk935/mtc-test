@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { products } from './schema';
 import {
@@ -48,8 +48,8 @@ export async function createProductRecord(
         casePrice: input.casePrice,
         itemCostHk: input.itemCostHk,
         qtyInStock: input.qtyInStock,
-        qtyCommitted: input.qtyCommitted,
-        qtyAvailable: input.qtyAvailable,
+        qtyCommitted: 0,
+        qtyAvailable: input.qtyInStock,
         qtyOnOrder: input.qtyOnOrder,
         upcomingShipmentNo: normalizeOptional(input.upcomingShipmentNo),
         upcomingShipmentArrival: normalizeOptional(
@@ -106,8 +106,7 @@ export async function updateProductRecord(
             casePrice: input.casePrice,
             itemCostHk: input.itemCostHk,
             qtyInStock: input.qtyInStock,
-            qtyCommitted: input.qtyCommitted,
-            qtyAvailable: input.qtyAvailable,
+            qtyAvailable: sql`${input.qtyInStock} - ${products.qtyCommitted}`,
             qtyOnOrder: input.qtyOnOrder,
             upcomingShipmentNo: normalizeOptional(input.upcomingShipmentNo),
             upcomingShipmentArrival: normalizeOptional(
