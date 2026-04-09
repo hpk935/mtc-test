@@ -19,7 +19,7 @@ export async function getDashboardStats() {
         db
             .select({ invoicedCount: count() })
             .from(invoices)
-            .where(eq(invoices.invoiceStatus, 'posted')),
+            .where(eq(invoices.invoiceStatus, 'open')),
         db.select({ totalCustomers: count() }).from(customers),
         db
             .select({ totalProducts: count() })
@@ -40,7 +40,7 @@ export async function getRecentOrders(limit = 5) {
             orderStatus: orders.orderStatus,
         })
         .from(orders)
-        .orderBy(desc(orders.createdAt))
+        .orderBy(desc(orders.orderDate))
         .limit(limit);
 }
 
@@ -54,6 +54,6 @@ export async function getRecentInvoices(limit = 5) {
             invoiceStatus: invoices.invoiceStatus,
         })
         .from(invoices)
-        .orderBy(desc(invoices.createdAt))
+        .orderBy(desc(invoices.invoiceDate))
         .limit(limit);
 }
