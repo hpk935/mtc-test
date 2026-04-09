@@ -13,7 +13,8 @@ import { DataTablePagination } from '@/components/data/data-table-pagination';
 const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = INVOICE_STATUSES.map((s) => ({
-  label: s.charAt(0).toUpperCase() + s.slice(1),
+  label:
+    s === 'partially_paid' ? 'Partial' : s.charAt(0).toUpperCase() + s.slice(1),
   value: s,
 }));
 
@@ -30,7 +31,7 @@ export default async function InvoicesPage({
       ? undefined
       : (INVOICE_STATUSES as readonly string[]).includes(params.status ?? '')
         ? (params.status as InvoiceStatus)
-        : 'posted';
+        : 'open';
 
   const { invoices, totalCount, totalPages } = await getInvoices({
     search: search || undefined,
@@ -49,7 +50,7 @@ export default async function InvoicesPage({
           <DataTableFilter
             options={STATUS_OPTIONS}
             paramName="status"
-            defaultValue="posted"
+            defaultValue="open"
             allLabel="All Statuses"
           />
         </div>

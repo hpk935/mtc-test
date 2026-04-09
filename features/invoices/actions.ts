@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
-import { updateInvoiceStatusSchema } from './validation';
-import { updateInvoiceStatusRecord } from './service';
+import { updateInvoiceStatusSchema, applyPaymentSchema } from './validation';
+import { updateInvoiceStatusRecord, applyPaymentRecord } from './service';
 import type { ActionResult } from '@/types';
 
 export async function updateInvoiceStatus(
@@ -28,6 +28,44 @@ export async function updateInvoiceStatus(
     const result = await updateInvoiceStatusRecord(
         parsed.data.invoiceNumber,
         parsed.data.status,
+    );
+
+    if (result.success) {
+        revalidatePath(`/invoices/${invoiceNumber}`);
+        revalidatePath('/invoices');
+    }
+
+    return result;
+}
+
+export async function applyPayment(
+    invoiceNumber: string,
+    paymentAmount: string,
+    paymentDate: string,
+    paymentRef?: string,
+): Promise<ActionResult> {
+    await requireAuth();
+
+    const parsed = applyPaymentSchema.safeParse({
+        invoiceNumber,
+        paymentAmount,
+        paymentDate,
+        paymentRef,
+    });
+
+    if (!parsed.success) {
+        const firstError = parsed.error.issues[0]?.message;
+        return {
+            success: false,
+            error: firstError ?? 'Invalid payment data.',
+        };
+    }
+
+    const result = await applyPaymentRecord(
+        parsed.data.invoiceNumber,
+        parseFloat(parsed.data.paymentAmount),
+        parsed.data.paymentDate,
+        parsed.data.paymentRef,
     );
 
     if (result.success) {

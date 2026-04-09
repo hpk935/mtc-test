@@ -4,6 +4,7 @@ import {
     numeric,
     pgEnum,
     pgTable,
+    serial,
     text,
     timestamp,
     varchar,
@@ -11,10 +12,9 @@ import {
 import { users } from '@/features/users/schema';
 import { customers, shipToAddresses } from '@/features/customers/schema';
 import { orders, orderItems } from '@/features/orders/schema';
-import { INVOICE_STATUSES, PAYMENT_STATUSES } from './constants';
+import { INVOICE_STATUSES } from './constants';
 
 export const invoiceStatusEnum = pgEnum('invoice_status', INVOICE_STATUSES);
-export const paymentStatusEnum = pgEnum('payment_status', PAYMENT_STATUSES);
 
 export const invoices = pgTable('invoices', {
     invoiceNumber: varchar('invoice_number', { length: 20 }).primaryKey(),
@@ -57,37 +57,15 @@ export const invoices = pgTable('invoices', {
         .default('0'),
     invoiceStatus: invoiceStatusEnum('invoice_status')
         .notNull()
-        .default('posted'),
-    shippingNote: text('shipping_note'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-export const accountReceivables = pgTable('account_receivables', {
-    invoiceNumber: varchar('invoice_number', { length: 20 })
-        .primaryKey()
-        .references(() => invoices.invoiceNumber),
-    orderNumber: varchar('order_number', { length: 20 })
-        .notNull()
-        .references(() => orders.orderNumber),
-    customerNumber: varchar('customer_number', { length: 20 })
-        .notNull()
-        .references(() => customers.customerNumber),
-    receivableDate: date('receivable_date').notNull(),
-    dueDate: date('due_date').notNull(),
-    termCode: varchar('term_code', { length: 10 }).notNull(),
-    invoiceTotalAmount: numeric('invoice_total_amount', {
-        precision: 10,
-        scale: 2,
-    }).notNull(),
+        .default('open'),
+    dueDate: date('due_date'),
     amountPaid: numeric('amount_paid', { precision: 10, scale: 2 })
         .notNull()
         .default('0'),
     balanceDue: numeric('balance_due', { precision: 10, scale: 2 }).notNull(),
-    paymentStatus: paymentStatusEnum('payment_status')
-        .notNull()
-        .default('open'),
     paidDate: date('paid_date'),
+    paymentRef: varchar('payment_ref', { length: 50 }),
+    shippingNote: text('shipping_note'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -111,27 +89,26 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
         fields: [invoices.shipToId],
         references: [shipToAddresses.shipToId],
     }),
-    accountReceivable: one(accountReceivables, {
-        fields: [invoices.invoiceNumber],
-        references: [accountReceivables.invoiceNumber],
-    }),
     items: many(orderItems),
+    payments: many(payments),
 }));
 
-export const accountReceivablesRelations = relations(
-    accountReceivables,
-    ({ one }) => ({
-        invoice: one(invoices, {
-            fields: [accountReceivables.invoiceNumber],
-            references: [invoices.invoiceNumber],
-        }),
-        order: one(orders, {
-            fields: [accountReceivables.orderNumber],
-            references: [orders.orderNumber],
-        }),
-        customer: one(customers, {
-            fields: [accountReceivables.customerNumber],
-            references: [customers.customerNumber],
-        }),
+// Payments
+
+export const payments = pgTable('payments', {
+    id: serial('id').primaryKey(),
+    invoiceNumber: varchar('invoice_number', { length: 20 })
+        .notNull()
+        .references(() => invoices.invoiceNumber),
+    amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+    paymentDate: date('payment_date').notNull(),
+    paymentRef: varchar('payment_ref', { length: 50 }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+    invoice: one(invoices, {
+        fields: [payments.invoiceNumber],
+        references: [invoices.invoiceNumber],
     }),
-);
+}));

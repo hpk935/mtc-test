@@ -12,22 +12,28 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { DataTablePagination } from '@/components/data/data-table-pagination';
 import { InvoiceStatusAction } from './invoice-status-action';
+import { ApplyPaymentDialog } from './apply-payment-dialog';
 import type {
   InvoiceDetail,
   InvoiceItemDetail,
+  PaymentRecord,
 } from '@/features/invoices/queries';
 import type { InvoiceStatus } from '@/features/invoices/constants';
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> =
-  {
-    posted: 'secondary',
-    paid: 'default',
-    voided: 'destructive',
-  };
+const STATUS_VARIANT: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  open: 'secondary',
+  paid: 'default',
+  partially_paid: 'outline',
+  voided: 'destructive',
+};
 
 const STATUS_LABEL: Record<string, string> = {
-  posted: 'Posted',
+  open: 'Open',
   paid: 'Paid',
+  partially_paid: 'Partial',
   voided: 'Voided',
 };
 
@@ -65,6 +71,7 @@ interface InvoiceDetailViewProps {
   currentPage: number;
   totalPages: number;
   totalCount: number;
+  payments: PaymentRecord[];
 }
 
 const ITEMS_PAGE_SIZE = 20;
@@ -76,6 +83,7 @@ export function InvoiceDetailView({
   currentPage,
   totalPages,
   totalCount,
+  payments,
 }: InvoiceDetailViewProps) {
   const salesperson =
     invoice.salespersonFirstName && invoice.salespersonLastName
@@ -95,6 +103,7 @@ export function InvoiceDetailView({
               <InvoiceStatusAction
                 invoiceNumber={invoice.invoiceNumber}
                 currentStatus={invoiceStatus}
+                hasPayments={payments.length > 0}
               />
             </DetailRow>
             <DetailRow label="Date">
@@ -168,8 +177,97 @@ export function InvoiceDetailView({
         )}
       </div>
 
-      {/* Right column — line items + totals */}
+      {/* Right column — AR, totals, line items */}
       <div className="space-y-6 lg:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Receivables</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <DetailRow label="Amount Paid">
+              {formatCurrency(invoice.amountPaid)}
+            </DetailRow>
+            <DetailRow label="Balance Due">
+              {formatCurrency(invoice.balanceDue)}
+            </DetailRow>
+            {invoice.dueDate && (
+              <DetailRow label="Due Date">
+                {formatDate(invoice.dueDate)}
+              </DetailRow>
+            )}
+            {invoice.paidDate && (
+              <DetailRow label="Paid Date">
+                {formatDate(invoice.paidDate)}
+              </DetailRow>
+            )}
+            {invoice.paymentRef && (
+              <DetailRow label="Payment Ref">{invoice.paymentRef}</DetailRow>
+            )}
+            {(invoiceStatus === 'open' ||
+              invoiceStatus === 'partially_paid') && (
+              <div className="pt-2">
+                <ApplyPaymentDialog
+                  invoiceNumber={invoice.invoiceNumber}
+                  totalAmount={invoice.totalAmount}
+                  balanceDue={invoice.balanceDue}
+                />
+              </div>
+            )}
+            {payments.length > 0 && (
+              <>
+                <Separator />
+                <details className="group">
+                  <summary className="flex cursor-pointer items-center justify-between text-sm font-medium select-none">
+                    <span>
+                      Payment History{' '}
+                      <span className="text-muted-foreground font-normal">
+                        ({payments.length})
+                      </span>
+                    </span>
+                    <svg
+                      className="text-muted-foreground h-4 w-4 transition-transform group-open:rotate-180"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                  </summary>
+                  <div className="mt-3">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead>Reference</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {payments.map((p) => (
+                          <TableRow key={p.id}>
+                            <TableCell>{formatDate(p.paymentDate)}</TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(p.amount)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {p.paymentRef || '—'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </details>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>

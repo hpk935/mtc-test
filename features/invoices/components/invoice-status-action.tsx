@@ -24,34 +24,39 @@ import { updateInvoiceStatus } from '../actions';
 import { type InvoiceStatus } from '@/features/invoices/constants';
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  posted: 'Posted',
+  open: 'Open',
   paid: 'Paid',
+  partially_paid: 'Partial',
   voided: 'Voided',
 };
 
 const STATUS_VARIANT: Record<
   InvoiceStatus,
-  'default' | 'secondary' | 'destructive'
+  'default' | 'secondary' | 'destructive' | 'outline'
 > = {
-  posted: 'secondary',
+  open: 'secondary',
   paid: 'default',
+  partially_paid: 'outline',
   voided: 'destructive',
 };
 
 const VALID_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
-  posted: ['paid', 'voided'],
-  paid: ['posted', 'voided'],
+  open: ['paid', 'voided'],
+  partially_paid: ['paid', 'voided'],
+  paid: ['open', 'voided'],
   voided: [],
 };
 
 interface InvoiceStatusActionProps {
   invoiceNumber: string;
   currentStatus: InvoiceStatus;
+  hasPayments?: boolean;
 }
 
 export function InvoiceStatusAction({
   invoiceNumber,
   currentStatus,
+  hasPayments = false,
 }: InvoiceStatusActionProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -59,7 +64,11 @@ export function InvoiceStatusAction({
     null,
   );
 
-  const allowedStatuses = VALID_TRANSITIONS[currentStatus];
+  // Lock status when fully paid via payments
+  const allowedStatuses =
+    currentStatus === 'paid' && hasPayments
+      ? []
+      : VALID_TRANSITIONS[currentStatus];
 
   function handleConfirm() {
     if (!pendingStatus) return;
@@ -143,6 +152,11 @@ export function InvoiceStatusAction({
               {pendingStatus === 'voided' && (
                 <span className="mt-2 block text-sm font-medium text-red-600">
                   This action cannot be undone.
+                </span>
+              )}
+              {pendingStatus === 'paid' && (
+                <span className="mt-2 block text-sm font-medium text-amber-600">
+                  Once fully paid, the status cannot be changed.
                 </span>
               )}
             </DialogDescription>

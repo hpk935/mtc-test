@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   findInvoiceByNumber,
   getInvoiceItems,
+  getPaymentsByInvoice,
 } from '@/features/invoices/queries';
 import { InvoiceDetailView } from '@/features/invoices/components/invoice-detail';
 import type { InvoiceStatus } from '@/features/invoices/constants';
@@ -20,10 +21,12 @@ export default async function InvoiceDetailPage({
   const { page: pageParam } = await searchParams;
   const itemsPage = Math.max(1, Number(pageParam) || 1);
 
-  const [invoice, { items, totalCount, totalPages }] = await Promise.all([
-    findInvoiceByNumber(invoiceNumber),
-    getInvoiceItems({ invoiceNumber, page: itemsPage }),
-  ]);
+  const [invoice, { items, totalCount, totalPages }, paymentHistory] =
+    await Promise.all([
+      findInvoiceByNumber(invoiceNumber),
+      getInvoiceItems({ invoiceNumber, page: itemsPage }),
+      getPaymentsByInvoice(invoiceNumber),
+    ]);
 
   if (!invoice) {
     notFound();
@@ -54,6 +57,7 @@ export default async function InvoiceDetailPage({
         currentPage={itemsPage}
         totalPages={totalPages}
         totalCount={totalCount}
+        payments={paymentHistory}
       />
     </div>
   );

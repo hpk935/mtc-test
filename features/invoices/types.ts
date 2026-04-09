@@ -1,7 +1,7 @@
-import type { invoices, accountReceivables } from './schema';
+import type { invoices, payments } from './schema';
 
 export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
 
-export type AccountReceivable = typeof accountReceivables.$inferSelect;
-export type NewAccountReceivable = typeof accountReceivables.$inferInsert;
+export type Payment = typeof payments.$inferSelect;
+export type NewPayment = typeof payments.$inferInsert;

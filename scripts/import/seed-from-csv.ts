@@ -7,7 +7,7 @@ import db from '../../lib/db';
 import { users } from '../../features/users/schema';
 import { customers } from '../../features/customers/schema';
 import { orders } from '../../features/orders/schema';
-import { invoices, accountReceivables } from '../../features/invoices/schema';
+import { invoices } from '../../features/invoices/schema';
 import { hashPassword } from '../../features/auth/service';
 import { eq } from 'drizzle-orm';
 
@@ -203,41 +203,14 @@ async function seedInvoices() {
         costAmount: parseMoney(r.cost_amount),
         invoiceStatus: r.invoice_status as
             | 'open'
-            | 'posted'
             | 'paid'
+            | 'partially_paid'
             | 'voided',
         shippingNote: emptyToNull(r.shipping_note),
     }));
 
     await db.insert(invoices).values(values).onConflictDoNothing();
     console.log(`  Invoices: ${values.length} rows`);
-}
-
-// --- Seed account receivables ---
-
-async function seedAccountReceivables() {
-    const rows = readCsv('account-receivables.csv');
-
-    const values = rows.map((r) => ({
-        invoiceNumber: r.invoice_number,
-        orderNumber: r.order_number,
-        customerNumber: r.customer_number,
-        receivableDate: r.receivable_date,
-        dueDate: r.due_date,
-        termCode: r.term_code,
-        invoiceTotalAmount: parseMoney(r.invoice_total_amount),
-        amountPaid: parseMoney(r.amount_paid),
-        balanceDue: parseMoney(r.balance_due),
-        paymentStatus: r.payment_status as
-            | 'open'
-            | 'paid'
-            | 'partially_paid'
-            | 'voided',
-        paidDate: emptyToNull(r.paid_date),
-    }));
-
-    await db.insert(accountReceivables).values(values).onConflictDoNothing();
-    console.log(`  Account receivables: ${values.length} rows`);
 }
 
 // --- Main ---
@@ -261,7 +234,6 @@ async function main() {
     await seedCustomers();
     await seedOrders();
     await seedInvoices();
-    await seedAccountReceivables();
 
     console.log('\n✅ Business data seeding complete.');
     process.exit(0);

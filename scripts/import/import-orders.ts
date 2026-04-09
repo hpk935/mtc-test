@@ -321,9 +321,10 @@ function transformRows(
             termCode,
             territoryCode,
             salesTaxAmount: parseMoney(r['SalesTax']),
-            subtotalAmount: parseMoney(r['Amount']),
+            // CSV 'Amount' = total customer pays, 'OrderTotal' = merchandise subtotal
+            subtotalAmount: parseMoney(r['OrderTotal']),
             freightAmount: parseMoney(r['Freight']),
-            totalAmount: parseMoney(r['OrderTotal']),
+            totalAmount: parseMoney(r['Amount']),
             costAmount: parseMoney(r['Cost']),
             orderStatus: deriveOrderStatus(r),
             shippingNote,

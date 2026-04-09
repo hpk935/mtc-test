@@ -10,16 +10,20 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { InvoiceListItem } from '@/features/invoices/queries';
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> =
-  {
-    posted: 'secondary',
-    paid: 'default',
-    voided: 'destructive',
-  };
+const STATUS_VARIANT: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  open: 'secondary',
+  paid: 'default',
+  partially_paid: 'outline',
+  voided: 'destructive',
+};
 
 const STATUS_LABEL: Record<string, string> = {
-  posted: 'Posted',
+  open: 'Open',
   paid: 'Paid',
+  partially_paid: 'Partial',
   voided: 'Voided',
 };
 
@@ -57,6 +61,7 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
           <TableHead>Customer</TableHead>
           <TableHead>Date</TableHead>
           <TableHead className="text-right">Total</TableHead>
+          <TableHead className="text-right">Balance</TableHead>
           <TableHead>Status</TableHead>
         </TableRow>
       </TableHeader>
@@ -84,6 +89,9 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
             <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
             <TableCell className="text-right">
               {formatCurrency(invoice.totalAmount)}
+            </TableCell>
+            <TableCell className="text-right">
+              {formatCurrency(invoice.balanceDue)}
             </TableCell>
             <TableCell>
               <Badge

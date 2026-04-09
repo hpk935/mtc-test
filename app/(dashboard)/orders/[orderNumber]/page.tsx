@@ -2,7 +2,11 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { findOrderByNumber, getOrderItems } from '@/features/orders/queries';
+import {
+  findOrderByNumber,
+  getOrderItems,
+  getInvoiceNumbersForOrder,
+} from '@/features/orders/queries';
 import { OrderDetailView } from '@/features/orders/components/order-detail';
 import { OrderActions } from '@/features/orders/components/order-actions';
 
@@ -17,10 +21,12 @@ export default async function OrderDetailPage({
   const { page: pageParam } = await searchParams;
   const itemsPage = Math.max(1, Number(pageParam) || 1);
 
-  const [order, { items, totalCount, totalPages }] = await Promise.all([
-    findOrderByNumber(orderNumber),
-    getOrderItems({ orderNumber, page: itemsPage }),
-  ]);
+  const [order, { items, totalCount, totalPages }, invoiceNumbers] =
+    await Promise.all([
+      findOrderByNumber(orderNumber),
+      getOrderItems({ orderNumber, page: itemsPage }),
+      getInvoiceNumbersForOrder(orderNumber),
+    ]);
 
   if (!order) {
     notFound();
@@ -54,6 +60,7 @@ export default async function OrderDetailPage({
         currentPage={itemsPage}
         totalPages={totalPages}
         totalCount={totalCount}
+        invoiceNumbers={invoiceNumbers}
       />
     </div>
   );

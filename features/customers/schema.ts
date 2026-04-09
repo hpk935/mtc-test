@@ -11,7 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { users } from '@/features/users/schema';
 import { orders } from '@/features/orders/schema';
-import { invoices, accountReceivables } from '@/features/invoices/schema';
+import { invoices } from '@/features/invoices/schema';
 import { ACCOUNT_STATUSES, LOCATION_STATUSES } from './constants';
 
 export const accountStatusEnum = pgEnum('account_status', ACCOUNT_STATUSES);
@@ -88,7 +88,6 @@ export const customersRelations = relations(customers, ({ one, many }) => ({
     shipToAddresses: many(shipToAddresses),
     orders: many(orders),
     invoices: many(invoices),
-    accountReceivables: many(accountReceivables),
 }));
 
 export const shipToAddressesRelations = relations(

@@ -2,6 +2,7 @@ import { ilike, or, and, count, desc, eq, asc, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { orders, orderItems } from './schema';
 import { customers } from '@/features/customers/schema';
+import { invoices } from '@/features/invoices/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
 import type { OrderStatus } from './constants';
@@ -177,6 +178,17 @@ export async function getOrderItems({
 export type OrderItemDetail = Awaited<
     ReturnType<typeof getOrderItems>
 >['items'][number];
+
+export async function getInvoiceNumbersForOrder(
+    orderNumber: string,
+): Promise<string[]> {
+    const rows = await db
+        .select({ invoiceNumber: invoices.invoiceNumber })
+        .from(invoices)
+        .where(eq(invoices.orderNumber, orderNumber))
+        .orderBy(asc(invoices.invoiceNumber));
+    return rows.map((r) => r.invoiceNumber);
+}
 
 export async function getMaxOrderNumber(): Promise<number> {
     const [result] = await db

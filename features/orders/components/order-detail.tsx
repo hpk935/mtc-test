@@ -59,6 +59,7 @@ interface OrderDetailViewProps {
   currentPage: number;
   totalPages: number;
   totalCount: number;
+  invoiceNumbers: string[];
 }
 
 const ITEMS_PAGE_SIZE = 20;
@@ -69,6 +70,7 @@ export function OrderDetailView({
   currentPage,
   totalPages,
   totalCount,
+  invoiceNumbers,
 }: OrderDetailViewProps) {
   const salesperson =
     order.salespersonFirstName && order.salespersonLastName
@@ -90,6 +92,25 @@ export function OrderDetailView({
               </Badge>
             </DetailRow>
             <DetailRow label="Date">{formatDate(order.orderDate)}</DetailRow>
+            {invoiceNumbers.length > 0 && (
+              <DetailRow
+                label={invoiceNumbers.length === 1 ? 'Invoice' : 'Invoices'}>
+                <span className="space-x-1">
+                  {invoiceNumbers.map((num, i) => (
+                    <span key={num}>
+                      {i > 0 && (
+                        <span className="text-muted-foreground">,</span>
+                      )}
+                      <Link
+                        href={`/invoices/${num}`}
+                        className="hover:underline">
+                        {num}
+                      </Link>
+                    </span>
+                  ))}
+                </span>
+              </DetailRow>
+            )}
             {order.customerPoReference && (
               <DetailRow label="PO #">{order.customerPoReference}</DetailRow>
             )}

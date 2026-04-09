@@ -128,13 +128,11 @@ function buildShipToKey(
 
 function deriveInvoiceStatus(
     row: Record<string, string>,
-): 'open' | 'posted' | 'paid' | 'voided' {
+): 'open' | 'paid' | 'voided' {
     const voidFlag = parseInt(row['Void'] || '0', 10);
     if (voidFlag !== 0) return 'voided';
     const paidFlag = parseInt(row['Paid'] || '0', 10);
     if (paidFlag !== 0) return 'paid';
-    const postedFlag = parseInt(row['Posted'] || '0', 10);
-    if (postedFlag !== 0) return 'posted';
     return 'open';
 }
 
@@ -296,6 +294,11 @@ function transformRows(
         const note2 = r['Note2']?.trim() || '';
         const shippingNote = [note1, note2].filter(Boolean).join('\n') || null;
 
+        const status = deriveInvoiceStatus(r);
+        // CSV Amount = full customer-facing total (includes freight)
+        // CSV OrderTotal = merchandise subtotal (Amount - Freight)
+        const totalAmount = parseMoney(r['Amount']);
+
         valid.push({
             invoiceNumber: invoiceNo,
             orderNumber: orderId,
@@ -314,11 +317,17 @@ function transformRows(
             termCode,
             territoryCode,
             salesTaxAmount: parseMoney(r['SalesTax']),
-            subtotalAmount: parseMoney(r['Amount']),
+            subtotalAmount: parseMoney(r['OrderTotal']),
             freightAmount: parseMoney(r['Freight']),
-            totalAmount: parseMoney(r['OrderTotal']),
+            totalAmount,
             costAmount: parseMoney(r['Cost']),
-            invoiceStatus: deriveInvoiceStatus(r),
+            invoiceStatus: status,
+            // AR columns
+            balanceDue:
+                status === 'paid' || status === 'voided' ? '0' : totalAmount,
+            amountPaid: status === 'paid' ? totalAmount : '0',
+            paidDate: null,
+            dueDate: null,
             shippingNote,
         });
     }

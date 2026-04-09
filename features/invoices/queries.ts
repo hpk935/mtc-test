@@ -1,6 +1,6 @@
 import { ilike, or, and, count, desc, eq, asc } from 'drizzle-orm';
 import db from '@/lib/db';
-import { invoices } from './schema';
+import { invoices, payments } from './schema';
 import { customers } from '@/features/customers/schema';
 import { orderItems } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
@@ -50,6 +50,7 @@ export async function getInvoices({
                 customerName: customers.customerName,
                 invoiceDate: invoices.invoiceDate,
                 totalAmount: invoices.totalAmount,
+                balanceDue: invoices.balanceDue,
                 invoiceStatus: invoices.invoiceStatus,
             })
             .from(invoices)
@@ -111,6 +112,11 @@ export async function findInvoiceByNumber(invoiceNumber: string) {
             totalAmount: invoices.totalAmount,
             costAmount: invoices.costAmount,
             invoiceStatus: invoices.invoiceStatus,
+            dueDate: invoices.dueDate,
+            amountPaid: invoices.amountPaid,
+            balanceDue: invoices.balanceDue,
+            paidDate: invoices.paidDate,
+            paymentRef: invoices.paymentRef,
             shippingNote: invoices.shippingNote,
             createdAt: invoices.createdAt,
         })
@@ -176,3 +182,21 @@ export async function getInvoiceItems({
 export type InvoiceItemDetail = Awaited<
     ReturnType<typeof getInvoiceItems>
 >['items'][number];
+
+export async function getPaymentsByInvoice(invoiceNumber: string) {
+    return db
+        .select({
+            id: payments.id,
+            amount: payments.amount,
+            paymentDate: payments.paymentDate,
+            paymentRef: payments.paymentRef,
+            createdAt: payments.createdAt,
+        })
+        .from(payments)
+        .where(eq(payments.invoiceNumber, invoiceNumber))
+        .orderBy(desc(payments.paymentDate), desc(payments.id));
+}
+
+export type PaymentRecord = Awaited<
+    ReturnType<typeof getPaymentsByInvoice>
+>[number];
