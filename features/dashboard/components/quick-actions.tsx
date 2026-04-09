@@ -10,7 +10,7 @@ const actions = [
   },
   {
     label: 'Create Order',
-    href: '/orders',
+    href: '/orders/new',
     icon: ShoppingCart,
   },
   {

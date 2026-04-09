@@ -41,7 +41,7 @@ export function DataTablePagination({
   }
 
   return (
-    <div className="text-muted-foreground flex items-center justify-between px-4 py-3 text-sm">
+    <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 text-sm">
       <span>
         Showing {showingFrom}–{showingTo} of {totalCount} {label}
       </span>
@@ -92,7 +92,7 @@ function GoToPageInput({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="ml-2 flex items-center gap-1.5">
+    <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
       <span className="text-muted-foreground text-sm">Page</span>
       <Input
         type="number"

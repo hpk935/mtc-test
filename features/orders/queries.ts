@@ -250,10 +250,12 @@ export async function getOrdersByCustomer(
                 orderDate: orders.orderDate,
                 totalAmount: orders.totalAmount,
                 orderStatus: orders.orderStatus,
+                invoiceStatus: invoices.invoiceStatus,
             })
             .from(orders)
+            .leftJoin(invoices, eq(orders.orderNumber, invoices.orderNumber))
             .where(where)
-            .orderBy(desc(orders.createdAt))
+            .orderBy(desc(orders.orderDate))
             .limit(pageSize)
             .offset(offset),
         db.select({ total: count() }).from(orders).where(where),

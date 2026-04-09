@@ -7,27 +7,27 @@ import {
   getSalespersons,
   getShipToAddresses,
 } from '@/features/customers/queries';
-import { getOrdersByCustomer } from '@/features/orders/queries';
+import { getInvoicesByCustomer } from '@/features/invoices/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
-import { CustomerOrders } from '@/features/customers/components/customer-orders';
+import { PurchaseHistory } from '@/features/customers/components/customer-orders';
 
 export default async function CustomerDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ customerNumber: string }>;
-  searchParams: Promise<{ ordersPage?: string }>;
+  searchParams: Promise<{ invoicesPage?: string }>;
 }) {
   const { customerNumber } = await params;
-  const { ordersPage } = await searchParams;
-  const ordersCurrentPage = Math.max(1, Number(ordersPage) || 1);
+  const { invoicesPage } = await searchParams;
+  const invoicesCurrentPage = Math.max(1, Number(invoicesPage) || 1);
 
-  const [customer, salespersons, shipToResult, ordersResult] =
+  const [customer, salespersons, shipToResult, invoicesResult] =
     await Promise.all([
       findCustomerByNumber(customerNumber),
       getSalespersons(),
       getShipToAddresses(customerNumber),
-      getOrdersByCustomer(customerNumber, { page: ordersCurrentPage }),
+      getInvoicesByCustomer(customerNumber, { page: invoicesCurrentPage }),
     ]);
 
   if (!customer) {
@@ -87,11 +87,11 @@ export default async function CustomerDetailPage({
         </div>
         <div className="xl:col-span-2">
           <div className="sticky top-6">
-            <CustomerOrders
-              orders={ordersResult.orders}
-              totalCount={ordersResult.totalCount}
-              totalPages={ordersResult.totalPages}
-              currentPage={ordersCurrentPage}
+            <PurchaseHistory
+              invoices={invoicesResult.invoices}
+              totalCount={invoicesResult.totalCount}
+              totalPages={invoicesResult.totalPages}
+              currentPage={invoicesCurrentPage}
             />
           </div>
         </div>

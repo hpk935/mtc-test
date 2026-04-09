@@ -85,6 +85,41 @@ export type InvoiceListItem = Awaited<
     ReturnType<typeof getInvoices>
 >['invoices'][number];
 
+export async function getInvoicesByCustomer(
+    customerNumber: string,
+    { page = 1, pageSize = 10 }: { page?: number; pageSize?: number } = {},
+) {
+    const offset = (page - 1) * pageSize;
+    const where = eq(invoices.customerNumber, customerNumber);
+
+    const [data, [{ total }]] = await Promise.all([
+        db
+            .select({
+                invoiceNumber: invoices.invoiceNumber,
+                invoiceDate: invoices.invoiceDate,
+                totalAmount: invoices.totalAmount,
+                balanceDue: invoices.balanceDue,
+                invoiceStatus: invoices.invoiceStatus,
+            })
+            .from(invoices)
+            .where(where)
+            .orderBy(desc(invoices.invoiceDate))
+            .limit(pageSize)
+            .offset(offset),
+        db.select({ total: count() }).from(invoices).where(where),
+    ]);
+
+    return {
+        invoices: data,
+        totalCount: total,
+        totalPages: Math.ceil(total / pageSize),
+    };
+}
+
+export type CustomerInvoiceItem = Awaited<
+    ReturnType<typeof getInvoicesByCustomer>
+>['invoices'][number];
+
 export async function findInvoiceByNumber(invoiceNumber: string) {
     const [invoice] = await db
         .select({

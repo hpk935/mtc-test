@@ -10,17 +10,22 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/data/data-table-pagination';
-import type { CustomerOrderItem } from '@/features/orders/queries';
+import type { CustomerInvoiceItem } from '@/features/invoices/queries';
 
-const STATUS_VARIANT: Record<string, 'success' | 'info' | 'destructive'> = {
-  open: 'success',
-  invoiced: 'info',
+const STATUS_VARIANT: Record<
+  string,
+  'info' | 'warning' | 'success' | 'destructive'
+> = {
+  open: 'info',
+  partially_paid: 'warning',
+  paid: 'success',
   voided: 'destructive',
 };
 
 const STATUS_LABEL: Record<string, string> = {
   open: 'Open',
-  invoiced: 'Invoiced',
+  partially_paid: 'Partial',
+  paid: 'Paid',
   voided: 'Voided',
 };
 
@@ -38,24 +43,24 @@ function formatDate(dateStr: string): string {
 
 const PAGE_SIZE = 10;
 
-interface CustomerOrdersProps {
-  orders: CustomerOrderItem[];
+interface PurchaseHistoryProps {
+  invoices: CustomerInvoiceItem[];
   totalCount: number;
   totalPages: number;
   currentPage: number;
 }
 
-export function CustomerOrders({
-  orders,
+export function PurchaseHistory({
+  invoices,
   totalCount,
   totalPages,
   currentPage,
-}: CustomerOrdersProps) {
+}: PurchaseHistoryProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          Orders{' '}
+          Purchase History{' '}
           <span className="text-muted-foreground font-normal">
             ({totalCount})
           </span>
@@ -64,39 +69,40 @@ export function CustomerOrders({
       <CardContent className="px-4 py-0">
         {totalCount === 0 ? (
           <div className="text-muted-foreground flex items-center justify-center py-12 text-sm">
-            No orders for this customer.
+            No invoices for this customer.
           </div>
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order #</TableHead>
+                  <TableHead>Invoice #</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.orderNumber} className="group">
+                {invoices.map((invoice) => (
+                  <TableRow key={invoice.invoiceNumber} className="group">
                     <TableCell className="font-medium">
                       <Link
-                        href={`/orders/${order.orderNumber}`}
+                        href={`/invoices/${invoice.invoiceNumber}`}
                         className="group-hover:underline">
-                        {order.orderNumber}
+                        {invoice.invoiceNumber}
                       </Link>
                     </TableCell>
-                    <TableCell>{formatDate(order.orderDate)}</TableCell>
+                    <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
                     <TableCell className="text-right">
-                      {formatCurrency(order.totalAmount)}
+                      {formatCurrency(invoice.totalAmount)}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          STATUS_VARIANT[order.orderStatus] ?? 'secondary'
+                          STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'
                         }>
-                        {STATUS_LABEL[order.orderStatus] ?? order.orderStatus}
+                        {STATUS_LABEL[invoice.invoiceStatus] ??
+                          invoice.invoiceStatus}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -108,8 +114,8 @@ export function CustomerOrders({
               totalPages={totalPages}
               totalCount={totalCount}
               pageSize={PAGE_SIZE}
-              label="orders"
-              paramName="ordersPage"
+              label="invoices"
+              paramName="invoicesPage"
             />
           </>
         )}

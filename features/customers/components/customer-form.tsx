@@ -75,10 +75,10 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-6 md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-6 md:grid-cols-[160px_1fr] lg:grid-cols-[200px_1fr]">
       <div>
         <h3 className="text-sm font-medium">{title}</h3>
-        <p className="text-muted-foreground mt-1 text-sm">{description}</p>
+        <p className="text-muted-foreground mt-1 text-xs">{description}</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
     </div>
@@ -193,7 +193,7 @@ export function CustomerForm({
       {/* Customer Information */}
       <FormSection
         title="Customer Information"
-        description="Basic details used to identify this customer account.">
+        description="Basic customer identity details.">
         {isEdit && (
           <div className="space-y-2">
             <Label htmlFor="customerNumber">Customer Number</Label>
@@ -246,9 +246,7 @@ export function CustomerForm({
       <Separator />
 
       {/* Contact Details */}
-      <FormSection
-        title="Contact Details"
-        description="How to reach this customer by phone or email.">
+      <FormSection title="Contact Details" description="Phone, email, and fax.">
         <div className="space-y-2">
           <Label htmlFor="mainEmail">Email Address</Label>
           <Input
@@ -308,7 +306,7 @@ export function CustomerForm({
       {/* Billing Address */}
       <FormSection
         title="Billing Address"
-        description="The address used for invoices and billing correspondence.">
+        description="Invoice and billing address.">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="billingAddress1">Street Address</Label>
           <Input
@@ -388,7 +386,7 @@ export function CustomerForm({
         <>
           <FormSection
             title="Shipping Address"
-            description="The default location where orders will be shipped.">
+            description="Default ship-to location.">
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="shipLocationName">Location Name</Label>
               <Input
@@ -529,7 +527,7 @@ export function CustomerForm({
         <>
           <FormSection
             title="Shipping Addresses"
-            description="Locations where orders can be shipped for this customer.">
+            description="Ship-to locations on file.">
             <div className="sm:col-span-2">
               <ShipToList
                 addresses={shipToAddresses}
@@ -545,7 +543,7 @@ export function CustomerForm({
       {/* Account & Sales */}
       <FormSection
         title="Account & Sales"
-        description="Payment terms, territory assignment, and sales rep for this customer.">
+        description="Terms, territory, and sales rep.">
         <div className="space-y-2">
           <Label htmlFor="salespersonCode">Salesperson</Label>
           <Select
@@ -637,9 +635,7 @@ export function CustomerForm({
       <Separator />
 
       {/* Notes */}
-      <FormSection
-        title="Notes"
-        description="Any additional information about this customer.">
+      <FormSection title="Notes" description="Additional notes.">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="customerNote">
             Customer Note <OptionalTag />
