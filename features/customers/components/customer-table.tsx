@@ -10,12 +10,11 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { CustomerListItem } from '@/features/customers/queries';
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> =
-  {
-    active: 'default',
-    inactive: 'secondary',
-    on_hold: 'destructive',
-  };
+const STATUS_VARIANT: Record<string, 'success' | 'secondary' | 'warning'> = {
+  active: 'success',
+  inactive: 'secondary',
+  on_hold: 'warning',
+};
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Active',

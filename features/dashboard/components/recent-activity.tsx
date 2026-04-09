@@ -23,20 +23,34 @@ interface RecentInvoice {
   invoiceStatus: string;
 }
 
-const ORDER_STATUS_STYLES: Record<string, string> = {
-  open: 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-400',
-  invoiced:
-    'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400',
-  voided:
-    'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400',
+const ORDER_STATUS_VARIANT: Record<string, 'success' | 'info' | 'destructive'> =
+  {
+    open: 'success',
+    invoiced: 'info',
+    voided: 'destructive',
+  };
+
+const INVOICE_STATUS_VARIANT: Record<
+  string,
+  'info' | 'warning' | 'success' | 'destructive'
+> = {
+  open: 'info',
+  partially_paid: 'warning',
+  paid: 'success',
+  voided: 'destructive',
 };
 
-const INVOICE_STATUS_STYLES: Record<string, string> = {
-  posted:
-    'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400',
-  paid: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
-  voided:
-    'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-400',
+const ORDER_STATUS_LABEL: Record<string, string> = {
+  open: 'Open',
+  invoiced: 'Invoiced',
+  voided: 'Voided',
+};
+
+const INVOICE_STATUS_LABEL: Record<string, string> = {
+  open: 'Open',
+  partially_paid: 'Partial',
+  paid: 'Paid',
+  voided: 'Voided',
 };
 
 function formatCurrency(value: string) {
@@ -44,10 +58,6 @@ function formatCurrency(value: string) {
     style: 'currency',
     currency: 'USD',
   }).format(Number(value));
-}
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
@@ -77,12 +87,10 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
                     {formatCurrency(order.totalAmount)}
                   </span>
                   <Badge
-                    variant="outline"
-                    className={
-                      ORDER_STATUS_STYLES[order.orderStatus] ??
-                      ORDER_STATUS_STYLES.open
+                    variant={
+                      ORDER_STATUS_VARIANT[order.orderStatus] ?? 'default'
                     }>
-                    {capitalize(order.orderStatus)}
+                    {ORDER_STATUS_LABEL[order.orderStatus] ?? order.orderStatus}
                   </Badge>
                 </div>
               </div>
@@ -123,12 +131,12 @@ export function RecentInvoices({ invoices }: { invoices: RecentInvoice[] }) {
                     {formatCurrency(invoice.totalAmount)}
                   </span>
                   <Badge
-                    variant="outline"
-                    className={
-                      INVOICE_STATUS_STYLES[invoice.invoiceStatus] ??
-                      INVOICE_STATUS_STYLES.posted
+                    variant={
+                      INVOICE_STATUS_VARIANT[invoice.invoiceStatus] ??
+                      'secondary'
                     }>
-                    {capitalize(invoice.invoiceStatus)}
+                    {INVOICE_STATUS_LABEL[invoice.invoiceStatus] ??
+                      invoice.invoiceStatus}
                   </Badge>
                 </div>
               </div>

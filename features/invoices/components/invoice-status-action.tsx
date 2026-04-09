@@ -32,11 +32,11 @@ const STATUS_LABEL: Record<InvoiceStatus, string> = {
 
 const STATUS_VARIANT: Record<
   InvoiceStatus,
-  'default' | 'secondary' | 'destructive' | 'outline'
+  'info' | 'warning' | 'success' | 'destructive'
 > = {
-  open: 'secondary',
-  paid: 'default',
-  partially_paid: 'outline',
+  open: 'info',
+  paid: 'success',
+  partially_paid: 'warning',
   voided: 'destructive',
 };
 

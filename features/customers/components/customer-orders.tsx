@@ -12,12 +12,11 @@ import {
 import { DataTablePagination } from '@/components/data/data-table-pagination';
 import type { CustomerOrderItem } from '@/features/orders/queries';
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> =
-  {
-    open: 'default',
-    invoiced: 'secondary',
-    voided: 'destructive',
-  };
+const STATUS_VARIANT: Record<string, 'success' | 'info' | 'destructive'> = {
+  open: 'success',
+  invoiced: 'info',
+  voided: 'destructive',
+};
 
 const STATUS_LABEL: Record<string, string> = {
   open: 'Open',

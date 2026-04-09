@@ -22,11 +22,11 @@ import type { InvoiceStatus } from '@/features/invoices/constants';
 
 const STATUS_VARIANT: Record<
   string,
-  'default' | 'secondary' | 'destructive' | 'outline'
+  'info' | 'warning' | 'success' | 'destructive'
 > = {
-  open: 'secondary',
-  paid: 'default',
-  partially_paid: 'outline',
+  open: 'info',
+  paid: 'success',
+  partially_paid: 'warning',
   voided: 'destructive',
 };
 

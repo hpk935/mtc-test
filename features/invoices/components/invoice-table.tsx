@@ -12,11 +12,11 @@ import type { InvoiceListItem } from '@/features/invoices/queries';
 
 const STATUS_VARIANT: Record<
   string,
-  'default' | 'secondary' | 'destructive' | 'outline'
+  'info' | 'warning' | 'success' | 'destructive'
 > = {
-  open: 'secondary',
-  paid: 'default',
-  partially_paid: 'outline',
+  open: 'info',
+  paid: 'success',
+  partially_paid: 'warning',
   voided: 'destructive',
 };
 
