@@ -29,7 +29,7 @@ export default async function DashboardPage() {
       <Card className="overflow-visible py-8">
         <CardHeader className="items-center text-center">
           <CardTitle className="font-heading text-3xl font-bold tracking-tight">
-            MTC Trading
+            MTC Trading Co.
           </CardTitle>
           <CardDescription className="text-sm">
             Overview of your business at a glance.

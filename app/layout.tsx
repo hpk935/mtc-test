@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MTC Internal',
+  title: 'MTC Trading Co.',
   description: 'Internal business management platform',
 };
 

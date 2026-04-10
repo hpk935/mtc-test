@@ -1,3 +1,3 @@
 // App-wide constants
 
-export const APP_NAME = 'MTC Internal';
+export const APP_NAME = 'MTC Trading Co.';

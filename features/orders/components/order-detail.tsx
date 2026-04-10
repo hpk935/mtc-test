@@ -102,7 +102,7 @@ export function OrderDetailView({
                       )}
                       <Link
                         href={`/invoices/${num}`}
-                        className="hover:underline">
+                        className="text-primary hover:underline">
                         {num}
                       </Link>
                     </span>
@@ -128,7 +128,7 @@ export function OrderDetailView({
             <DetailRow label="Name">
               <Link
                 href={`/customers/${order.customerNumber}`}
-                className="hover:underline">
+                className="text-primary hover:underline">
                 {order.customerName}
               </Link>
             </DetailRow>
@@ -203,7 +203,11 @@ export function OrderDetailView({
                     {items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
-                          {item.itemNumber}
+                          <Link
+                            href={`/products?search=${item.itemNumber}`}
+                            className="hover:underline">
+                            {item.itemNumber}
+                          </Link>
                         </TableCell>
                         <TableCell className="max-w-60 truncate">
                           {item.description}

@@ -46,12 +46,17 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <span className="font-heading text-sm font-bold">M</span>
+                <div className="flex aspect-square size-8 shrink-0 items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/mtc-logo.webp"
+                    alt="MTC Trading Co."
+                    className="h-auto w-full"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="font-heading truncate font-semibold">
-                    MTC Internal
+                    MTC Trading Co.
                   </span>
                 </div>
               </Link>

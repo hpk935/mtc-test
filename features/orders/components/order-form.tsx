@@ -73,6 +73,7 @@ interface LineItem {
   qtyOrdered: number;
   unitPrice: number;
   discount: number;
+  qtyAvailable: number | null;
 }
 
 interface CustomerInfo {
@@ -306,6 +307,7 @@ export function OrderForm({
         qtyOrdered: li.qtyOrdered,
         unitPrice: Number(li.unitPrice),
         discount: Number(li.discount),
+        qtyAvailable: null,
       }));
     }
     return [
@@ -316,6 +318,7 @@ export function OrderForm({
         qtyOrdered: 1,
         unitPrice: 0,
         discount: 0,
+        qtyAvailable: null,
       },
     ];
   });
@@ -452,6 +455,7 @@ export function OrderForm({
         qtyOrdered: 1,
         unitPrice: 0,
         discount: 0,
+        qtyAvailable: null,
       },
     ]);
   }
@@ -910,13 +914,14 @@ export function OrderForm({
 
         {/* Header */}
         <div className="border-b pb-2">
-          <div className="grid grid-cols-[1fr_1fr_80px_100px_100px_100px_40px] gap-2 text-sm font-medium">
+          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_80px_88px_36px] gap-3 text-sm font-medium">
             <span>Item Number</span>
             <span>Description</span>
             <span className="text-right">Qty</span>
+            <span className="text-right">Avail</span>
             <span className="text-right">Unit Price</span>
             <span className="text-right">Discount</span>
-            <span className="text-right">Line Total</span>
+            <span className="text-right">Total</span>
             <span />
           </div>
         </div>
@@ -938,8 +943,8 @@ export function OrderForm({
 
         {/* Subtotal */}
         <div className="border-t pt-3">
-          <div className="grid grid-cols-[1fr_1fr_80px_100px_100px_100px_40px] gap-2 text-sm font-medium">
-            <span className="col-span-5 text-right">Subtotal</span>
+          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_80px_88px_36px] gap-3 text-sm font-medium">
+            <span className="col-span-6 text-right">Subtotal</span>
             <span className="text-right">{formatCurrency(subtotal)}</span>
             <span />
           </div>
@@ -1084,10 +1089,11 @@ function LineItemRow({
     onUpdate('itemNumber', product.itemNumber);
     onUpdate('description', product.description);
     onUpdate('unitPrice', Number(product.casePrice));
+    onUpdate('qtyAvailable', product.qtyAvailable);
   }
 
   return (
-    <div className="grid grid-cols-[1fr_1fr_80px_100px_100px_100px_40px] items-center gap-2">
+    <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_80px_88px_36px] items-center gap-3">
       {/* Product search */}
       <div className="relative" ref={containerRef}>
         <Input
@@ -1110,9 +1116,19 @@ function LineItemRow({
                     {p.description}
                   </div>
                 </div>
-                <span className="text-muted-foreground ml-2 whitespace-nowrap">
-                  ${Number(p.casePrice).toFixed(2)}
-                </span>
+                <div className="ml-2 text-right whitespace-nowrap">
+                  <div className="text-muted-foreground">
+                    ${Number(p.casePrice).toFixed(2)}
+                  </div>
+                  <div
+                    className={
+                      p.qtyAvailable > 0
+                        ? 'text-muted-foreground'
+                        : 'text-destructive'
+                    }>
+                    {p.qtyAvailable} avail
+                  </div>
+                </div>
               </button>
             ))}
           </div>
@@ -1133,15 +1149,16 @@ function LineItemRow({
         className="h-8 text-right text-sm"
       />
 
-      {/* Unit Price */}
-      <Input
-        type="number"
-        min={0}
-        step="0.01"
-        value={item.unitPrice}
-        onChange={(e) => onUpdate('unitPrice', Number(e.target.value) || 0)}
-        className="h-8 text-right text-sm"
-      />
+      {/* Available Qty */}
+      <span
+        className={`text-right text-sm ${item.qtyAvailable !== null && item.qtyAvailable < item.qtyOrdered ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+        {item.qtyAvailable !== null ? item.qtyAvailable : '—'}
+      </span>
+
+      {/* Unit Price (read-only, set from product) */}
+      <span className="text-right text-sm">
+        {item.unitPrice ? formatCurrency(item.unitPrice) : '—'}
+      </span>
 
       {/* Discount */}
       <Input

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -77,7 +78,11 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
                 key={order.orderNumber}
                 className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium">{order.orderNumber}</div>
+                  <Link
+                    href={`/orders/${order.orderNumber}`}
+                    className="text-sm font-medium hover:underline">
+                    {order.orderNumber}
+                  </Link>
                   <div className="text-muted-foreground text-xs">
                     {order.customerNumber} &middot; {order.orderDate}
                   </div>
@@ -119,9 +124,11 @@ export function RecentInvoices({ invoices }: { invoices: RecentInvoice[] }) {
                 key={invoice.invoiceNumber}
                 className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium">
+                  <Link
+                    href={`/invoices/${invoice.invoiceNumber}`}
+                    className="text-sm font-medium hover:underline">
                     {invoice.invoiceNumber}
-                  </div>
+                  </Link>
                   <div className="text-muted-foreground text-xs">
                     {invoice.customerNumber} &middot; {invoice.invoiceDate}
                   </div>
