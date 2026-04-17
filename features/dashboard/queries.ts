@@ -20,7 +20,10 @@ export async function getDashboardStats() {
             .select({ invoicedCount: count() })
             .from(invoices)
             .where(eq(invoices.invoiceStatus, 'open')),
-        db.select({ totalCustomers: count() }).from(customers),
+        db
+            .select({ totalCustomers: count() })
+            .from(customers)
+            .where(eq(customers.accountStatus, 'active')),
         db
             .select({ totalProducts: count() })
             .from(products)

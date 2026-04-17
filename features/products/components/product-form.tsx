@@ -77,7 +77,6 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
     landedCost: product?.landedCost ?? '0',
     minimumPackPrice: product?.minimumPackPrice ?? '0',
     casePrice: product?.casePrice ?? '0',
-    itemCostHk: product?.itemCostHk ?? '0',
     qtyInStock: String(product?.qtyInStock ?? 0),
     qtyCommitted: String(product?.qtyCommitted ?? 0),
     qtyAvailable: String(product?.qtyAvailable ?? 0),
@@ -363,16 +362,6 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
             name="casePrice"
             placeholder="0.00"
             value={formValues.casePrice}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="itemCostHk">Item Cost (HK)</Label>
-          <Input
-            id="itemCostHk"
-            name="itemCostHk"
-            placeholder="0.00"
-            value={formValues.itemCostHk}
             onChange={handleChange}
           />
         </div>

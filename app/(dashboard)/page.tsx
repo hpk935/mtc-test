@@ -20,8 +20,8 @@ import {
 export default async function DashboardPage() {
   const [stats, recentOrders, recentInvoices] = await Promise.all([
     getDashboardStats(),
-    getRecentOrders(),
-    getRecentInvoices(),
+    getRecentOrders(10),
+    getRecentInvoices(10),
   ]);
 
   return (

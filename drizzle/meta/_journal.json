@@ -50,6 +50,13 @@
       "when": 1775112617664,
       "tag": "0006_motionless_moira_mactaggert",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776233985987,
+      "tag": "0007_silent_human_torch",
+      "breakpoints": true
     }
   ]
 }

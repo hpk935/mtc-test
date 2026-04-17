@@ -47,7 +47,7 @@ export function StatsCards({
       label: 'Customers',
       value: totalCustomers.toLocaleString(),
       icon: Users,
-      description: 'Registered',
+      description: 'Active accounts',
       href: '/customers',
     },
   ];

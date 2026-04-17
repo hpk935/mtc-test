@@ -44,9 +44,6 @@ export const products = pgTable('products', {
     casePrice: numeric('case_price', { precision: 10, scale: 2 })
         .notNull()
         .default('0'),
-    itemCostHk: numeric('item_cost_hk', { precision: 10, scale: 2 })
-        .notNull()
-        .default('0'),
     qtyInStock: integer('qty_in_stock').notNull().default(0),
     qtyCommitted: integer('qty_committed').notNull().default(0),
     qtyAvailable: integer('qty_available').notNull().default(0),

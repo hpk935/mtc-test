@@ -194,7 +194,6 @@ function transformRows(rows: Record<string, string>[]) {
             landedCost: parseMoney(r['LandedCost']),
             minimumPackPrice: parseMoney(r['MinimumPackPrice']),
             casePrice: parseMoney(r['CasePrice']),
-            itemCostHk: parseMoney(r['ItemCostinHK']),
             qtyInStock: parseIntOrDefault(r['QtyInStock']),
             qtyCommitted: parseIntOrDefault(r['QtyCommited']),
             qtyAvailable: parseIntOrDefault(r['QtyAvailable']),
