@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Ban, FileText, Pencil, Trash2 } from 'lucide-react';
+import { Ban, FileText, Pencil, Printer, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,7 +29,18 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
   const [isVoiding, setIsVoiding] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
 
-  if (orderStatus !== 'open') return null;
+  if (orderStatus !== 'open') {
+    return (
+      <div className="flex gap-2">
+        <Button size="sm" asChild>
+          <Link href={`/orders/${orderNumber}/print`} target="_blank">
+            <Printer className="mr-2 size-4" />
+            Pick Sheet
+          </Link>
+        </Button>
+      </div>
+    );
+  }
 
   async function handleDelete() {
     setIsDeleting(true);
@@ -65,6 +76,13 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
 
   return (
     <div className="flex gap-2">
+      <Button size="sm" asChild>
+        <Link href={`/orders/${orderNumber}/print`} target="_blank">
+          <Printer className="mr-2 size-4" />
+          Pick Sheet
+        </Link>
+      </Button>
+
       <Button variant="outline" size="sm" asChild>
         <Link href={`/orders/${orderNumber}/edit`}>
           <Pencil className="mr-2 size-4" />

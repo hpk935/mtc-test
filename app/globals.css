@@ -133,3 +133,45 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Print styles for pick sheet */
+@media print {
+    /* Hide dashboard shell: sidebar, header, nav */
+    [data-sidebar],
+    [data-slot='sidebar'],
+    header:has([data-sidebar-trigger]),
+    .print\:hidden {
+        display: none !important;
+    }
+
+    /* Reset inset wrapper to fill page */
+    [data-slot='sidebar-inset'],
+    [data-slot='sidebar-provider'] {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 0 !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .pick-sheet {
+        font-size: 14px;
+        padding: 12mm !important;
+    }
+
+    @page {
+        size: letter;
+        margin: 8mm;
+    }
+}

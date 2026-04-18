@@ -276,3 +276,56 @@ export async function getOrdersByCustomer(
 export type CustomerOrderItem = Awaited<
     ReturnType<typeof getOrdersByCustomer>
 >['orders'][number];
+
+export async function getOrderPrintData(orderNumber: string) {
+    const [order] = await db
+        .select({
+            orderNumber: orders.orderNumber,
+            customerNumber: orders.customerNumber,
+            customerName: customers.customerName,
+            orderDate: orders.orderDate,
+            customerPoReference: orders.customerPoReference,
+            freightTerm: orders.freightTerm,
+            shipToName: orders.shipToName,
+            shipToAddress1: orders.shipToAddress1,
+            shipToAddress2: orders.shipToAddress2,
+            shipToCity: orders.shipToCity,
+            shipToStateCode: orders.shipToStateCode,
+            shipToPostalCode: orders.shipToPostalCode,
+            orderStatus: orders.orderStatus,
+            shippingNote: orders.shippingNote,
+            totalAmount: orders.totalAmount,
+            subtotalAmount: orders.subtotalAmount,
+        })
+        .from(orders)
+        .leftJoin(
+            customers,
+            eq(orders.customerNumber, customers.customerNumber),
+        )
+        .where(eq(orders.orderNumber, orderNumber))
+        .limit(1);
+
+    if (!order) return null;
+
+    const items = await db
+        .select({
+            id: orderItems.id,
+            itemNumber: orderItems.itemNumber,
+            description: products.description,
+            unitSoldBy: products.unitSoldBy,
+            qtyOrdered: orderItems.qtyOrdered,
+            qtyShipped: orderItems.qtyShipped,
+            caseWeight: products.caseWeight,
+            maxQty: products.maxQty,
+        })
+        .from(orderItems)
+        .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))
+        .where(eq(orderItems.orderNumber, orderNumber))
+        .orderBy(asc(orderItems.itemNumber));
+
+    return { order, items };
+}
+
+export type OrderPrintData = NonNullable<
+    Awaited<ReturnType<typeof getOrderPrintData>>
+>;
