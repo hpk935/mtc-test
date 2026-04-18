@@ -29,3 +29,7 @@ export type LineItemInput = z.infer<typeof lineItemSchema>;
 
 export const updateOrderSchema = createOrderSchema;
 export type UpdateOrderInput = z.infer<typeof updateOrderSchema>;
+
+export const updateTrackingNumberSchema = z.object({
+    trackingNumber: z.string().max(100).optional().default(''),
+});

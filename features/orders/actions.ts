@@ -3,7 +3,11 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
-import { createOrderSchema, updateOrderSchema } from './validation';
+import {
+    createOrderSchema,
+    updateOrderSchema,
+    updateTrackingNumberSchema,
+} from './validation';
 import {
     createOrderRecord,
     updateOrderRecord,
@@ -12,6 +16,9 @@ import {
     postOrderToInvoice,
 } from './service';
 import type { ActionResult } from '@/types';
+import db from '@/lib/db';
+import { orders } from './schema';
+import { eq } from 'drizzle-orm';
 
 export async function createOrder(
     _prevState: ActionResult,
@@ -128,4 +135,29 @@ export async function postToInvoice(
     revalidatePath('/orders');
     revalidatePath('/invoices');
     redirect(`/invoices/${result.data}`);
+}
+
+export async function updateTrackingNumber(
+    orderNumber: string,
+    formData: FormData,
+): Promise<ActionResult> {
+    await requireAuth();
+
+    const parsed = updateTrackingNumberSchema.safeParse({
+        trackingNumber: formData.get('trackingNumber'),
+    });
+
+    if (!parsed.success) {
+        return { success: false, error: 'Invalid tracking number.' };
+    }
+
+    const value = parsed.data.trackingNumber || null;
+
+    await db
+        .update(orders)
+        .set({ trackingNumber: value, updatedAt: new Date() })
+        .where(eq(orders.orderNumber, orderNumber));
+
+    revalidatePath(`/orders/${orderNumber}`);
+    return { success: true, data: undefined };
 }

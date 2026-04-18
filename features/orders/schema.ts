@@ -56,6 +56,7 @@ export const orders = pgTable('orders', {
         .default('0'),
     orderStatus: orderStatusEnum('order_status').notNull().default('open'),
     shippingNote: text('shipping_note'),
+    trackingNumber: varchar('tracking_number', { length: 100 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

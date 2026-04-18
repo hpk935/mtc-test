@@ -163,6 +163,17 @@ export function InvoiceDetailView({
           </CardContent>
         </Card>
 
+        {invoice.trackingNumber && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Tracking Number</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm font-medium">{invoice.trackingNumber}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {invoice.shippingNote && (
           <Card>
             <CardHeader>

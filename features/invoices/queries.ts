@@ -2,7 +2,7 @@ import { ilike, or, and, count, desc, eq, asc } from 'drizzle-orm';
 import db from '@/lib/db';
 import { invoices, payments } from './schema';
 import { customers } from '@/features/customers/schema';
-import { orderItems } from '@/features/orders/schema';
+import { orders, orderItems } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
 import type { InvoiceStatus } from './constants';
@@ -153,6 +153,7 @@ export async function findInvoiceByNumber(invoiceNumber: string) {
             paidDate: invoices.paidDate,
             paymentRef: invoices.paymentRef,
             shippingNote: invoices.shippingNote,
+            trackingNumber: orders.trackingNumber,
             createdAt: invoices.createdAt,
         })
         .from(invoices)
@@ -161,6 +162,7 @@ export async function findInvoiceByNumber(invoiceNumber: string) {
             eq(invoices.customerNumber, customers.customerNumber),
         )
         .leftJoin(users, eq(invoices.salespersonCode, users.employeeId))
+        .leftJoin(orders, eq(invoices.orderNumber, orders.orderNumber))
         .where(eq(invoices.invoiceNumber, invoiceNumber))
         .limit(1);
     return invoice ?? null;
@@ -199,7 +201,7 @@ export async function getInvoiceItems({
             .from(orderItems)
             .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))
             .where(where)
-            .orderBy(asc(orderItems.id))
+            .orderBy(asc(orderItems.itemNumber))
             .limit(pageSize)
             .offset(offset),
         db.select({ total: count() }).from(orderItems).where(where),

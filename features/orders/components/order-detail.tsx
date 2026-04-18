@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { DataTablePagination } from '@/components/data/data-table-pagination';
+import { TrackingNumberForm } from './tracking-number-form';
 import type { OrderDetail, OrderItemDetail } from '@/features/orders/queries';
 
 const STATUS_VARIANT: Record<string, 'success' | 'info' | 'destructive'> = {
@@ -152,6 +153,18 @@ export function OrderDetailView({
                 {order.shipToPostalCode}
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tracking Number</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TrackingNumberForm
+              orderNumber={order.orderNumber}
+              trackingNumber={order.trackingNumber}
+            />
           </CardContent>
         </Card>
 

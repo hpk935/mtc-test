@@ -113,6 +113,7 @@ export async function findOrderByNumber(orderNumber: string) {
             costAmount: orders.costAmount,
             orderStatus: orders.orderStatus,
             shippingNote: orders.shippingNote,
+            trackingNumber: orders.trackingNumber,
             createdAt: orders.createdAt,
         })
         .from(orders)
@@ -160,7 +161,7 @@ export async function getOrderItems({
             .from(orderItems)
             .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))
             .where(where)
-            .orderBy(asc(orderItems.id))
+            .orderBy(asc(orderItems.itemNumber))
             .limit(pageSize)
             .offset(offset),
         db.select({ total: count() }).from(orderItems).where(where),
@@ -227,7 +228,7 @@ export async function getOrderForEdit(orderNumber: string) {
         .from(orderItems)
         .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))
         .where(eq(orderItems.orderNumber, orderNumber))
-        .orderBy(asc(orderItems.id));
+        .orderBy(asc(orderItems.itemNumber));
 
     return { order: row.order, customerName: row.customerName, items };
 }

@@ -57,6 +57,13 @@
       "when": 1776233985987,
       "tag": "0007_silent_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776477622437,
+      "tag": "0008_romantic_landau",
+      "breakpoints": true
     }
   ]
 }
