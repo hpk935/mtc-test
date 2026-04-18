@@ -932,7 +932,7 @@ export function OrderForm({
 
         {/* Rows */}
         <div className="space-y-3">
-          {lineItems.map((item) => (
+          {lineItems.map((item, index) => (
             <LineItemRow
               key={item.key}
               item={item}
@@ -941,6 +941,8 @@ export function OrderForm({
               }
               onRemove={() => removeLineItem(item.key)}
               canRemove={lineItems.length > 1}
+              isLast={index === lineItems.length - 1}
+              onAddRow={addLineItem}
             />
           ))}
         </div>
@@ -1038,17 +1040,34 @@ function LineItemRow({
   onUpdate,
   onRemove,
   canRemove,
+  isLast,
+  onAddRow,
 }: {
   item: LineItem;
   onUpdate: (field: keyof LineItem, value: string | number) => void;
   onRemove: () => void;
   canRemove: boolean;
+  isLast: boolean;
+  onAddRow: () => void;
 }) {
   const [productQuery, setProductQuery] = useState(item.itemNumber);
   const [results, setResults] = useState<ProductResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
+  const discountRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus the product search input when a new empty row is mounted
+  useEffect(() => {
+    if (!item.itemNumber) {
+      inputRef.current?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -1057,16 +1076,26 @@ function LineItemRow({
         !containerRef.current.contains(e.target as Node)
       ) {
         setIsOpen(false);
+        setHighlightedIndex(-1);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && resultsRef.current) {
+      const items = resultsRef.current.querySelectorAll('[role="option"]');
+      items[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightedIndex]);
+
   function handleProductSearch(value: string) {
     setProductQuery(value);
     onUpdate('itemNumber', '');
     onUpdate('description', '');
+    setHighlightedIndex(-1);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (value.trim().length < 2) {
@@ -1081,8 +1110,10 @@ function LineItemRow({
       );
       if (res.ok) {
         const json = await res.json();
-        setResults(json.data?.products ?? []);
+        const products = json.data?.products ?? [];
+        setResults(products);
         setIsOpen(true);
+        setHighlightedIndex(products.length > 0 ? 0 : -1);
       }
     }, 300);
   }
@@ -1090,11 +1121,65 @@ function LineItemRow({
   function selectProduct(product: ProductResult) {
     setProductQuery(product.itemNumber);
     setIsOpen(false);
+    setHighlightedIndex(-1);
     onUpdate('itemNumber', product.itemNumber);
     onUpdate('description', product.description);
     onUpdate('unitPrice', Number(product.casePrice));
     onUpdate('qtyAvailable', product.qtyAvailable);
     onUpdate('innerCasePrice', Number(product.minimumPackPrice));
+    // Move focus to quantity field after selecting a product
+    setTimeout(() => qtyRef.current?.focus(), 0);
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!isOpen || results.length === 0) {
+      // If Enter is pressed with no dropdown, move to qty
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        qtyRef.current?.focus();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev < results.length - 1 ? prev + 1 : 0,
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev > 0 ? prev - 1 : results.length - 1,
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < results.length) {
+          selectProduct(results[highlightedIndex]);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+        inputRef.current?.focus();
+        break;
+      case 'Tab':
+        // Close dropdown and let Tab proceed naturally
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+        break;
+    }
+  }
+
+  function handleDiscountKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // When tabbing forward from the last row's discount, add a new row
+    if (e.key === 'Tab' && !e.shiftKey && isLast) {
+      e.preventDefault();
+      onAddRow();
+    }
   }
 
   return (
@@ -1102,19 +1187,40 @@ function LineItemRow({
       {/* Product search */}
       <div className="relative" ref={containerRef}>
         <Input
+          ref={inputRef}
           placeholder="Search product..."
           value={productQuery}
           onChange={(e) => handleProductSearch(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          onFocus={() => {
+            if (results.length > 0 && !item.itemNumber) {
+              setIsOpen(true);
+              setHighlightedIndex(0);
+            }
+          }}
           className="h-8 text-sm"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
         />
         {isOpen && results.length > 0 && (
-          <div className="bg-popover border-border absolute top-full z-50 mt-1 w-87.5 rounded-lg border shadow-lg">
-            {results.map((p) => (
+          <div
+            ref={resultsRef}
+            role="listbox"
+            className="bg-popover border-border absolute top-full z-50 mt-1 max-h-64 w-87.5 overflow-y-auto rounded-lg border shadow-lg">
+            {results.map((p, index) => (
               <button
                 key={p.itemNumber}
                 type="button"
-                className="hover:bg-accent flex w-full items-center justify-between px-3 py-2 text-left text-xs first:rounded-t-lg last:rounded-b-lg"
-                onClick={() => selectProduct(p)}>
+                role="option"
+                aria-selected={index === highlightedIndex}
+                className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs first:rounded-t-lg last:rounded-b-lg ${
+                  index === highlightedIndex ? 'bg-accent' : 'hover:bg-accent'
+                }`}
+                onClick={() => selectProduct(p)}
+                onMouseEnter={() => setHighlightedIndex(index)}
+                tabIndex={-1}>
                 <div>
                   <div className="font-medium">{p.itemNumber}</div>
                   <div className="text-muted-foreground max-w-62.5 truncate">
@@ -1147,10 +1253,12 @@ function LineItemRow({
 
       {/* Quantity */}
       <Input
+        ref={qtyRef}
         type="number"
         min={1}
         value={item.qtyOrdered}
         onChange={(e) => onUpdate('qtyOrdered', Number(e.target.value) || 1)}
+        onFocus={(e) => e.target.select()}
         className="h-8 text-right text-sm"
       />
 
@@ -1174,11 +1282,14 @@ function LineItemRow({
 
       {/* Discount */}
       <Input
+        ref={discountRef}
         type="number"
         min={0}
         step="0.01"
         value={item.discount}
         onChange={(e) => onUpdate('discount', Number(e.target.value) || 0)}
+        onKeyDown={handleDiscountKeyDown}
+        onFocus={(e) => e.target.select()}
         className="h-8 text-right text-sm"
       />
 
@@ -1195,7 +1306,8 @@ function LineItemRow({
             variant="ghost"
             size="icon"
             className="size-8"
-            onClick={onRemove}>
+            onClick={onRemove}
+            tabIndex={-1}>
             <Trash2 className="size-4" />
           </Button>
         )}
