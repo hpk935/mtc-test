@@ -203,25 +203,6 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="unitSoldBy">Unit Sold By</Label>
-          <Select
-            name="unitSoldBy"
-            required
-            value={formValues.unitSoldBy}
-            onValueChange={(v) => handleSelectChange('unitSoldBy', v)}>
-            <SelectTrigger id="unitSoldBy">
-              <SelectValue placeholder="Select unit" />
-            </SelectTrigger>
-            <SelectContent>
-              {UNITS_SOLD_BY.map((u) => (
-                <SelectItem key={u} value={u}>
-                  {u}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="upcNumber">
             UPC Number <OptionalTag />
           </Label>
@@ -327,6 +308,25 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
             onChange={handleChange}
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="unitSoldBy">Unit Sold By</Label>
+          <Select
+            name="unitSoldBy"
+            required
+            value={formValues.unitSoldBy}
+            onValueChange={(v) => handleSelectChange('unitSoldBy', v)}>
+            <SelectTrigger id="unitSoldBy">
+              <SelectValue placeholder="Select unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {UNITS_SOLD_BY.map((u) => (
+                <SelectItem key={u} value={u}>
+                  {u}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </FormSection>
 
       <Separator />
@@ -356,7 +356,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="casePrice">Master Case Price</Label>
+          <Label htmlFor="casePrice">Case Price</Label>
           <Input
             id="casePrice"
             name="casePrice"

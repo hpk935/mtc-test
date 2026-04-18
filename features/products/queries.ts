@@ -43,6 +43,7 @@ export async function getProducts({
                 description: products.description,
                 productType: products.productType,
                 casePrice: products.casePrice,
+                minimumPackPrice: products.minimumPackPrice,
                 qtyInStock: products.qtyInStock,
                 qtyAvailable: products.qtyAvailable,
                 isDiscontinued: products.isDiscontinued,

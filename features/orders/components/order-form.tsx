@@ -63,6 +63,7 @@ interface ProductResult {
   itemNumber: string;
   description: string;
   casePrice: string;
+  minimumPackPrice: string;
   qtyAvailable: number;
 }
 
@@ -74,6 +75,7 @@ interface LineItem {
   unitPrice: number;
   discount: number;
   qtyAvailable: number | null;
+  innerCasePrice: number | null;
 }
 
 interface CustomerInfo {
@@ -120,10 +122,8 @@ function formatCurrency(value: number): string {
 }
 
 function lineTotal(item: LineItem): number {
-  return Math.max(
-    0,
-    Math.round((item.qtyOrdered * item.unitPrice - item.discount) * 100) / 100,
-  );
+  const effectivePrice = item.discount > 0 ? item.discount : item.unitPrice;
+  return Math.max(0, Math.round(item.qtyOrdered * effectivePrice * 100) / 100);
 }
 
 function generateKey(): string {
@@ -308,6 +308,7 @@ export function OrderForm({
         unitPrice: Number(li.unitPrice),
         discount: Number(li.discount),
         qtyAvailable: null,
+        innerCasePrice: null,
       }));
     }
     return [
@@ -319,6 +320,7 @@ export function OrderForm({
         unitPrice: 0,
         discount: 0,
         qtyAvailable: null,
+        innerCasePrice: null,
       },
     ];
   });
@@ -456,6 +458,7 @@ export function OrderForm({
         unitPrice: 0,
         discount: 0,
         qtyAvailable: null,
+        innerCasePrice: null,
       },
     ]);
   }
@@ -914,11 +917,12 @@ export function OrderForm({
 
         {/* Header */}
         <div className="border-b pb-2">
-          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_80px_88px_36px] gap-3 text-sm font-medium">
+          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_88px_36px] gap-3 text-sm font-medium">
             <span>Item Number</span>
             <span>Description</span>
             <span className="text-right">Qty</span>
             <span className="text-right">Avail</span>
+            <span className="text-right">Inner Price</span>
             <span className="text-right">Unit Price</span>
             <span className="text-right">Discount</span>
             <span className="text-right">Total</span>
@@ -1090,10 +1094,11 @@ function LineItemRow({
     onUpdate('description', product.description);
     onUpdate('unitPrice', Number(product.casePrice));
     onUpdate('qtyAvailable', product.qtyAvailable);
+    onUpdate('innerCasePrice', Number(product.minimumPackPrice));
   }
 
   return (
-    <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_80px_88px_36px] items-center gap-3">
+    <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_88px_36px] items-center gap-3">
       {/* Product search */}
       <div className="relative" ref={containerRef}>
         <Input
@@ -1153,6 +1158,13 @@ function LineItemRow({
       <span
         className={`text-right text-sm ${item.qtyAvailable !== null && item.qtyAvailable < item.qtyOrdered ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
         {item.qtyAvailable !== null ? item.qtyAvailable : '—'}
+      </span>
+
+      {/* Inner Case Price (read-only reference) */}
+      <span className="text-muted-foreground text-right text-sm">
+        {item.innerCasePrice !== null
+          ? formatCurrency(item.innerCasePrice)
+          : '—'}
       </span>
 
       {/* Unit Price (read-only, set from product) */}

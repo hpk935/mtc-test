@@ -130,10 +130,10 @@ export async function createOrderRecord(input: CreateOrderInput) {
                 error: `Product "${item.itemNumber}" not found.`,
             };
         }
+        const effectivePrice =
+            item.discount > 0 ? item.discount : item.unitPrice;
         const lineTotal =
-            Math.round(
-                (item.qtyOrdered * item.unitPrice - item.discount) * 100,
-            ) / 100;
+            Math.round(item.qtyOrdered * effectivePrice * 100) / 100;
         validatedItems.push({
             itemNumber: item.itemNumber,
             qtyOrdered: item.qtyOrdered,
@@ -258,10 +258,10 @@ export async function updateOrderRecord(
                 error: `Product "${item.itemNumber}" not found.`,
             };
         }
+        const effectivePrice =
+            item.discount > 0 ? item.discount : item.unitPrice;
         const lineTotal =
-            Math.round(
-                (item.qtyOrdered * item.unitPrice - item.discount) * 100,
-            ) / 100;
+            Math.round(item.qtyOrdered * effectivePrice * 100) / 100;
         validatedItems.push({
             itemNumber: item.itemNumber,
             qtyOrdered: item.qtyOrdered,
