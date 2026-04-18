@@ -103,7 +103,20 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    setFormValues((prev) => {
+      const next = { ...prev, [name]: value };
+      if (
+        name === 'dimensionsL' ||
+        name === 'dimensionsW' ||
+        name === 'dimensionsH'
+      ) {
+        const l = parseFloat(next.dimensionsL) || 0;
+        const w = parseFloat(next.dimensionsW) || 0;
+        const h = parseFloat(next.dimensionsH) || 0;
+        next.cubicFeet = ((l * w * h) / 1728).toFixed(4);
+      }
+      return next;
+    });
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -259,7 +272,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dimensionsL">Length</Label>
+          <Label htmlFor="dimensionsL">Length (in)</Label>
           <Input
             id="dimensionsL"
             name="dimensionsL"
@@ -269,7 +282,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dimensionsW">Width</Label>
+          <Label htmlFor="dimensionsW">Width (in)</Label>
           <Input
             id="dimensionsW"
             name="dimensionsW"
@@ -279,7 +292,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dimensionsH">Height</Label>
+          <Label htmlFor="dimensionsH">Height (in)</Label>
           <Input
             id="dimensionsH"
             name="dimensionsH"
@@ -289,17 +302,17 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cubicFeet">Cubic Feet (per master box)</Label>
+          <Label htmlFor="cubicFeet">Cubic Feet (per master box) (ft³)</Label>
+          <input type="hidden" name="cubicFeet" value={formValues.cubicFeet} />
           <Input
             id="cubicFeet"
-            name="cubicFeet"
             placeholder="0.0000"
             value={formValues.cubicFeet}
-            onChange={handleChange}
+            disabled
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="caseWeight">Case Weight (per master box)</Label>
+          <Label htmlFor="caseWeight">Case Weight (per master box) (lbs)</Label>
           <Input
             id="caseWeight"
             name="caseWeight"

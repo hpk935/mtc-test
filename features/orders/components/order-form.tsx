@@ -64,6 +64,8 @@ interface ProductResult {
   description: string;
   casePrice: string;
   minimumPackPrice: string;
+  caseWeight: string;
+  maxQty: number;
   qtyAvailable: number;
 }
 
@@ -76,6 +78,7 @@ interface LineItem {
   discount: number;
   qtyAvailable: number | null;
   innerCasePrice: number | null;
+  unitWeight: number | null;
 }
 
 interface CustomerInfo {
@@ -216,6 +219,8 @@ interface OrderFormInitialData {
     qtyOrdered: number;
     unitPrice: string;
     discount: string;
+    caseWeight: string | null;
+    maxQty: number | null;
   }[];
 }
 
@@ -309,6 +314,10 @@ export function OrderForm({
         discount: Number(li.discount),
         qtyAvailable: null,
         innerCasePrice: null,
+        unitWeight:
+          li.caseWeight != null && li.maxQty
+            ? Number(li.caseWeight) / li.maxQty
+            : null,
       }));
     }
     return [
@@ -321,6 +330,7 @@ export function OrderForm({
         discount: 0,
         qtyAvailable: null,
         innerCasePrice: null,
+        unitWeight: null,
       },
     ];
   });
@@ -459,6 +469,7 @@ export function OrderForm({
         discount: 0,
         qtyAvailable: null,
         innerCasePrice: null,
+        unitWeight: null,
       },
     ]);
   }
@@ -576,6 +587,11 @@ export function OrderForm({
 
   // --- Totals ---
   const subtotal = lineItems.reduce((sum, item) => sum + lineTotal(item), 0);
+  const totalWeight = lineItems.reduce(
+    (sum, item) =>
+      sum + (item.unitWeight ? item.qtyOrdered * item.unitWeight : 0),
+    0,
+  );
   const freight = Number(freightAmount) || 0;
   const tax = Number(salesTaxAmount) || 0;
   const total = subtotal + freight + tax;
@@ -917,14 +933,15 @@ export function OrderForm({
 
         {/* Header */}
         <div className="border-b pb-2">
-          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_88px_36px] gap-3 text-sm font-medium">
+          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
             <span>Item Number</span>
             <span>Description</span>
             <span className="text-right">Qty</span>
             <span className="text-right">Avail</span>
             <span className="text-right">Inner Price</span>
-            <span className="text-right">Unit Price</span>
+            <span className="text-right">Case Price</span>
             <span className="text-right">Discount</span>
+            <span className="text-right">Weight</span>
             <span className="text-right">Total</span>
             <span />
           </div>
@@ -947,10 +964,21 @@ export function OrderForm({
           ))}
         </div>
 
-        {/* Subtotal */}
-        <div className="border-t pt-3">
-          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_80px_88px_36px] gap-3 text-sm font-medium">
-            <span className="col-span-6 text-right">Subtotal</span>
+        {/* Subtotal + Total Weight */}
+        <div className="space-y-1 border-t pt-3">
+          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
+            <span className="col-span-8 text-right">Total Weight</span>
+            <span className="text-right">
+              {totalWeight.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{' '}
+              lbs
+            </span>
+            <span />
+          </div>
+          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
+            <span className="col-span-8 text-right">Subtotal</span>
             <span className="text-right">{formatCurrency(subtotal)}</span>
             <span />
           </div>
@@ -1127,6 +1155,9 @@ function LineItemRow({
     onUpdate('unitPrice', Number(product.casePrice));
     onUpdate('qtyAvailable', product.qtyAvailable);
     onUpdate('innerCasePrice', Number(product.minimumPackPrice));
+    const unitWt =
+      product.maxQty > 0 ? Number(product.caseWeight) / product.maxQty : 0;
+    onUpdate('unitWeight', Math.round(unitWt * 10000) / 10000);
     // Move focus to quantity field after selecting a product
     setTimeout(() => qtyRef.current?.focus(), 0);
   }
@@ -1183,7 +1214,7 @@ function LineItemRow({
   }
 
   return (
-    <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_88px_36px] items-center gap-3">
+    <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] items-center gap-3">
       {/* Product search */}
       <div className="relative" ref={containerRef}>
         <Input
@@ -1292,6 +1323,16 @@ function LineItemRow({
         onFocus={(e) => e.target.select()}
         className="h-8 text-right text-sm"
       />
+
+      {/* Line Weight */}
+      <span className="text-muted-foreground text-right text-sm">
+        {item.unitWeight != null
+          ? (item.qtyOrdered * item.unitWeight).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          : '—'}
+      </span>
 
       {/* Line Total */}
       <span className="text-right text-sm font-medium">

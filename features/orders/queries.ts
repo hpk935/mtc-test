@@ -156,6 +156,8 @@ export async function getOrderItems({
                 qtyShipped: orderItems.qtyShipped,
                 discount: orderItems.discount,
                 lineTotal: orderItems.lineTotal,
+                caseWeight: products.caseWeight,
+                maxQty: products.maxQty,
                 invoiceNumber: orderItems.invoiceNumber,
             })
             .from(orderItems)
@@ -224,6 +226,8 @@ export async function getOrderForEdit(orderNumber: string) {
             qtyOrdered: orderItems.qtyOrdered,
             unitPrice: orderItems.unitPrice,
             discount: orderItems.discount,
+            caseWeight: products.caseWeight,
+            maxQty: products.maxQty,
         })
         .from(orderItems)
         .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))

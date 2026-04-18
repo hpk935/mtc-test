@@ -197,6 +197,8 @@ export async function getInvoiceItems({
                 qtyShipped: orderItems.qtyShipped,
                 discount: orderItems.discount,
                 lineTotal: orderItems.lineTotal,
+                caseWeight: products.caseWeight,
+                maxQty: products.maxQty,
             })
             .from(orderItems)
             .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))

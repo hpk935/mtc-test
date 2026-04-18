@@ -44,6 +44,8 @@ export async function getProducts({
                 productType: products.productType,
                 casePrice: products.casePrice,
                 minimumPackPrice: products.minimumPackPrice,
+                caseWeight: products.caseWeight,
+                maxQty: products.maxQty,
                 qtyInStock: products.qtyInStock,
                 qtyAvailable: products.qtyAvailable,
                 isDiscontinued: products.isDiscontinued,

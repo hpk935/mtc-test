@@ -209,6 +209,7 @@ export function OrderDetailView({
                       <TableHead className="text-right">Ordered</TableHead>
                       <TableHead className="text-right">Shipped</TableHead>
                       <TableHead className="text-right">Discount</TableHead>
+                      <TableHead className="text-right">Weight</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -240,6 +241,17 @@ export function OrderDetailView({
                             : '—'}
                         </TableCell>
                         <TableCell className="text-right">
+                          {item.caseWeight && item.maxQty
+                            ? (
+                                (item.qtyOrdered * Number(item.caseWeight)) /
+                                item.maxQty
+                              ).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }) + ' lbs'
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="text-right">
                           {formatCurrency(item.lineTotal)}
                         </TableCell>
                       </TableRow>
@@ -263,6 +275,24 @@ export function OrderDetailView({
             <CardTitle>Order Totals</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <DetailRow label="Total Weight">
+              {items
+                .reduce(
+                  (sum, item) =>
+                    sum +
+                    (item.caseWeight && item.maxQty
+                      ? (item.qtyOrdered * Number(item.caseWeight)) /
+                        item.maxQty
+                      : 0),
+                  0,
+                )
+                .toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+              lbs
+            </DetailRow>
+            <Separator />
             <DetailRow label="Subtotal">
               {formatCurrency(order.subtotalAmount)}
             </DetailRow>
