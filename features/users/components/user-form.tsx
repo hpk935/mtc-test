@@ -93,6 +93,33 @@ export function UserForm({ user }: UserFormProps) {
     new Set(defaultPermissions),
   );
 
+  // Track form field values for dirty detection in edit mode
+  const [formValues, setFormValues] = useState({
+    firstName: user?.firstName ?? '',
+    lastName: user?.lastName ?? '',
+    email: user?.email ?? '',
+    role: user?.role ?? 'employee',
+    isActive: String(user?.isActive ?? true),
+  });
+
+  const isDirty = isEdit
+    ? formValues.firstName !== (user?.firstName ?? '') ||
+      formValues.lastName !== (user?.lastName ?? '') ||
+      formValues.email !== (user?.email ?? '') ||
+      formValues.role !== (user?.role ?? 'employee') ||
+      formValues.isActive !== String(user?.isActive ?? true) ||
+      (() => {
+        const orig = new Set(defaultPermissions);
+        if (selectedPerms.size !== orig.size) return true;
+        for (const p of selectedPerms) if (!orig.has(p)) return true;
+        return false;
+      })()
+    : true;
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFormValues((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
   function getViewPerm(module: string): Permission {
     return `${module}:view` as Permission;
   }
@@ -144,7 +171,8 @@ export function UserForm({ user }: UserFormProps) {
               <Input
                 id="firstName"
                 name="firstName"
-                defaultValue={user?.firstName ?? ''}
+                value={formValues.firstName}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -153,7 +181,8 @@ export function UserForm({ user }: UserFormProps) {
               <Input
                 id="lastName"
                 name="lastName"
-                defaultValue={user?.lastName ?? ''}
+                value={formValues.lastName}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -188,7 +217,12 @@ export function UserForm({ user }: UserFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select name="role" defaultValue={user?.role ?? 'employee'}>
+            <Select
+              name="role"
+              value={formValues.role}
+              onValueChange={(v) =>
+                setFormValues((prev) => ({ ...prev, role: v }))
+              }>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -205,7 +239,12 @@ export function UserForm({ user }: UserFormProps) {
           {isEdit && (
             <div className="space-y-2">
               <Label htmlFor="isActive">Status</Label>
-              <Select name="isActive" defaultValue={String(user.isActive)}>
+              <Select
+                name="isActive"
+                value={formValues.isActive}
+                onValueChange={(v) =>
+                  setFormValues((prev) => ({ ...prev, isActive: v }))
+                }>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -262,7 +301,7 @@ export function UserForm({ user }: UserFormProps) {
       </Card>
 
       <div className="flex justify-end gap-3">
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending || (isEdit && !isDirty)}>
           {isPending
             ? isEdit
               ? 'Saving...'
