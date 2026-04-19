@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import {
     createOrderSchema,
     updateOrderSchema,
@@ -24,7 +24,7 @@ export async function createOrder(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const rawJson = formData.get('orderData');
     if (typeof rawJson !== 'string') {
@@ -62,7 +62,7 @@ export async function updateOrder(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const rawJson = formData.get('orderData');
     if (typeof rawJson !== 'string') {
@@ -96,7 +96,7 @@ export async function updateOrder(
 }
 
 export async function deleteOrder(orderNumber: string): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const result = await deleteOrderRecord(orderNumber);
 
@@ -108,7 +108,7 @@ export async function deleteOrder(orderNumber: string): Promise<ActionResult> {
 }
 
 export async function voidOrder(orderNumber: string): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const result = await voidOrderRecord(orderNumber);
 
@@ -124,7 +124,7 @@ export async function voidOrder(orderNumber: string): Promise<ActionResult> {
 export async function postToInvoice(
     orderNumber: string,
 ): Promise<ActionResult<string>> {
-    await requireAuth();
+    await requireAdmin();
 
     const result = await postOrderToInvoice(orderNumber);
 
@@ -141,7 +141,7 @@ export async function updateTrackingNumber(
     orderNumber: string,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = updateTrackingNumberSchema.safeParse({
         trackingNumber: formData.get('trackingNumber'),

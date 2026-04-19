@@ -9,6 +9,7 @@ import { InvoiceTable } from '@/features/invoices/components/invoice-table';
 import { DataTableSearch } from '@/components/data/data-table-search';
 import { DataTableFilter } from '@/components/data/data-table-filter';
 import { DataTablePagination } from '@/components/data/data-table-pagination';
+import { requirePermission } from '@/lib/auth';
 
 const PAGE_SIZE = 20;
 
@@ -23,6 +24,7 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<{ search?: string; page?: string; status?: string }>;
 }) {
+  await requirePermission('invoices:view');
   const params = await searchParams;
   const search = params.search ?? '';
   const page = Math.max(1, Number(params.page) || 1);

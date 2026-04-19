@@ -9,6 +9,7 @@ import {
 } from '@/features/orders/queries';
 import { OrderDetailView } from '@/features/orders/components/order-detail';
 import { OrderActions } from '@/features/orders/components/order-actions';
+import { requirePermission } from '@/lib/auth';
 
 export default async function OrderDetailPage({
   params,
@@ -17,6 +18,7 @@ export default async function OrderDetailPage({
   params: Promise<{ orderNumber: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
+  const session = await requirePermission('orders:view');
   const { orderNumber } = await params;
   const { page: pageParam } = await searchParams;
   const itemsPage = Math.max(1, Number(pageParam) || 1);
@@ -52,6 +54,7 @@ export default async function OrderDetailPage({
         <OrderActions
           orderNumber={orderNumber}
           orderStatus={order.orderStatus}
+          isAdmin={session.role === 'admin'}
         />
       </div>
       <OrderDetailView

@@ -4,12 +4,14 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { findProductById } from '@/features/products/queries';
 import { ProductForm } from '@/features/products/components/product-form';
+import { requirePermission } from '@/lib/auth';
 
 export default async function EditProductPage({
   params,
 }: {
   params: Promise<{ productId: string }>;
 }) {
+  const session = await requirePermission('products:view');
   const { productId } = await params;
   const product = await findProductById(Number(productId));
 
@@ -30,10 +32,14 @@ export default async function EditProductPage({
           {product.description}
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Product {product.itemNumber} &middot; Edit details below
+          Product {product.itemNumber}
         </p>
       </div>
-      <ProductForm product={product} mode="edit" />
+      <ProductForm
+        product={product}
+        mode="edit"
+        readOnly={session.role !== 'admin'}
+      />
     </div>
   );
 }

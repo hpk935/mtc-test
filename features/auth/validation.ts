@@ -14,5 +14,14 @@ export const registerSchema = z.object({
     role: z.enum(USER_ROLES).default('employee'),
 });
 
+export const changePasswordSchema = z.object({
+    email: z.email(),
+    currentPassword: z
+        .string()
+        .min(8, 'Password must be at least 8 characters'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import {
     createCustomerWithShipToSchema,
     updateCustomerSchema,
@@ -24,7 +24,7 @@ export async function createCustomer(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const raw = Object.fromEntries(formData);
     const parsed = createCustomerWithShipToSchema.safeParse(raw);
@@ -119,7 +119,7 @@ export async function updateCustomer(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const customerNumber = formData.get('customerNumber') as string;
     if (!customerNumber) {
@@ -152,7 +152,7 @@ export async function createShipTo(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const raw = Object.fromEntries(formData);
     const parsed = createShipToSchema.safeParse(raw);
@@ -181,7 +181,7 @@ export async function updateShipTo(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const shipToId = formData.get('shipToId') as string;
     const customerNumber = formData.get('customerNumber') as string;
@@ -213,7 +213,7 @@ export async function updateShipTo(
 }
 
 export async function deleteShipTo(formData: FormData): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const shipToId = formData.get('shipToId') as string;
     const customerNumber = formData.get('customerNumber') as string;

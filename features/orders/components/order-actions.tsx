@@ -19,9 +19,14 @@ import { deleteOrder, voidOrder, postToInvoice } from '../actions';
 interface OrderActionsProps {
   orderNumber: string;
   orderStatus: string;
+  isAdmin: boolean;
 }
 
-export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
+export function OrderActions({
+  orderNumber,
+  orderStatus,
+  isAdmin,
+}: OrderActionsProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
@@ -29,7 +34,7 @@ export function OrderActions({ orderNumber, orderStatus }: OrderActionsProps) {
   const [isVoiding, setIsVoiding] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
 
-  if (orderStatus !== 'open') {
+  if (orderStatus !== 'open' || !isAdmin) {
     return null;
   }
 

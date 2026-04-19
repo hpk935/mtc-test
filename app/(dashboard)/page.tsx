@@ -17,11 +17,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { getSession } from '@/lib/auth';
 export default async function DashboardPage() {
-  const [stats, recentOrders, recentInvoices] = await Promise.all([
+  const [stats, recentOrders, recentInvoices, session] = await Promise.all([
     getDashboardStats(),
     getRecentOrders(10),
     getRecentInvoices(10),
+    getSession(),
   ]);
 
   return (
@@ -41,7 +43,7 @@ export default async function DashboardPage() {
       </Card>
 
       <div>
-        <QuickActions />
+        <QuickActions isAdmin={session?.role === 'admin'} />
       </div>
 
       <StatsCards

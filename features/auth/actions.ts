@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
 import { users } from '@/features/users/schema';
 import { findUserByEmail } from '@/features/users/queries';
@@ -13,7 +14,11 @@ import {
     setSessionCookie,
     deleteSessionCookie,
 } from './service';
-import { loginSchema, registerSchema } from './validation';
+import {
+    loginSchema,
+    registerSchema,
+    changePasswordSchema,
+} from './validation';
 
 export async function login(
     _prevState: ActionResult,
@@ -92,4 +97,49 @@ export async function register(
 export async function logout(): Promise<void> {
     await deleteSessionCookie();
     redirect('/login');
+}
+
+export async function changePassword(
+    _prevState: ActionResult,
+    formData: FormData,
+): Promise<ActionResult> {
+    const raw = Object.fromEntries(formData);
+    const parsed = changePasswordSchema.safeParse(raw);
+    if (!parsed.success) {
+        return {
+            success: false,
+            error: 'Please check all fields and try again.',
+        };
+    }
+
+    const { email, currentPassword, newPassword } = parsed.data;
+
+    if (currentPassword === newPassword) {
+        return {
+            success: false,
+            error: 'New password must be different from current password.',
+        };
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+        return { success: false, error: 'Invalid email or password.' };
+    }
+
+    if (!user.isActive) {
+        return { success: false, error: 'Your account has been deactivated.' };
+    }
+
+    const valid = await verifyPassword(user.passwordHash, currentPassword);
+    if (!valid) {
+        return { success: false, error: 'Invalid email or password.' };
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await db
+        .update(users)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+    return { success: true, data: undefined };
 }

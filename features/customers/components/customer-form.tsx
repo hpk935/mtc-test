@@ -63,6 +63,7 @@ interface CustomerFormProps {
   customer?: CustomerData;
   mode?: 'create' | 'edit';
   shipToAddresses?: ShipToAddress[];
+  readOnly?: boolean;
 }
 
 function FormSection({
@@ -100,6 +101,7 @@ export function CustomerForm({
   customer,
   mode = 'create',
   shipToAddresses,
+  readOnly,
 }: CustomerFormProps) {
   const action = mode === 'edit' ? updateCustomer : createCustomer;
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -654,20 +656,22 @@ export function CustomerForm({
       <Separator />
 
       {/* Actions */}
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" asChild>
-          <Link href="/customers">Cancel</Link>
-        </Button>
-        <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
-          {pending
-            ? isEdit
-              ? 'Saving...'
-              : 'Creating...'
-            : isEdit
-              ? 'Save Changes'
-              : 'Create Customer'}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/customers">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
+            {pending
+              ? isEdit
+                ? 'Saving...'
+                : 'Creating...'
+              : isEdit
+                ? 'Save Changes'
+                : 'Create Customer'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

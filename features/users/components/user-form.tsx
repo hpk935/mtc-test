@@ -36,19 +36,19 @@ const PERMISSION_GROUPS: Record<
 > = {
   orders: {
     label: 'Orders',
-    permissions: ['orders:view', 'orders:edit'],
+    permissions: ['orders:view'],
   },
   invoices: {
     label: 'Invoices',
-    permissions: ['invoices:view', 'invoices:edit'],
+    permissions: ['invoices:view'],
   },
   products: {
     label: 'Products',
-    permissions: ['products:view', 'products:edit'],
+    permissions: ['products:view'],
   },
   customers: {
     label: 'Customers',
-    permissions: ['customers:view', 'customers:edit'],
+    permissions: ['customers:view'],
   },
   reports: {
     label: 'Reports',
@@ -56,7 +56,7 @@ const PERMISSION_GROUPS: Record<
   },
   users: {
     label: 'Users',
-    permissions: ['users:view', 'users:manage'],
+    permissions: ['users:view'],
   },
 };
 

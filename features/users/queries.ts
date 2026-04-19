@@ -1,4 +1,4 @@
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, asc, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { users } from './schema';
 import { generateEmployeeId } from './service';
@@ -28,8 +28,8 @@ export async function getNextEmployeeId(): Promise<string> {
     return generateEmployeeId(result?.maxId ?? null);
 }
 
-export async function getAllUsers() {
-    return db
+export async function getAllUsers(isActive?: boolean) {
+    const query = db
         .select({
             id: users.id,
             employeeId: users.employeeId,
@@ -42,8 +42,13 @@ export async function getAllUsers() {
             createdAt: users.createdAt,
             updatedAt: users.updatedAt,
         })
-        .from(users)
-        .orderBy(desc(users.createdAt));
+        .from(users);
+
+    if (isActive !== undefined) {
+        query.where(eq(users.isActive, isActive));
+    }
+
+    return query.orderBy(asc(users.id));
 }
 
 export type UserListItem = Awaited<ReturnType<typeof getAllUsers>>[number];

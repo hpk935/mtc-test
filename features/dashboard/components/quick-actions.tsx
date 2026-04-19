@@ -20,7 +20,9 @@ const actions = [
   },
 ];
 
-export function QuickActions() {
+export function QuickActions({ isAdmin }: { isAdmin: boolean }) {
+  if (!isAdmin) return null;
+
   return (
     <div className="space-y-3">
       <h2 className="text-muted-foreground text-sm font-medium">

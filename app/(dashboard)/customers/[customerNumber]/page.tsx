@@ -10,6 +10,7 @@ import {
 import { getInvoicesByCustomer } from '@/features/invoices/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
 import { PurchaseHistory } from '@/features/customers/components/customer-orders';
+import { requirePermission } from '@/lib/auth';
 
 export default async function CustomerDetailPage({
   params,
@@ -18,6 +19,7 @@ export default async function CustomerDetailPage({
   params: Promise<{ customerNumber: string }>;
   searchParams: Promise<{ invoicesPage?: string }>;
 }) {
+  const session = await requirePermission('customers:view');
   const { customerNumber } = await params;
   const { invoicesPage } = await searchParams;
   const invoicesCurrentPage = Math.max(1, Number(invoicesPage) || 1);
@@ -73,7 +75,7 @@ export default async function CustomerDetailPage({
           {customer.customerName}
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Customer {customerNumber} &middot; Edit details below
+          Customer {customerNumber}
         </p>
       </div>
       <div className="grid gap-6 xl:grid-cols-5">
@@ -83,6 +85,7 @@ export default async function CustomerDetailPage({
             customer={customerData}
             mode="edit"
             shipToAddresses={shipToAddresses}
+            readOnly={session.role !== 'admin'}
           />
         </div>
         <div className="xl:col-span-2">

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { updateInvoiceStatusSchema, applyPaymentSchema } from './validation';
 import { updateInvoiceStatusRecord, applyPaymentRecord } from './service';
 import type { ActionResult } from '@/types';
@@ -10,7 +10,7 @@ export async function updateInvoiceStatus(
     invoiceNumber: string,
     newStatus: string,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = updateInvoiceStatusSchema.safeParse({
         invoiceNumber,
@@ -44,7 +44,7 @@ export async function applyPayment(
     paymentDate: string,
     paymentRef?: string,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = applyPaymentSchema.safeParse({
         invoiceNumber,

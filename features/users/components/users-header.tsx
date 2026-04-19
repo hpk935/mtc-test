@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function UsersHeader() {
+export function UsersHeader({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -11,12 +11,14 @@ export function UsersHeader() {
           Manage employee accounts, roles, and permissions.
         </p>
       </div>
-      <Button asChild>
-        <Link href="/users/new">
-          <Plus className="mr-2 size-4" />
-          New User
-        </Link>
-      </Button>
+      {isAdmin && (
+        <Button asChild>
+          <Link href="/users/new">
+            <Plus className="mr-2 size-4" />
+            New User
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

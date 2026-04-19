@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/auth';
+import { findUserById } from '@/features/users/queries';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -16,11 +17,13 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  const user = session ? await findUserById(session.userId) : null;
+  const permissions = (user?.permissions ?? []) as string[];
 
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <AppSidebar session={session} />
+        <AppSidebar session={session} permissions={permissions} />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2">

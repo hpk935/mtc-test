@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { createProductSchema, updateProductSchema } from './validation';
 import {
     createProductRecord,
@@ -15,7 +15,7 @@ export async function createProduct(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const raw = Object.fromEntries(formData);
     const parsed = createProductSchema.safeParse(raw);
@@ -46,7 +46,7 @@ export async function updateProduct(
     _prevState: ActionResult,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const productId = Number(formData.get('productId'));
     if (!productId) {

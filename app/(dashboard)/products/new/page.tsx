@@ -2,8 +2,11 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductForm } from '@/features/products/components/product-form';
+import { requireAdmin } from '@/lib/auth';
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+  await requireAdmin();
+
   return (
     <div className="flex w-full flex-col gap-6">
       <Button variant="ghost" size="sm" asChild className="w-fit">

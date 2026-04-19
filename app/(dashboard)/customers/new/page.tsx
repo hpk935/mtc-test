@@ -3,8 +3,10 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getSalespersons } from '@/features/customers/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
+import { requireAdmin } from '@/lib/auth';
 
 export default async function NewCustomerPage() {
+  await requireAdmin();
   const salespersons = await getSalespersons();
 
   return (

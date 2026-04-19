@@ -9,6 +9,7 @@ import { CustomerTable } from '@/features/customers/components/customer-table';
 import { DataTableSearch } from '@/components/data/data-table-search';
 import { DataTableFilter } from '@/components/data/data-table-filter';
 import { DataTablePagination } from '@/components/data/data-table-pagination';
+import { requirePermission } from '@/lib/auth';
 
 const PAGE_SIZE = 20;
 
@@ -22,6 +23,7 @@ export default async function CustomersPage({
 }: {
   searchParams: Promise<{ search?: string; page?: string; status?: string }>;
 }) {
+  const session = await requirePermission('customers:view');
   const params = await searchParams;
   const search = params.search ?? '';
   const page = Math.max(1, Number(params.page) || 1);
@@ -41,7 +43,7 @@ export default async function CustomersPage({
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <CustomersHeader />
+      <CustomersHeader isAdmin={session.role === 'admin'} />
 
       <Suspense fallback={null}>
         <div className="flex items-center gap-3">

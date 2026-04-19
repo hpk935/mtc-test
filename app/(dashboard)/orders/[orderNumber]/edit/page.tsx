@@ -3,12 +3,14 @@ import { getSalespersons } from '@/features/customers/queries';
 import { FREIGHT_TERMS } from '@/features/customers/constants';
 import { getOrderForEdit } from '@/features/orders/queries';
 import { OrderForm } from '@/features/orders/components/order-form';
+import { requireAdmin } from '@/lib/auth';
 
 export default async function EditOrderPage({
   params,
 }: {
   params: Promise<{ orderNumber: string }>;
 }) {
+  await requireAdmin();
   const { orderNumber } = await params;
 
   const [data, salespersons] = await Promise.all([

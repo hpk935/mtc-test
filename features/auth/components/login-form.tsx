@@ -17,7 +17,11 @@ import type { ActionResult } from '@/types';
 
 const initialState: ActionResult = { success: false, error: '' };
 
-export function LoginForm() {
+export function LoginForm({
+  onChangePassword,
+}: {
+  onChangePassword?: () => void;
+}) {
   const [state, formAction, pending] = useActionState(login, initialState);
 
   useEffect(() => {
@@ -61,6 +65,16 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? 'Signing in...' : 'Sign in'}
           </Button>
+
+          {onChangePassword && (
+            <Button
+              type="button"
+              variant="link"
+              className="w-full"
+              onClick={onChangePassword}>
+              Change Password
+            </Button>
+          )}
         </form>
       </CardContent>
     </Card>

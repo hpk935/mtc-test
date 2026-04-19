@@ -8,6 +8,7 @@ import {
   getPaymentsByInvoice,
 } from '@/features/invoices/queries';
 import { InvoiceDetailView } from '@/features/invoices/components/invoice-detail';
+import { requirePermission } from '@/lib/auth';
 import type { InvoiceStatus } from '@/features/invoices/constants';
 
 export default async function InvoiceDetailPage({
@@ -17,6 +18,7 @@ export default async function InvoiceDetailPage({
   params: Promise<{ invoiceNumber: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
+  await requirePermission('invoices:view');
   const { invoiceNumber } = await params;
   const { page: pageParam } = await searchParams;
   const itemsPage = Math.max(1, Number(pageParam) || 1);

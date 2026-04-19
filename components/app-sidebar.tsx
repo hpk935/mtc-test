@@ -25,6 +25,16 @@ import {
   UserCog,
 } from 'lucide-react';
 import type { Session } from '@/features/auth/types';
+import type { Permission } from '@/features/users/constants';
+
+const NAV_PERMISSION_MAP: Record<string, Permission> = {
+  '/orders': 'orders:view',
+  '/invoices': 'invoices:view',
+  '/products': 'products:view',
+  '/customers': 'customers:view',
+  '/reports': 'reports:view',
+  '/users': 'users:view',
+};
 
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -39,8 +49,20 @@ const navItems = [
 
 export function AppSidebar({
   session,
+  permissions = [],
   ...props
-}: React.ComponentProps<typeof Sidebar> & { session: Session | null }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  session: Session | null;
+  permissions?: string[];
+}) {
+  const isAdmin = session?.role === 'admin';
+  const visibleItems = navItems.filter((item) => {
+    const requiredPerm = NAV_PERMISSION_MAP[item.url];
+    if (!requiredPerm) return true; // Dashboard, Vendors — always visible
+    if (isAdmin) return true;
+    return permissions.includes(requiredPerm);
+  });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -67,7 +89,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems} />
+        <NavMain items={visibleItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser session={session} />

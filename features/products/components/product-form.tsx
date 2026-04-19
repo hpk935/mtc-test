@@ -53,9 +53,14 @@ const initialState: ActionResult = { success: false, error: '' };
 interface ProductFormProps {
   product?: Product;
   mode?: 'create' | 'edit';
+  readOnly?: boolean;
 }
 
-export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
+export function ProductForm({
+  product,
+  mode = 'create',
+  readOnly,
+}: ProductFormProps) {
   const action = mode === 'edit' ? updateProduct : createProduct;
   const [state, formAction, pending] = useActionState(action, initialState);
   const isEdit = mode === 'edit';
@@ -527,20 +532,22 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
       <Separator />
 
       {/* Actions */}
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" asChild>
-          <Link href="/products">Cancel</Link>
-        </Button>
-        <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
-          {pending
-            ? isEdit
-              ? 'Saving...'
-              : 'Creating...'
-            : isEdit
-              ? 'Save Changes'
-              : 'Create Product'}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/products">Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
+            {pending
+              ? isEdit
+                ? 'Saving...'
+                : 'Creating...'
+              : isEdit
+                ? 'Save Changes'
+                : 'Create Product'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
