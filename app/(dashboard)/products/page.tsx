@@ -24,9 +24,9 @@ export default async function ProductsPage({
   const discontinued =
     params.status === 'discontinued'
       ? true
-      : params.status === 'active'
-        ? false
-        : undefined;
+      : params.status === 'all'
+        ? undefined
+        : false;
 
   const { products, totalCount, totalPages } = await getProducts({
     search: search || undefined,
@@ -45,6 +45,7 @@ export default async function ProductsPage({
           <DataTableFilter
             options={STATUS_OPTIONS}
             paramName="status"
+            defaultValue="active"
             allLabel="All Products"
           />
         </div>

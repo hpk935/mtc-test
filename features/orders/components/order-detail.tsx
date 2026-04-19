@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -185,13 +187,23 @@ export function OrderDetailView({
       {/* Right column — line items + totals */}
       <div className="space-y-6 lg:col-span-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>
               Line Items{' '}
               <span className="text-muted-foreground font-normal">
                 ({totalCount})
               </span>
             </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-primary text-primary hover:bg-primary/5 hover:text-primary/80"
+              asChild>
+              <Link href={`/orders/${order.orderNumber}/print`} target="_blank">
+                <Printer className="mr-2 size-4" />
+                Pick Sheet
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
             {totalCount === 0 ? (
