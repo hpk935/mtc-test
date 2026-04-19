@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -103,10 +103,27 @@ export function CustomerForm({
   shipToAddresses,
   readOnly,
 }: CustomerFormProps) {
-  const action = mode === 'edit' ? updateCustomer : createCustomer;
-  const [state, formAction, pending] = useActionState(action, initialState);
+  const serverAction = mode === 'edit' ? updateCustomer : createCustomer;
   const isEdit = mode === 'edit';
   const today = new Date().toISOString().split('T')[0];
+
+  async function actionWithToast(
+    _prevState: ActionResult,
+    formData: FormData,
+  ): Promise<ActionResult> {
+    const result = await serverAction(_prevState, formData);
+    if (result.success && isEdit) {
+      toast.success('Customer updated successfully.');
+    } else if (!result.success && result.error) {
+      toast.error(result.error);
+    }
+    return result;
+  }
+
+  const [state, formAction, pending] = useActionState(
+    actionWithToast,
+    initialState,
+  );
 
   const buildInitialValues = () => ({
     customerNumber: customer?.customerNumber ?? '',
@@ -164,22 +181,6 @@ export function CustomerForm({
   const handleSelectChange = (name: string, value: string) => {
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
-
-  // Update saved baseline after successful edit
-  const formValuesRef = useRef(formValues);
-
-  useEffect(() => {
-    formValuesRef.current = formValues;
-  });
-
-  useEffect(() => {
-    if (state.success && isEdit) {
-      setSavedValues({ ...formValuesRef.current });
-      toast.success('Customer updated successfully.');
-    } else if (!state.success && state.error) {
-      toast.error(state.error);
-    }
-  }, [state, isEdit]);
 
   return (
     <form action={formAction} className="space-y-8">

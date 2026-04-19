@@ -36,6 +36,7 @@ export default async function EditProductPage({
         </p>
       </div>
       <ProductForm
+        key={String(product.updatedAt)}
         product={product}
         mode="edit"
         readOnly={session.role !== 'admin'}

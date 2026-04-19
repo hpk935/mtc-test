@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -61,9 +61,26 @@ export function ProductForm({
   mode = 'create',
   readOnly,
 }: ProductFormProps) {
-  const action = mode === 'edit' ? updateProduct : createProduct;
-  const [state, formAction, pending] = useActionState(action, initialState);
+  const serverAction = mode === 'edit' ? updateProduct : createProduct;
   const isEdit = mode === 'edit';
+
+  async function actionWithToast(
+    _prevState: ActionResult,
+    formData: FormData,
+  ): Promise<ActionResult> {
+    const result = await serverAction(_prevState, formData);
+    if (result.success && isEdit) {
+      toast.success('Product updated successfully.');
+    } else if (!result.success && result.error) {
+      toast.error(result.error);
+    }
+    return result;
+  }
+
+  const [state, formAction, pending] = useActionState(
+    actionWithToast,
+    initialState,
+  );
 
   const buildInitialValues = () => ({
     itemNumber: product?.itemNumber ?? '',
@@ -127,21 +144,6 @@ export function ProductForm({
   const handleSelectChange = (name: string, value: string) => {
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
-
-  const formValuesRef = useRef(formValues);
-
-  useEffect(() => {
-    formValuesRef.current = formValues;
-  });
-
-  useEffect(() => {
-    if (state.success && isEdit) {
-      setSavedValues({ ...formValuesRef.current });
-      toast.success('Product updated successfully.');
-    } else if (!state.success && state.error) {
-      toast.error(state.error);
-    }
-  }, [state, isEdit]);
 
   return (
     <form action={formAction} className="space-y-8">

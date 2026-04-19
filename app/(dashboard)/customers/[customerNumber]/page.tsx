@@ -81,6 +81,7 @@ export default async function CustomerDetailPage({
       <div className="grid gap-6 xl:grid-cols-5">
         <div className="xl:col-span-3">
           <CustomerForm
+            key={String(customer.updatedAt)}
             salespersons={salespersons}
             customer={customerData}
             mode="edit"
