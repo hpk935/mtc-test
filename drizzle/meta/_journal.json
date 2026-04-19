@@ -64,6 +64,13 @@
       "when": 1776477622437,
       "tag": "0008_romantic_landau",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776558999169,
+      "tag": "0009_rare_black_queen",
+      "breakpoints": true
     }
   ]
 }

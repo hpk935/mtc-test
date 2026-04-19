@@ -22,6 +22,7 @@ import {
   Users,
   Truck,
   BarChart3,
+  UserCog,
 } from 'lucide-react';
 import type { Session } from '@/features/auth/types';
 
@@ -33,6 +34,7 @@ const navItems = [
   { title: 'Customers', url: '/customers', icon: Users },
   { title: 'Vendors', url: '/vendors', icon: Truck },
   { title: 'Reports', url: '/reports', icon: BarChart3 },
+  { title: 'Users', url: '/users', icon: UserCog },
 ];
 
 export function AppSidebar({

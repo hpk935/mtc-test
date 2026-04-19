@@ -37,6 +37,7 @@ export async function getAllUsers() {
             firstName: users.firstName,
             lastName: users.lastName,
             role: users.role,
+            permissions: users.permissions,
             isActive: users.isActive,
             createdAt: users.createdAt,
             updatedAt: users.updatedAt,
@@ -44,3 +45,5 @@ export async function getAllUsers() {
         .from(users)
         .orderBy(desc(users.createdAt));
 }
+
+export type UserListItem = Awaited<ReturnType<typeof getAllUsers>>[number];
