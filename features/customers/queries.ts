@@ -168,10 +168,10 @@ export async function findShipToAddress(shipToId: string) {
 export async function getMaxNumericCustomerNumber(): Promise<number> {
     const [result] = await db
         .select({
-            maxNum: sql<number>`max(cast(${customers.customerNumber} as integer))`,
+            maxNum: sql<number>`max(cast(substring(${customers.customerNumber} from 2) as integer))`,
         })
         .from(customers)
-        .where(sql`${customers.customerNumber} ~ '^[0-9]+$'`);
+        .where(sql`${customers.customerNumber} ~ '^c[0-9]+$'`);
     return result?.maxNum ?? 0;
 }
 

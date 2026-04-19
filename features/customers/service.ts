@@ -23,7 +23,7 @@ const NEW_CUSTOMER_NUMBER_START = 10001;
 export async function generateCustomerNumber(): Promise<string> {
     const maxExisting = await getMaxNumericCustomerNumber();
     const next = Math.max(NEW_CUSTOMER_NUMBER_START, maxExisting + 1);
-    return next.toString();
+    return `c${next}`;
 }
 
 export async function generateShipToId(): Promise<string> {
