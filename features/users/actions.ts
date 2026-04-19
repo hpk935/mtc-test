@@ -133,6 +133,7 @@ export async function updateUser(
 
     revalidatePath('/users');
     revalidatePath(`/users/${userId}`);
+    revalidatePath(`/users/${userId}/edit`);
     return { success: true, data: undefined };
 }
 

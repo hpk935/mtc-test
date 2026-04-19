@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,21 +68,25 @@ function formatPermissionLabel(perm: Permission): string {
 export function UserForm({ user }: UserFormProps) {
   const isEdit = !!user;
 
-  const action = isEdit ? updateUser.bind(null, user.id) : createUser;
+  const serverAction = isEdit ? updateUser.bind(null, user.id) : createUser;
 
-  const [state, formAction, isPending] = useActionState(action, {
+  async function actionWithToast(
+    _prevState: ActionResult,
+    formData: FormData,
+  ): Promise<ActionResult> {
+    const result = await serverAction(_prevState, formData);
+    if (result.success && isEdit) {
+      toast.success('User updated successfully.');
+    } else if (!result.success && result.error) {
+      toast.error(result.error);
+    }
+    return result;
+  }
+
+  const [state, formAction, isPending] = useActionState(actionWithToast, {
     success: false,
     error: '',
   } as ActionResult);
-
-  useEffect(() => {
-    if (state && !state.success && state.error) {
-      toast.error(state.error);
-    }
-    if (state?.success && isEdit) {
-      toast.success('User updated successfully.');
-    }
-  }, [state, isEdit]);
 
   const defaultPermissions = user?.permissions ?? [];
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(

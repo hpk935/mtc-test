@@ -41,6 +41,7 @@ export default async function EditUserPage({
         </p>
       </div>
       <UserForm
+        key={String(user.updatedAt)}
         user={{
           id: user.id,
           employeeId: user.employeeId,
