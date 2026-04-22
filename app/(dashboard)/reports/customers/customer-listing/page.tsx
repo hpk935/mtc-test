@@ -65,7 +65,7 @@ export default async function CustomerListingReportPage({
       description="Customers filterable by salesperson, territory, and status.">
       <ReportStats
         items={[
-          { label: 'Total (matching)', value: report.stats.total },
+          { label: 'Matching', value: report.stats.total },
           { label: 'Active', value: report.stats.active },
           { label: 'Inactive', value: report.stats.inactive },
           { label: 'On Hold', value: report.stats.onHold },

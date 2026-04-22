@@ -1,33 +1,4 @@
-import type { AgingBucket, PeriodOption } from './constants';
-
-/**
- * Given an "as of" date and an invoice's due date (or invoice date as fallback),
- * return which aging bucket the balance falls into.
- */
-export function calcAgingBucket(args: {
-    asOf: Date;
-    dueDate: string | null;
-    invoiceDate: string;
-}): AgingBucket {
-    const reference = args.dueDate ?? args.invoiceDate;
-    const refDate = new Date(reference + 'T00:00:00Z');
-    const asOfUtc = new Date(
-        Date.UTC(
-            args.asOf.getUTCFullYear(),
-            args.asOf.getUTCMonth(),
-            args.asOf.getUTCDate(),
-        ),
-    );
-    const daysPastDue = Math.floor(
-        (asOfUtc.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    if (daysPastDue <= 0) return 'current';
-    if (daysPastDue <= 30) return 'd1_30';
-    if (daysPastDue <= 60) return 'd31_60';
-    if (daysPastDue <= 90) return 'd61_90';
-    return 'd90_plus';
-}
+import type { PeriodOption } from './constants';
 
 /**
  * Rolling window ending at `now` that covers the given period option.
