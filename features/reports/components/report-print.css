@@ -1,0 +1,89 @@
+/* Print styles scoped to report pages under /print/reports/*.
+   Portrait letter with tight typography. Users can hide columns via the
+   Columns filter to keep wide tables (e.g. aging) within the page width. */
+@media print {
+    @page {
+        size: letter portrait;
+        margin: 6mm;
+    }
+
+    .report-print {
+        font-size: 9pt;
+        line-height: 1.25;
+        color: #000;
+    }
+
+    /* Header / meta */
+    .report-print h1 {
+        font-size: 13pt;
+    }
+    .report-print header {
+        margin-bottom: 6pt;
+        padding-bottom: 4pt;
+    }
+    .report-print header .text-xs,
+    .report-print header p {
+        font-size: 8pt;
+    }
+
+    /* Stat cards — smaller to save vertical room */
+    .report-print .grid > div {
+        padding: 4pt 6pt;
+    }
+    .report-print .grid p {
+        font-size: 9pt;
+    }
+    .report-print .grid p:first-child {
+        font-size: 7pt;
+    }
+
+    /* Tables: fit-to-page, no overflow, allow wrapping */
+    .report-print [data-slot='table-container'] {
+        overflow: visible !important;
+    }
+    .report-print table {
+        width: 100% !important;
+        table-layout: auto;
+        border-collapse: collapse;
+        font-size: 7.5pt;
+    }
+    .report-print thead {
+        display: table-header-group; /* repeat on each page */
+    }
+    .report-print tfoot {
+        display: table-footer-group;
+    }
+    .report-print tr {
+        page-break-inside: avoid;
+    }
+    .report-print th,
+    .report-print td {
+        padding: 1.5pt 3pt !important;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .report-print th {
+        font-size: 7pt;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        background: #f3f4f6;
+        border-bottom: 1px solid #9ca3af;
+    }
+    .report-print td {
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Right-align any cell marked with tabular-nums (numeric columns) */
+    .report-print .tabular-nums {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    /* Hide any rounded container borders — we want flat print */
+    .report-print .rounded-lg,
+    .report-print .rounded,
+    .report-print .rounded-md {
+        border-radius: 0 !important;
+    }
+}

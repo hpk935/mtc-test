@@ -71,6 +71,13 @@
       "when": 1776558999169,
       "tag": "0009_rare_black_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776816160499,
+      "tag": "0010_reflective_madame_masque",
+      "breakpoints": true
     }
   ]
 }

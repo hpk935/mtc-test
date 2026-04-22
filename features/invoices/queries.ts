@@ -1,8 +1,8 @@
 import { ilike, or, and, count, desc, eq, asc } from 'drizzle-orm';
 import db from '@/lib/db';
-import { invoices, payments } from './schema';
+import { invoices, invoiceItems, payments } from './schema';
 import { customers } from '@/features/customers/schema';
-import { orders, orderItems } from '@/features/orders/schema';
+import { orders } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
 import type { InvoiceStatus } from './constants';
@@ -184,29 +184,32 @@ export async function getInvoiceItems({
     pageSize?: number;
 }) {
     const offset = (page - 1) * pageSize;
-    const where = eq(orderItems.invoiceNumber, invoiceNumber);
+    const where = eq(invoiceItems.invoiceNumber, invoiceNumber);
 
     const [data, [{ total }]] = await Promise.all([
         db
             .select({
-                id: orderItems.id,
-                itemNumber: orderItems.itemNumber,
+                id: invoiceItems.id,
+                itemNumber: invoiceItems.itemNumber,
                 description: products.description,
-                unitPrice: orderItems.unitPrice,
-                qtyOrdered: orderItems.qtyOrdered,
-                qtyShipped: orderItems.qtyShipped,
-                discount: orderItems.discount,
-                lineTotal: orderItems.lineTotal,
+                unitPrice: invoiceItems.unitPrice,
+                qtyOrdered: invoiceItems.qtyOrdered,
+                qtyShipped: invoiceItems.qtyShipped,
+                discount: invoiceItems.discount,
+                lineTotal: invoiceItems.lineTotal,
                 caseWeight: products.caseWeight,
                 maxQty: products.maxQty,
             })
-            .from(orderItems)
-            .leftJoin(products, eq(orderItems.itemNumber, products.itemNumber))
+            .from(invoiceItems)
+            .leftJoin(
+                products,
+                eq(invoiceItems.itemNumber, products.itemNumber),
+            )
             .where(where)
-            .orderBy(asc(orderItems.itemNumber))
+            .orderBy(asc(invoiceItems.itemNumber))
             .limit(pageSize)
             .offset(offset),
-        db.select({ total: count() }).from(orderItems).where(where),
+        db.select({ total: count() }).from(invoiceItems).where(where),
     ]);
 
     return {

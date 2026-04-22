@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import {
     date,
+    integer,
     numeric,
     pgEnum,
     pgTable,
@@ -12,6 +13,7 @@ import {
 import { users } from '@/features/users/schema';
 import { customers, shipToAddresses } from '@/features/customers/schema';
 import { orders, orderItems } from '@/features/orders/schema';
+import { products } from '@/features/products/schema';
 import { INVOICE_STATUSES } from './constants';
 
 export const invoiceStatusEnum = pgEnum('invoice_status', INVOICE_STATUSES);
@@ -110,5 +112,56 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
     invoice: one(invoices, {
         fields: [payments.invoiceNumber],
         references: [invoices.invoiceNumber],
+    }),
+}));
+
+// Invoice Items — authoritative billed line items (1 row per invoiced line).
+// Sourced from last6MonthInvoiceItems.csv. Distinct from orderItems, which is
+// the order lifecycle log and contains duplicated / shadow rows.
+
+export const invoiceItems = pgTable('invoice_items', {
+    id: serial('id').primaryKey(),
+    invoiceNumber: varchar('invoice_number', { length: 20 })
+        .notNull()
+        .references(() => invoices.invoiceNumber),
+    orderNumber: varchar('order_number', { length: 20 })
+        .notNull()
+        .references(() => orders.orderNumber),
+    itemNumber: varchar('item_number', { length: 50 })
+        .notNull()
+        .references(() => products.itemNumber),
+    unitPrice: numeric('unit_price', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    qtyOrdered: integer('qty_ordered').notNull().default(0),
+    qtyShipped: integer('qty_shipped').notNull().default(0),
+    discount: numeric('discount', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    posted: integer('posted').notNull().default(0),
+    processed: integer('processed').notNull().default(0),
+    unitCost: numeric('unit_cost', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    lineTotal: numeric('line_total', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
+    legacyIndex: integer('legacy_index'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+    invoice: one(invoices, {
+        fields: [invoiceItems.invoiceNumber],
+        references: [invoices.invoiceNumber],
+    }),
+    order: one(orders, {
+        fields: [invoiceItems.orderNumber],
+        references: [orders.orderNumber],
+    }),
+    product: one(products, {
+        fields: [invoiceItems.itemNumber],
+        references: [products.itemNumber],
     }),
 }));
