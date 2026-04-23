@@ -44,45 +44,50 @@ export function CustomerTable({ customers }: CustomerTableProps) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Primary Contact</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Phone</TableHead>
-          <TableHead>City / State</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {customers.map((customer) => (
-          <TableRow key={customer.customerNumber} className="group">
-            <TableCell className="font-medium">
-              <Link
-                href={`/customers/${customer.customerNumber}`}
-                className="block group-hover:underline">
-                {customer.customerName}
-              </Link>
-              <span className="text-muted-foreground text-xs">
-                {customer.customerNumber}
-              </span>
-            </TableCell>
-            <TableCell>{customer.primaryContactName}</TableCell>
-            <TableCell>{customer.mainEmail}</TableCell>
-            <TableCell>{formatPhone(customer.mainPhone)}</TableCell>
-            <TableCell>
-              {customer.billingCity}, {customer.billingStateCode}
-            </TableCell>
-            <TableCell>
-              <Badge
-                variant={STATUS_VARIANT[customer.accountStatus] ?? 'secondary'}>
-                {STATUS_LABEL[customer.accountStatus] ?? customer.accountStatus}
-              </Badge>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Primary Contact</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>City / State</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {customers.map((customer) => (
+            <TableRow key={customer.customerNumber} className="group">
+              <TableCell className="font-medium">
+                <Link
+                  href={`/customers/${customer.customerNumber}`}
+                  className="block group-hover:underline">
+                  {customer.customerName}
+                </Link>
+                <span className="text-muted-foreground text-xs">
+                  {customer.customerNumber}
+                </span>
+              </TableCell>
+              <TableCell>{customer.primaryContactName}</TableCell>
+              <TableCell>{customer.mainEmail}</TableCell>
+              <TableCell>{formatPhone(customer.mainPhone)}</TableCell>
+              <TableCell>
+                {customer.billingCity}, {customer.billingStateCode}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={
+                    STATUS_VARIANT[customer.accountStatus] ?? 'secondary'
+                  }>
+                  {STATUS_LABEL[customer.accountStatus] ??
+                    customer.accountStatus}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

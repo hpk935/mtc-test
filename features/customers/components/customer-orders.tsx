@@ -73,42 +73,44 @@ export function PurchaseHistory({
           </div>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoices.map((invoice) => (
-                  <TableRow key={invoice.invoiceNumber} className="group">
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/invoices/${invoice.invoiceNumber}`}
-                        className="group-hover:underline">
-                        {invoice.invoiceNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(invoice.totalAmount)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'
-                        }>
-                        {STATUS_LABEL[invoice.invoiceStatus] ??
-                          invoice.invoiceStatus}
-                      </Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map((invoice) => (
+                    <TableRow key={invoice.invoiceNumber} className="group">
+                      <TableCell className="font-medium">
+                        <Link
+                          href={`/invoices/${invoice.invoiceNumber}`}
+                          className="group-hover:underline">
+                          {invoice.invoiceNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(invoice.totalAmount)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'
+                          }>
+                          {STATUS_LABEL[invoice.invoiceStatus] ??
+                            invoice.invoiceStatus}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             <DataTablePagination
               currentPage={currentPage}
               totalPages={totalPages}

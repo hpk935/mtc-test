@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export function OrdersHeader({ isAdmin }: { isAdmin: boolean }) {
   return (
-    <div className="flex items-start justify-between">
+    <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">All Orders</h1>
         <p className="text-muted-foreground mt-1 text-sm">

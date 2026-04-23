@@ -48,55 +48,58 @@ export function OrderTable({ orders }: OrderTableProps) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Order #</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Ship To</TableHead>
-          <TableHead className="text-right">Total</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {orders.map((order) => (
-          <TableRow key={order.orderNumber} className="group">
-            <TableCell className="font-medium">
-              <Link
-                href={`/orders/${order.orderNumber}`}
-                className="block group-hover:underline">
-                {order.orderNumber}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link
-                href={`/customers/${order.customerNumber}`}
-                className="hover:underline">
-                {order.customerName}
-              </Link>
-              <span className="text-muted-foreground ml-1 text-xs">
-                {order.customerNumber}
-              </span>
-            </TableCell>
-            <TableCell>{formatDate(order.orderDate)}</TableCell>
-            <TableCell>
-              {order.shipToName}
-              <span className="text-muted-foreground block text-xs">
-                {order.shipToCity}, {order.shipToStateCode}
-              </span>
-            </TableCell>
-            <TableCell className="text-right">
-              {formatCurrency(order.totalAmount)}
-            </TableCell>
-            <TableCell>
-              <Badge variant={STATUS_VARIANT[order.orderStatus] ?? 'secondary'}>
-                {STATUS_LABEL[order.orderStatus] ?? order.orderStatus}
-              </Badge>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Order #</TableHead>
+            <TableHead>Customer</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Ship To</TableHead>
+            <TableHead className="text-right">Total</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {orders.map((order) => (
+            <TableRow key={order.orderNumber} className="group">
+              <TableCell className="font-medium">
+                <Link
+                  href={`/orders/${order.orderNumber}`}
+                  className="block group-hover:underline">
+                  {order.orderNumber}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={`/customers/${order.customerNumber}`}
+                  className="hover:underline">
+                  {order.customerName}
+                </Link>
+                <span className="text-muted-foreground ml-1 text-xs">
+                  {order.customerNumber}
+                </span>
+              </TableCell>
+              <TableCell>{formatDate(order.orderDate)}</TableCell>
+              <TableCell>
+                {order.shipToName}
+                <span className="text-muted-foreground block text-xs">
+                  {order.shipToCity}, {order.shipToStateCode}
+                </span>
+              </TableCell>
+              <TableCell className="text-right">
+                {formatCurrency(order.totalAmount)}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={STATUS_VARIANT[order.orderStatus] ?? 'secondary'}>
+                  {STATUS_LABEL[order.orderStatus] ?? order.orderStatus}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

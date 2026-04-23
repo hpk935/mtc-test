@@ -76,18 +76,18 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
             {orders.map((order) => (
               <div
                 key={order.orderNumber}
-                className="flex items-center justify-between">
-                <div>
+                className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
                   <Link
                     href={`/orders/${order.orderNumber}`}
-                    className="text-sm font-medium hover:underline">
+                    className="block truncate text-sm font-medium hover:underline">
                     {order.orderNumber}
                   </Link>
-                  <div className="text-muted-foreground text-xs">
+                  <div className="text-muted-foreground truncate text-xs">
                     {order.customerNumber} &middot; {order.orderDate}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <span className="text-sm font-medium">
                     {formatCurrency(order.totalAmount)}
                   </span>
@@ -122,18 +122,18 @@ export function RecentInvoices({ invoices }: { invoices: RecentInvoice[] }) {
             {invoices.map((invoice) => (
               <div
                 key={invoice.invoiceNumber}
-                className="flex items-center justify-between">
-                <div>
+                className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
                   <Link
                     href={`/invoices/${invoice.invoiceNumber}`}
-                    className="text-sm font-medium hover:underline">
+                    className="block truncate text-sm font-medium hover:underline">
                     {invoice.invoiceNumber}
                   </Link>
-                  <div className="text-muted-foreground text-xs">
+                  <div className="text-muted-foreground truncate text-xs">
                     {invoice.customerNumber} &middot; {invoice.invoiceDate}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <span className="text-sm font-medium">
                     {formatCurrency(invoice.totalAmount)}
                   </span>

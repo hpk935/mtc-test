@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
-import { invoices, payments } from './schema';
-import { orders, orderItems } from '@/features/orders/schema';
+import { invoices, invoiceItems, payments } from './schema';
+import { orders } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
 import type { InvoiceStatus } from './constants';
 import type { ActionResult } from '@/types';
@@ -88,15 +88,16 @@ export async function updateInvoiceStatusRecord(
 
         // When voiding, restore inventory and void the linked order
         if (newStatus === 'voided') {
-            // Get shipped items to restore stock
+            // Read authoritative billed line items (dedupe-safe) to
+            // determine how much stock to return.
             const items = await tx
                 .select({
-                    itemNumber: orderItems.itemNumber,
-                    qtyShipped: orderItems.qtyShipped,
-                    orderNumber: orderItems.orderNumber,
+                    itemNumber: invoiceItems.itemNumber,
+                    qtyShipped: invoiceItems.qtyShipped,
+                    orderNumber: invoiceItems.orderNumber,
                 })
-                .from(orderItems)
-                .where(eq(orderItems.invoiceNumber, invoiceNumber));
+                .from(invoiceItems)
+                .where(eq(invoiceItems.invoiceNumber, invoiceNumber));
 
             // Restore qtyInStock and recalculate qtyAvailable
             for (const item of items) {
@@ -110,12 +111,16 @@ export async function updateInvoiceStatusRecord(
                     .where(eq(products.itemNumber, item.itemNumber));
             }
 
-            // Void the linked order
-            if (items.length > 0) {
+            // Void the linked order(s). An invoice is normally tied to a
+            // single order, but iterate over the distinct set to be safe.
+            const orderNumbers = Array.from(
+                new Set(items.map((i) => i.orderNumber)),
+            );
+            for (const linkedOrderNumber of orderNumbers) {
                 await tx
                     .update(orders)
                     .set({ orderStatus: 'voided', updatedAt: now })
-                    .where(eq(orders.orderNumber, items[0].orderNumber));
+                    .where(eq(orders.orderNumber, linkedOrderNumber));
             }
         }
     });

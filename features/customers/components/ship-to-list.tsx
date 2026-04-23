@@ -95,7 +95,7 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
           <p className="text-muted-foreground mb-3 text-sm">
             No shipping addresses yet.
           </p>
-          <Button size="sm" variant="outline" onClick={handleAdd}>
+          <Button size="sm" variant="outline" type="button" onClick={handleAdd}>
             <Plus className="mr-2 size-4" />
             Add Address
           </Button>
@@ -117,6 +117,7 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
               {hasFavorites && (
                 <Button
                   size="sm"
+                  type="button"
                   variant={showFavoritesOnly ? 'default' : 'outline'}
                   className="h-8 gap-1.5 text-xs"
                   onClick={() => {
@@ -187,6 +188,7 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
                 <Button
                   size="icon"
                   variant="ghost"
+                  type="button"
                   className="size-7"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}>
@@ -195,6 +197,7 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
                 <Button
                   size="icon"
                   variant="ghost"
+                  type="button"
                   className="size-7"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}>
@@ -203,7 +206,7 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
               </div>
             </div>
           )}
-          <Button size="sm" variant="outline" onClick={handleAdd}>
+          <Button size="sm" variant="outline" type="button" onClick={handleAdd}>
             <Plus className="mr-2 size-4" />
             Add Address
           </Button>

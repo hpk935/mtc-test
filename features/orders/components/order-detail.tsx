@@ -82,7 +82,7 @@ export function OrderDetailView({
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       {/* Left column — info cards */}
-      <div className="space-y-6 lg:col-span-1">
+      <div className="min-w-0 space-y-6 lg:col-span-1">
         <Card>
           <CardHeader>
             <CardTitle>Order Info</CardTitle>
@@ -185,7 +185,7 @@ export function OrderDetailView({
       </div>
 
       {/* Right column — line items + totals */}
-      <div className="space-y-6 lg:col-span-2">
+      <div className="min-w-0 space-y-6 lg:col-span-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>
@@ -212,64 +212,66 @@ export function OrderDetailView({
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-right">Ordered</TableHead>
-                      <TableHead className="text-right">Shipped</TableHead>
-                      <TableHead className="text-right">Discount</TableHead>
-                      <TableHead className="text-right">Weight</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">
-                          <Link
-                            href={`/products?search=${item.itemNumber}`}
-                            className="hover:underline">
-                            {item.itemNumber}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="max-w-60 truncate">
-                          {item.description}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(item.unitPrice)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {item.qtyOrdered}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {item.qtyShipped}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {Number(item.discount) > 0
-                            ? formatCurrency(item.discount)
-                            : '—'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {item.caseWeight && item.maxQty
-                            ? (
-                                (item.qtyOrdered * Number(item.caseWeight)) /
-                                item.maxQty
-                              ).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              }) + ' lbs'
-                            : '—'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(item.lineTotal)}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead className="text-right">Ordered</TableHead>
+                        <TableHead className="text-right">Shipped</TableHead>
+                        <TableHead className="text-right">Discount</TableHead>
+                        <TableHead className="text-right">Weight</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {items.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            <Link
+                              href={`/products?search=${item.itemNumber}`}
+                              className="hover:underline">
+                              {item.itemNumber}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="max-w-60 truncate">
+                            {item.description}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.unitPrice)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.qtyOrdered}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.qtyShipped}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {Number(item.discount) > 0
+                              ? formatCurrency(item.discount)
+                              : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.caseWeight && item.maxQty
+                              ? (
+                                  (item.qtyOrdered * Number(item.caseWeight)) /
+                                  item.maxQty
+                                ).toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }) + ' lbs'
+                              : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.lineTotal)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
                 <DataTablePagination
                   currentPage={currentPage}
                   totalPages={totalPages}

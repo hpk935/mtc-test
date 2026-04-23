@@ -931,56 +931,63 @@ export function OrderForm({
           </p>
         </div>
 
-        {/* Header */}
-        <div className="border-b pb-2">
-          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
-            <span>Item Number</span>
-            <span>Description</span>
-            <span className="text-right">Qty</span>
-            <span className="text-right">Avail</span>
-            <span className="text-right">Inner Price</span>
-            <span className="text-right">Case Price</span>
-            <span className="text-right">Discount</span>
-            <span className="text-right">Weight</span>
-            <span className="text-right">Total</span>
-            <span />
-          </div>
-        </div>
+        {/* Horizontal scroll on narrow screens. pb-66 reserves vertical
+            room (~264px) for the product-search dropdown (max-h-64 + mt-1)
+            so it isn't clipped by the overflow-x container. */}
+        <div className="-mx-4 overflow-x-auto px-4 pb-52 sm:mx-0 sm:px-0">
+          <div className="min-w-230 space-y-3">
+            {/* Header */}
+            <div className="border-b pb-2">
+              <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
+                <span>Item Number</span>
+                <span>Description</span>
+                <span className="text-right">Qty</span>
+                <span className="text-right">Avail</span>
+                <span className="text-right">Inner Price</span>
+                <span className="text-right">Case Price</span>
+                <span className="text-right">Discount</span>
+                <span className="text-right">Weight</span>
+                <span className="text-right">Total</span>
+                <span />
+              </div>
+            </div>
 
-        {/* Rows */}
-        <div className="space-y-3">
-          {lineItems.map((item, index) => (
-            <LineItemRow
-              key={item.key}
-              item={item}
-              onUpdate={(field, value) =>
-                updateLineItem(item.key, field, value)
-              }
-              onRemove={() => removeLineItem(item.key)}
-              canRemove={lineItems.length > 1}
-              isLast={index === lineItems.length - 1}
-              onAddRow={addLineItem}
-            />
-          ))}
-        </div>
+            {/* Rows */}
+            <div className="space-y-3">
+              {lineItems.map((item, index) => (
+                <LineItemRow
+                  key={item.key}
+                  item={item}
+                  onUpdate={(field, value) =>
+                    updateLineItem(item.key, field, value)
+                  }
+                  onRemove={() => removeLineItem(item.key)}
+                  canRemove={lineItems.length > 1}
+                  isLast={index === lineItems.length - 1}
+                  onAddRow={addLineItem}
+                />
+              ))}
+            </div>
 
-        {/* Subtotal + Total Weight */}
-        <div className="space-y-1 border-t pt-3">
-          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
-            <span className="col-span-8 text-right">Total Weight</span>
-            <span className="text-right">
-              {totalWeight.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}{' '}
-              lbs
-            </span>
-            <span />
-          </div>
-          <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
-            <span className="col-span-8 text-right">Subtotal</span>
-            <span className="text-right">{formatCurrency(subtotal)}</span>
-            <span />
+            {/* Subtotal + Total Weight */}
+            <div className="space-y-1 border-t pt-3">
+              <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
+                <span className="col-span-8 text-right">Total Weight</span>
+                <span className="text-right">
+                  {totalWeight.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  lbs
+                </span>
+                <span />
+              </div>
+              <div className="grid grid-cols-[minmax(120px,1fr)_minmax(120px,2fr)_64px_56px_88px_88px_80px_72px_88px_36px] gap-3 text-sm font-medium">
+                <span className="col-span-8 text-right">Subtotal</span>
+                <span className="text-right">{formatCurrency(subtotal)}</span>
+                <span />
+              </div>
+            </div>
           </div>
         </div>
 

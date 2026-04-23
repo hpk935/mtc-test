@@ -46,7 +46,7 @@ export default async function CustomersPage({
       <CustomersHeader isAdmin={session.role === 'admin'} />
 
       <Suspense fallback={null}>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <DataTableSearch placeholder="Name, contact, zip, or customer #..." />
           <DataTableFilter
             options={STATUS_OPTIONS}

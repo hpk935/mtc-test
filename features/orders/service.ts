@@ -7,6 +7,7 @@ import { findShipToAddress } from '@/features/customers/queries';
 import { findProductByItemNumber } from '@/features/products/queries';
 import { products } from '@/features/products/schema';
 import { invoices } from '@/features/invoices/schema';
+import { invoiceItems } from '@/features/invoices/schema';
 import type { CreateOrderInput, UpdateOrderInput } from './validation';
 
 interface ValidatedItem {
@@ -507,6 +508,36 @@ export async function postOrderToInvoice(orderNumber: string) {
                 updatedAt: new Date(),
             })
             .where(eq(orderItems.orderNumber, orderNumber));
+
+        // Mirror order items into invoice_items (the authoritative billed
+        // line items table the invoice detail page reads from).
+        const orderItemRows = await tx
+            .select({
+                itemNumber: orderItems.itemNumber,
+                unitPrice: orderItems.unitPrice,
+                qtyOrdered: orderItems.qtyOrdered,
+                discount: orderItems.discount,
+                unitCost: orderItems.unitCost,
+                lineTotal: orderItems.lineTotal,
+            })
+            .from(orderItems)
+            .where(eq(orderItems.orderNumber, orderNumber));
+
+        if (orderItemRows.length > 0) {
+            await tx.insert(invoiceItems).values(
+                orderItemRows.map((row) => ({
+                    invoiceNumber,
+                    orderNumber,
+                    itemNumber: row.itemNumber,
+                    unitPrice: row.unitPrice,
+                    qtyOrdered: row.qtyOrdered,
+                    qtyShipped: row.qtyOrdered,
+                    discount: row.discount,
+                    unitCost: row.unitCost,
+                    lineTotal: row.lineTotal,
+                })),
+            );
+        }
 
         // Fulfill inventory: decrement qtyInStock, zero out qtyCommitted for these items
         if (items.length > 0) {

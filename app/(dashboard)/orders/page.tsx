@@ -43,7 +43,7 @@ export default async function OrdersPage({
       <OrdersHeader isAdmin={session.role === 'admin'} />
 
       <Suspense fallback={null}>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <DataTableSearch placeholder="Order #, customer name, PO #, or ship-to..." />
           <DataTableFilter
             options={STATUS_OPTIONS}

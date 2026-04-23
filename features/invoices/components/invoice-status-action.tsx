@@ -40,9 +40,11 @@ const STATUS_VARIANT: Record<
   voided: 'destructive',
 };
 
+// Note: 'paid' is never a manual transition target — it's applied automatically
+// by the Account Receivables flow once the balance reaches zero.
 const VALID_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
-  open: ['paid', 'voided'],
-  partially_paid: ['paid', 'voided'],
+  open: ['voided'],
+  partially_paid: ['voided'],
   paid: ['open', 'voided'],
   voided: [],
 };

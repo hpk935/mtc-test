@@ -71,7 +71,7 @@ export function OrderActions({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" asChild>
         <Link href={`/orders/${orderNumber}/edit`}>
           <Pencil className="mr-2 size-4" />
