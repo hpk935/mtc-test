@@ -33,7 +33,6 @@ export function ProductTable({ products }: ProductTableProps) {
         <TableRow>
           <TableHead>Item Number</TableHead>
           <TableHead>Description</TableHead>
-          <TableHead>Type</TableHead>
           <TableHead className="text-right">Case Price</TableHead>
           <TableHead className="text-right">In Stock</TableHead>
           <TableHead className="text-right">Available</TableHead>
@@ -53,7 +52,6 @@ export function ProductTable({ products }: ProductTableProps) {
             <TableCell className="max-w-75 truncate">
               {product.description}
             </TableCell>
-            <TableCell>{product.productType}</TableCell>
             <TableCell className="text-right">
               {formatCurrency(product.casePrice)}
             </TableCell>

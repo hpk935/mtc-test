@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { createProduct, updateProduct } from '../actions';
-import { PRODUCT_TYPES, UNITS_SOLD_BY } from '../constants';
+import { UNITS_SOLD_BY } from '../constants';
 import type { Product } from '../types';
 import type { ActionResult } from '@/types';
 
@@ -205,22 +205,15 @@ export function ProductForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="productType">Product Type</Label>
-          <Select
+          <Input
+            id="productType"
             name="productType"
             required
+            placeholder="e.g. A01"
             value={formValues.productType}
-            onValueChange={(v) => handleSelectChange('productType', v)}>
-            <SelectTrigger id="productType">
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRODUCT_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={handleChange}
+            maxLength={10}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="upcNumber">
