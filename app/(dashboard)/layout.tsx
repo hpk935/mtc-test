@@ -24,7 +24,7 @@ export default async function DashboardLayout({
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar session={session} permissions={permissions} />
-        <SidebarInset>
+        <SidebarInset className="min-w-0">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
@@ -38,7 +38,7 @@ export default async function DashboardLayout({
               <ThemeToggle />
             </div>
           </header>
-          <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0">
             {children}
           </main>
         </SidebarInset>

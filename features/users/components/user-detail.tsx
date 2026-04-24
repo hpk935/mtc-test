@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ROLE_LABEL, PERMISSIONS } from '../constants';
+import { ROLE_LABEL, PERMISSIONS, DEFAULT_PERMISSIONS } from '../constants';
 import type { Permission } from '../constants';
 import type { UserListItem } from '../queries';
 
@@ -14,6 +14,15 @@ function formatPermissionLabel(perm: Permission): string {
 }
 
 export function UserDetailView({ user }: UserDetailViewProps) {
+  // If the user has no saved permissions (legacy record), fall back to the
+  // role's defaults so the detail view matches what the edit form prefills.
+  const savedPermissions = (user.permissions ?? []) as Permission[];
+  const effectivePermissions =
+    savedPermissions.length > 0
+      ? savedPermissions
+      : DEFAULT_PERMISSIONS[user.role];
+  const usingDefaults = savedPermissions.length === 0;
+
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-6">
@@ -59,14 +68,20 @@ export function UserDetailView({ user }: UserDetailViewProps) {
           <CardHeader>
             <CardTitle>Permissions</CardTitle>
           </CardHeader>
-          <CardContent>
-            {user.permissions.length === 0 ? (
+          <CardContent className="space-y-3">
+            {usingDefaults && (
+              <p className="text-muted-foreground text-xs">
+                Showing defaults for the {ROLE_LABEL[user.role]} role. Save the
+                edit form to persist them.
+              </p>
+            )}
+            {effectivePermissions.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 No permissions assigned.
               </p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {user.permissions.map((perm) => (
+                {effectivePermissions.map((perm) => (
                   <Badge key={perm} variant="secondary">
                     {formatPermissionLabel(perm as Permission)}
                   </Badge>

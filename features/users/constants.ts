@@ -23,10 +23,5 @@ export const ROLE_LABEL: Record<UserRole, string> = {
  */
 export const DEFAULT_PERMISSIONS: Record<UserRole, Permission[]> = {
     admin: [...PERMISSIONS],
-    employee: [
-        'orders:view',
-        'invoices:view',
-        'products:view',
-        'customers:view',
-    ],
+    employee: ['invoices:view', 'products:view'],
 };

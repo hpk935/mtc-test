@@ -88,7 +88,16 @@ export function UserForm({ user }: UserFormProps) {
     error: '',
   } as ActionResult);
 
-  const defaultPermissions = user?.permissions ?? [];
+  const initialRole: UserRole = (user?.role as UserRole) ?? 'employee';
+  // On create, seed checkboxes from the role's default permissions.
+  // On edit, seed from the user's saved permissions — but if the saved list
+  // is empty/null (legacy records), fall back to the role's defaults so the
+  // admin can see and persist a sensible starting set.
+  const savedPermissions = user?.permissions ?? [];
+  const defaultPermissions =
+    isEdit && savedPermissions.length > 0
+      ? savedPermissions
+      : DEFAULT_PERMISSIONS[initialRole];
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(
     new Set(defaultPermissions),
   );
@@ -98,9 +107,18 @@ export function UserForm({ user }: UserFormProps) {
     firstName: user?.firstName ?? '',
     lastName: user?.lastName ?? '',
     email: user?.email ?? '',
-    role: user?.role ?? 'employee',
+    role: initialRole,
     isActive: String(user?.isActive ?? true),
   });
+
+  function handleRoleChange(value: string) {
+    const nextRole = value as UserRole;
+    setFormValues((prev) => ({ ...prev, role: nextRole }));
+    // Reset checkbox selections to the new role's defaults so the form
+    // mirrors what `DEFAULT_PERMISSIONS` says for that role. The user can
+    // still tick/untick individual boxes afterwards.
+    setSelectedPerms(new Set(DEFAULT_PERMISSIONS[nextRole]));
+  }
 
   const isDirty = isEdit
     ? formValues.firstName !== (user?.firstName ?? '') ||
@@ -220,9 +238,7 @@ export function UserForm({ user }: UserFormProps) {
             <Select
               name="role"
               value={formValues.role}
-              onValueChange={(v) =>
-                setFormValues((prev) => ({ ...prev, role: v }))
-              }>
+              onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
