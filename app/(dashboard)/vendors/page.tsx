@@ -11,7 +11,7 @@ import { requirePermission } from '@/lib/auth';
 const PAGE_SIZE = 20;
 
 const TYPE_OPTIONS = VENDOR_TYPES.map((t) => ({
-  label: t === 'CS' ? 'Cost of Sales' : 'Overhead',
+  label: t,
   value: t,
 }));
 

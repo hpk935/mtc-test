@@ -2,8 +2,8 @@ export const VENDOR_TYPES = ['CS', 'CO'] as const;
 export type VendorType = (typeof VENDOR_TYPES)[number];
 
 export const VENDOR_TYPE_LABEL: Record<VendorType, string> = {
-    CS: 'Cost of Sales',
-    CO: 'Overhead / Other',
+    CS: 'CS',
+    CO: 'CO',
 };
 
 export const PO_STATUSES = [

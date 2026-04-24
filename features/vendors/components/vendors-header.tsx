@@ -8,7 +8,7 @@ export function VendorsHeader({ isAdmin }: { isAdmin: boolean }) {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">All Vendors</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Suppliers and overhead vendors.
+          Manage vendor records and purchase orders.
         </p>
       </div>
       {isAdmin && (
