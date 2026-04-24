@@ -103,9 +103,6 @@ export function ProductForm({
     qtyCommitted: String(product?.qtyCommitted ?? 0),
     qtyAvailable: String(product?.qtyAvailable ?? 0),
     qtyOnOrder: String(product?.qtyOnOrder ?? 0),
-    upcomingShipmentNo: product?.upcomingShipmentNo ?? '',
-    upcomingShipmentArrival: product?.upcomingShipmentArrival ?? '',
-    upcomingShipmentQty: String(product?.upcomingShipmentQty ?? ''),
     nob: String(product?.nob ?? ''),
     isDiscontinued: product?.isDiscontinued ?? false,
     htsCode: product?.htsCode ?? '',
@@ -385,7 +382,7 @@ export function ProductForm({
       {/* Inventory */}
       <FormSection
         title="Inventory"
-        description="Current stock levels and incoming shipment details.">
+        description="Current stock levels. Qty On Order is derived from open purchase orders.">
         <div className="space-y-2">
           <Label htmlFor="qtyInStock">Qty In Stock</Label>
           <Input
@@ -425,47 +422,9 @@ export function ProductForm({
             id="qtyOnOrder"
             name="qtyOnOrder"
             type="number"
-            min={0}
             value={formValues.qtyOnOrder}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="upcomingShipmentNo">
-            Upcoming Shipment No. <OptionalTag />
-          </Label>
-          <Input
-            id="upcomingShipmentNo"
-            name="upcomingShipmentNo"
-            placeholder="e.g. SH-2024-001"
-            value={formValues.upcomingShipmentNo}
-            onChange={handleChange}
-            maxLength={20}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="upcomingShipmentArrival">
-            Shipment Arrival Date <OptionalTag />
-          </Label>
-          <Input
-            id="upcomingShipmentArrival"
-            name="upcomingShipmentArrival"
-            type="date"
-            value={formValues.upcomingShipmentArrival}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="upcomingShipmentQty">
-            Shipment Qty <OptionalTag />
-          </Label>
-          <Input
-            id="upcomingShipmentQty"
-            name="upcomingShipmentQty"
-            type="number"
-            min={0}
-            value={formValues.upcomingShipmentQty}
-            onChange={handleChange}
+            readOnly
+            disabled
           />
         </div>
       </FormSection>

@@ -62,7 +62,7 @@ function stockStatusCondition(
         case 'discontinued':
             return eq(products.isDiscontinued, true);
         case 'incoming':
-            return sql`${products.upcomingShipmentQty} > 0`;
+            return sql`${products.qtyOnOrder} > 0`;
         case 'all':
         case undefined:
             return undefined;
@@ -121,9 +121,6 @@ export async function getInventoryStatusReport(
                 qtyCommitted: products.qtyCommitted,
                 qtyAvailable: products.qtyAvailable,
                 qtyOnOrder: products.qtyOnOrder,
-                upcomingShipmentNo: products.upcomingShipmentNo,
-                upcomingShipmentArrival: products.upcomingShipmentArrival,
-                upcomingShipmentQty: products.upcomingShipmentQty,
                 landedCost: products.landedCost,
                 casePrice: products.casePrice,
                 isDiscontinued: products.isDiscontinued,
@@ -142,7 +139,7 @@ export async function getInventoryStatusReport(
                 lowStock: sql<number>`count(*) filter (where ${products.isDiscontinued} = false and ${products.qtyAvailable} > 0 and ${products.minQty} > 0 and ${products.qtyAvailable} < ${products.minQty})`,
                 inStock: sql<number>`count(*) filter (where ${products.isDiscontinued} = false and ${products.qtyAvailable} > 0 and (${products.minQty} = 0 or ${products.qtyAvailable} >= ${products.minQty}))`,
                 discontinued: sql<number>`count(*) filter (where ${products.isDiscontinued} = true)`,
-                incoming: sql<number>`count(*) filter (where ${products.upcomingShipmentQty} > 0)`,
+                incoming: sql<number>`count(*) filter (where ${products.qtyOnOrder} > 0)`,
                 stockValue: sql<string>`coalesce(sum(${products.qtyInStock}::numeric * ${products.landedCost}), 0)`,
             })
             .from(products)

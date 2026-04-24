@@ -198,11 +198,6 @@ function transformRows(rows: Record<string, string>[]) {
             qtyCommitted: parseIntOrDefault(r['QtyCommited']),
             qtyAvailable: parseIntOrDefault(r['QtyAvailable']),
             qtyOnOrder: parseIntOrDefault(r['QtyOrdered']),
-            upcomingShipmentNo: emptyToNull(r['UpcomingShipmentNo']),
-            upcomingShipmentArrival: parseDate(r['UpcomingShipmentArrival']),
-            upcomingShipmentQty: r['UpcomingShipmentQty']?.trim()
-                ? parseIntOrDefault(r['UpcomingShipmentQty'])
-                : null,
             nob: r['NOB']?.trim() ? parseIntOrDefault(r['NOB']) : null,
             isDiscontinued: r['Discontinued']?.trim() === '1',
             htsCode: emptyToNull(r['HTSCode']),

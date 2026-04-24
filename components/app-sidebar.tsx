@@ -21,6 +21,7 @@ import {
   Package,
   Users,
   Truck,
+  ClipboardList,
   BarChart3,
   UserCog,
 } from 'lucide-react';
@@ -32,6 +33,8 @@ const NAV_PERMISSION_MAP: Record<string, Permission> = {
   '/invoices': 'invoices:view',
   '/products': 'products:view',
   '/customers': 'customers:view',
+  '/vendors': 'vendors:view',
+  '/purchase-orders': 'vendors:view',
   '/reports': 'reports:view',
   '/users': 'users:view',
 };
@@ -43,6 +46,7 @@ const navItems = [
   { title: 'Products', url: '/products', icon: Package },
   { title: 'Customers', url: '/customers', icon: Users },
   { title: 'Vendors', url: '/vendors', icon: Truck },
+  { title: 'Purchase Orders', url: '/purchase-orders', icon: ClipboardList },
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Users', url: '/users', icon: UserCog },
 ];
@@ -58,7 +62,7 @@ export function AppSidebar({
   const isAdmin = session?.role === 'admin';
   const visibleItems = navItems.filter((item) => {
     const requiredPerm = NAV_PERMISSION_MAP[item.url];
-    if (!requiredPerm) return true; // Dashboard, Vendors — always visible
+    if (!requiredPerm) return true; // Dashboard — always visible
     if (isAdmin) return true;
     return permissions.includes(requiredPerm);
   });

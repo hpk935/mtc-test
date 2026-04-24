@@ -1,7 +1,6 @@
 import { relations } from 'drizzle-orm';
 import {
     boolean,
-    date,
     integer,
     numeric,
     pgTable,
@@ -9,6 +8,7 @@ import {
     varchar,
 } from 'drizzle-orm/pg-core';
 import { orderItems } from '@/features/orders/schema';
+import { purchaseOrderItems } from '@/features/vendors/schema';
 
 export const products = pgTable('products', {
     productId: integer('product_id').primaryKey(),
@@ -48,9 +48,6 @@ export const products = pgTable('products', {
     qtyCommitted: integer('qty_committed').notNull().default(0),
     qtyAvailable: integer('qty_available').notNull().default(0),
     qtyOnOrder: integer('qty_on_order').notNull().default(0),
-    upcomingShipmentNo: varchar('upcoming_shipment_no', { length: 20 }),
-    upcomingShipmentArrival: date('upcoming_shipment_arrival'),
-    upcomingShipmentQty: integer('upcoming_shipment_qty'),
     nob: integer('nob'),
     isDiscontinued: boolean('is_discontinued').notNull().default(false),
     htsCode: varchar('hts_code', { length: 20 }),
@@ -59,7 +56,7 @@ export const products = pgTable('products', {
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Relations will be added once order_items references products
 export const productsRelations = relations(products, ({ many }) => ({
     orderItems: many(orderItems),
+    purchaseOrderItems: many(purchaseOrderItems),
 }));

@@ -8,6 +8,7 @@ export const PERMISSIONS = [
     'customers:view',
     'reports:view',
     'users:view',
+    'vendors:view',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

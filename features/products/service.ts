@@ -50,11 +50,6 @@ export async function createProductRecord(
         qtyCommitted: 0,
         qtyAvailable: input.qtyInStock,
         qtyOnOrder: input.qtyOnOrder,
-        upcomingShipmentNo: normalizeOptional(input.upcomingShipmentNo),
-        upcomingShipmentArrival: normalizeOptional(
-            input.upcomingShipmentArrival,
-        ),
-        upcomingShipmentQty: input.upcomingShipmentQty ?? null,
         nob: input.nob ?? null,
         isDiscontinued: input.isDiscontinued,
         htsCode: normalizeOptional(input.htsCode),
@@ -106,11 +101,6 @@ export async function updateProductRecord(
             qtyInStock: input.qtyInStock,
             qtyAvailable: sql`${input.qtyInStock} - ${products.qtyCommitted}`,
             qtyOnOrder: input.qtyOnOrder,
-            upcomingShipmentNo: normalizeOptional(input.upcomingShipmentNo),
-            upcomingShipmentArrival: normalizeOptional(
-                input.upcomingShipmentArrival,
-            ),
-            upcomingShipmentQty: input.upcomingShipmentQty ?? null,
             nob: input.nob ?? null,
             isDiscontinued: input.isDiscontinued,
             htsCode: normalizeOptional(input.htsCode),

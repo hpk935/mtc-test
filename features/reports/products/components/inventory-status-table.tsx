@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import {
   isColumnVisible,
   type ReportColumn,
@@ -150,20 +150,10 @@ export function InventoryStatusTable({
               )}
               {show('incoming') && (
                 <TableCell className="text-xs">
-                  {r.upcomingShipmentQty && r.upcomingShipmentQty > 0 ? (
-                    <>
-                      <span className="font-medium tabular-nums">
-                        {r.upcomingShipmentQty.toLocaleString()}
-                      </span>
-                      {r.upcomingShipmentArrival && (
-                        <span className="text-muted-foreground block">
-                          {formatDate(r.upcomingShipmentArrival)}
-                          {r.upcomingShipmentNo
-                            ? ` · ${r.upcomingShipmentNo}`
-                            : ''}
-                        </span>
-                      )}
-                    </>
+                  {r.qtyOnOrder > 0 ? (
+                    <span className="font-medium tabular-nums">
+                      {r.qtyOnOrder.toLocaleString()}
+                    </span>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
