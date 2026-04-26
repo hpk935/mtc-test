@@ -88,7 +88,7 @@ export default async function InventoryStatusReportPage({
             hint: 'At landed cost',
           },
         ]}
-        className="lg:grid-cols-6"
+        className="xl:grid-cols-6"
       />
 
       <Suspense fallback={null}>

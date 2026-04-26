@@ -6,7 +6,6 @@ import {
 import { DataTablePagination } from '@/components/data/data-table-pagination';
 import { DataTableSearch } from '@/components/data/data-table-search';
 import { ReportPageShell } from '@/features/reports/components/report-page-shell';
-import { ReportStats } from '@/features/reports/components/report-stats';
 import { ReportPrintButton } from '@/features/reports/components/report-print-button';
 import { ReportSelectFilter } from '@/features/reports/components/report-select-filter';
 import { ReportColumnsFilter } from '@/features/reports/components/report-columns-filter';
@@ -63,51 +62,41 @@ export default async function CustomerListingReportPage({
     <ReportPageShell
       title="Customer Name Listing"
       description="Customers filterable by salesperson, territory, and status.">
-      <ReportStats
-        items={[
-          { label: 'Matching', value: report.stats.total },
-          { label: 'Active', value: report.stats.active },
-          { label: 'Inactive', value: report.stats.inactive },
-          { label: 'On Hold', value: report.stats.onHold },
-          {
-            label: 'Territories',
-            value: report.stats.territories,
-          },
-          {
-            label: 'New (last 90d)',
-            value: report.stats.newLast90,
-          },
-        ]}
-        className="lg:grid-cols-6"
-      />
-
       <Suspense fallback={null}>
-        <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="lg:col-span-1">
-            <label className="text-muted-foreground mb-1 block text-xs font-medium">
+        <div className="space-y-3">
+          <div>
+            <label className="text-muted-foreground mb-1 inline-block w-fit text-xs font-medium">
               Search
             </label>
             <DataTableSearch placeholder="Name, #, contact, email..." />
           </div>
-          <ReportSelectFilter
-            paramName="salesperson"
-            label="Salesperson"
-            options={salespersonOptions}
-            allLabel="All Salespeople"
-          />
-          <ReportSelectFilter
-            paramName="territory"
-            label="Territory"
-            options={territoryOptions}
-            allLabel="All Territories"
-          />
-          <ReportSelectFilter
-            paramName="status"
-            label="Status"
-            options={[...STATUS_OPTIONS, { label: 'All', value: 'all' }]}
-            defaultValue="active"
-            includeAll={false}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="w-full sm:w-fit">
+              <ReportSelectFilter
+                paramName="salesperson"
+                label="Salesperson"
+                options={salespersonOptions}
+                allLabel="All Salespeople"
+              />
+            </div>
+            <div className="w-full sm:w-fit">
+              <ReportSelectFilter
+                paramName="territory"
+                label="Territory"
+                options={territoryOptions}
+                allLabel="All Territories"
+              />
+            </div>
+            <div className="w-full sm:w-fit">
+              <ReportSelectFilter
+                paramName="status"
+                label="Status"
+                options={[...STATUS_OPTIONS, { label: 'All', value: 'all' }]}
+                defaultValue="active"
+                includeAll={false}
+              />
+            </div>
+          </div>
         </div>
       </Suspense>
 

@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface ReportSelectFilterProps {
   paramName: string;
@@ -41,6 +42,11 @@ export function ReportSelectFilter({
     defaultValue ??
     (includeAll ? '__all__' : '');
 
+  const currentLabel =
+    current === '__all__'
+      ? allLabel
+      : (options.find((o) => o.value === current)?.label ?? allLabel);
+
   function handleChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (value === '__all__' || value === '') {
@@ -53,13 +59,13 @@ export function ReportSelectFilter({
   }
 
   return (
-    <div className={className}>
-      <label className="text-muted-foreground mb-1 block text-xs font-medium">
+    <div className={cn('min-w-0', className)}>
+      <label className="text-muted-foreground mb-1 inline-block w-fit text-xs font-medium">
         {label}
       </label>
       <Select value={current} onValueChange={handleChange}>
-        <SelectTrigger>
-          <SelectValue />
+        <SelectTrigger className="w-full min-w-0">
+          <SelectValue placeholder={currentLabel}>{currentLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {includeAll && <SelectItem value="__all__">{allLabel}</SelectItem>}

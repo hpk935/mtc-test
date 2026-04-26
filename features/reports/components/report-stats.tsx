@@ -17,11 +17,13 @@ export function ReportStats({
   return (
     <div className={cn('grid gap-3 sm:grid-cols-2 lg:grid-cols-4', className)}>
       {items.map((item) => (
-        <div key={item.label} className="rounded-lg border p-4">
+        <div
+          key={item.label}
+          className="min-w-0 overflow-hidden rounded-lg border p-4">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             {item.label}
           </p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
+          <p className="mt-1 min-w-0 text-xl leading-tight font-semibold tracking-tight break-words tabular-nums sm:text-2xl">
             {item.value}
           </p>
           {item.hint && (

@@ -78,7 +78,7 @@ export default async function AgingSummaryReportPage({
             value: formatCurrency(data.stats.l12m),
           },
         ]}
-        className="lg:grid-cols-6"
+        className="xl:grid-cols-6"
       />
 
       <Suspense fallback={null}>

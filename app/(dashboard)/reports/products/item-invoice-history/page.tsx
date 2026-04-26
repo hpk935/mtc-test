@@ -122,7 +122,7 @@ async function ItemResults({
             value: data.stats.lastSale ? formatDate(data.stats.lastSale) : '—',
           },
         ]}
-        className="lg:grid-cols-6"
+        className="xl:grid-cols-6"
       />
 
       <div className="rounded-lg border">

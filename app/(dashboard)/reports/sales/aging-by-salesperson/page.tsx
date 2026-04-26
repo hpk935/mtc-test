@@ -75,7 +75,7 @@ export default async function AgingBySalespersonReportPage({
             hint: `${data.stats.salespersonCount} active salespeople`,
           },
         ]}
-        className="lg:grid-cols-6"
+        className="xl:grid-cols-6"
       />
 
       <Suspense fallback={null}>

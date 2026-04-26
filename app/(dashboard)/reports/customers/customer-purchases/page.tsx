@@ -217,7 +217,7 @@ async function CrossCustomerView({
             value: formatCurrency(data.stats.totalAmount),
           },
         ]}
-        className="lg:grid-cols-5"
+        className="xl:grid-cols-5"
       />
       <Suspense fallback={null}>
         <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">

@@ -76,7 +76,7 @@ export function PurchaseOrderForm({
     purchaseOrder?.expectedDate ?? '',
   );
   const [freightAmount, setFreightAmount] = useState(
-    purchaseOrder?.freightAmount ?? '0',
+    purchaseOrder?.freightAmount ?? '',
   );
   const [notes, setNotes] = useState(purchaseOrder?.notes ?? '');
 
@@ -144,7 +144,7 @@ export function PurchaseOrderForm({
           itemNumber: p.itemNumber,
           description: p.description,
           qtyOrdered: 1,
-          unitCost: p.landedCost,
+          unitCost: Number(p.landedCost) > 0 ? p.landedCost : '',
         },
       ];
     });
@@ -338,7 +338,7 @@ export function PurchaseOrderForm({
                   <Label className="text-xs">Unit Cost</Label>
                   <Input
                     inputMode="decimal"
-                    value={l.unitCost}
+                    value={Number(l.unitCost) === 0 ? '' : l.unitCost}
                     onChange={(e) =>
                       updateLine(l.key, { unitCost: e.target.value })
                     }

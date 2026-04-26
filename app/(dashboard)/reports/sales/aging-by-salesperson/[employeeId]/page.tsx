@@ -70,7 +70,7 @@ export default async function SalespersonAgingDetailPage({
             hint: `${data.totals.l12mInvoiceCount} invoices`,
           },
         ]}
-        className="lg:grid-cols-6"
+        className="xl:grid-cols-6"
       />
 
       <Suspense fallback={null}>

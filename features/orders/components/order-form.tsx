@@ -293,10 +293,10 @@ export function OrderForm({
     initialData?.territoryCode ?? '',
   );
   const [freightAmount, setFreightAmount] = useState(
-    initialData?.freightAmount ?? '0',
+    initialData?.freightAmount ?? '',
   );
   const [salesTaxAmount, setSalesTaxAmount] = useState(
-    initialData?.salesTaxAmount ?? '0',
+    initialData?.salesTaxAmount ?? '',
   );
   const [shippingNote, setShippingNote] = useState(
     initialData?.shippingNote ?? '',
@@ -1324,7 +1324,7 @@ function LineItemRow({
         type="number"
         min={0}
         step="0.01"
-        value={item.discount}
+        value={item.discount === 0 ? '' : item.discount}
         onChange={(e) => onUpdate('discount', Number(e.target.value) || 0)}
         onKeyDown={handleDiscountKeyDown}
         onFocus={(e) => e.target.select()}

@@ -71,10 +71,10 @@ function ReceiveDialog({ po }: { po: PurchaseOrderDetail }) {
   );
   const [qtyMap, setQtyMap] = useState<Record<number, string>>(() =>
     Object.fromEntries(
-      po.items.map((i) => [
-        i.id,
-        String(Math.max(0, i.qtyOrdered - i.qtyReceived)),
-      ]),
+      po.items.map((i) => {
+        const remaining = Math.max(0, i.qtyOrdered - i.qtyReceived);
+        return [i.id, remaining > 0 ? String(remaining) : ''];
+      }),
     ),
   );
   const [pending, setPending] = useState(false);
@@ -147,7 +147,7 @@ function ReceiveDialog({ po }: { po: PurchaseOrderDetail }) {
                     type="number"
                     min={0}
                     max={remaining}
-                    value={qtyMap[i.id] ?? '0'}
+                    value={qtyMap[i.id] ?? ''}
                     disabled={remaining <= 0}
                     onChange={(e) =>
                       setQtyMap((p) => ({

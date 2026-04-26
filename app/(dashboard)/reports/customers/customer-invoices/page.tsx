@@ -187,14 +187,14 @@ async function PerCustomerResults({
       />
 
       <section className="rounded-lg border">
-        <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-semibold">
             Invoices — {data.customer.customerName}{' '}
             <span className="text-muted-foreground font-normal">
               ({data.customer.customerNumber})
             </span>
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <ReportColumnsFilter
               columns={CUSTOMER_INVOICES_COLUMNS}
               paramName="invCols"
@@ -252,10 +252,10 @@ async function AllCustomersView({
             value: formatCurrency(data.stats.balanceDue),
           },
         ]}
-        className="lg:grid-cols-5"
+        className="xl:grid-cols-5"
       />
       <Suspense fallback={null}>
-        <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <ReportSelectFilter
             paramName="salesperson"
             label="Salesperson"
@@ -283,7 +283,7 @@ async function AllCustomersView({
         </div>
       </Suspense>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <ReportColumnsFilter
           columns={INVOICE_SUMMARY_ALL_COLUMNS}
           paramName="allCols"

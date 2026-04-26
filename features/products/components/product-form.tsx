@@ -87,22 +87,22 @@ export function ProductForm({
     description: product?.description ?? '',
     cartonNumber: product?.cartonNumber ?? '',
     unitSoldBy: product?.unitSoldBy ?? '',
-    minQty: String(product?.minQty ?? 0),
-    maxQty: String(product?.maxQty ?? 0),
+    minQty: product?.minQty != null ? String(product.minQty) : '',
+    maxQty: product?.maxQty != null ? String(product.maxQty) : '',
     productType: product?.productType ?? '',
-    dimensionsL: product?.dimensionsL ?? '0',
-    dimensionsW: product?.dimensionsW ?? '0',
-    dimensionsH: product?.dimensionsH ?? '0',
-    cubicFeet: product?.cubicFeet ?? '0',
-    caseWeight: product?.caseWeight ?? '0',
+    dimensionsL: product?.dimensionsL ?? '',
+    dimensionsW: product?.dimensionsW ?? '',
+    dimensionsH: product?.dimensionsH ?? '',
+    cubicFeet: product?.cubicFeet ?? '',
+    caseWeight: product?.caseWeight ?? '',
     upcNumber: product?.upcNumber ?? '',
-    landedCost: product?.landedCost ?? '0',
-    minimumPackPrice: product?.minimumPackPrice ?? '0',
-    casePrice: product?.casePrice ?? '0',
-    qtyInStock: String(product?.qtyInStock ?? 0),
-    qtyCommitted: String(product?.qtyCommitted ?? 0),
-    qtyAvailable: String(product?.qtyAvailable ?? 0),
-    qtyOnOrder: String(product?.qtyOnOrder ?? 0),
+    landedCost: product?.landedCost ?? '',
+    minimumPackPrice: product?.minimumPackPrice ?? '',
+    casePrice: product?.casePrice ?? '',
+    qtyInStock: product?.qtyInStock != null ? String(product.qtyInStock) : '',
+    qtyCommitted: product?.qtyCommitted != null ? String(product.qtyCommitted) : '',
+    qtyAvailable: product?.qtyAvailable != null ? String(product.qtyAvailable) : '',
+    qtyOnOrder: product?.qtyOnOrder != null ? String(product.qtyOnOrder) : '',
     nob: String(product?.nob ?? ''),
     isDiscontinued: product?.isDiscontinued ?? false,
     htsCode: product?.htsCode ?? '',
@@ -129,10 +129,14 @@ export function ProductForm({
         name === 'dimensionsW' ||
         name === 'dimensionsH'
       ) {
-        const l = parseFloat(next.dimensionsL) || 0;
-        const w = parseFloat(next.dimensionsW) || 0;
-        const h = parseFloat(next.dimensionsH) || 0;
-        next.cubicFeet = ((l * w * h) / 1728).toFixed(4);
+        if (next.dimensionsL && next.dimensionsW && next.dimensionsH) {
+          const l = parseFloat(next.dimensionsL) || 0;
+          const w = parseFloat(next.dimensionsW) || 0;
+          const h = parseFloat(next.dimensionsH) || 0;
+          next.cubicFeet = ((l * w * h) / 1728).toFixed(4);
+        } else {
+          next.cubicFeet = '';
+        }
       }
       return next;
     });
