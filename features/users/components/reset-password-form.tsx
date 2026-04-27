@@ -37,6 +37,7 @@ export function ResetPasswordForm({ userId }: ResetPasswordFormProps) {
           name="password"
           type="password"
           minLength={8}
+          maxLength={128}
           placeholder="Minimum 8 characters"
           required
         />

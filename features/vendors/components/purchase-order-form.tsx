@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
@@ -21,6 +22,14 @@ import { createPurchaseOrder, updatePurchaseOrderDraft } from '../actions';
 import type { ActionResult } from '@/types';
 
 type VendorOption = { id: number; vendorCode: string; name: string };
+
+function OptionalTag() {
+  return (
+    <span className="text-muted-foreground ml-1 text-xs font-normal">
+      (optional)
+    </span>
+  );
+}
 
 type ProductResult = {
   productId: number;
@@ -59,17 +68,23 @@ type ExistingPO = {
 export function PurchaseOrderForm({
   vendors,
   purchaseOrder,
+  defaultVendorId,
   mode = 'create',
 }: {
   vendors: VendorOption[];
   purchaseOrder?: ExistingPO;
+  defaultVendorId?: number;
   mode?: 'create' | 'edit';
 }) {
   const isEdit = mode === 'edit';
   const today = new Date().toISOString().slice(0, 10);
 
   const [vendorId, setVendorId] = useState(
-    purchaseOrder?.vendorId ? String(purchaseOrder.vendorId) : '',
+    purchaseOrder?.vendorId
+      ? String(purchaseOrder.vendorId)
+      : defaultVendorId
+        ? String(defaultVendorId)
+        : '',
   );
   const [orderDate, setOrderDate] = useState(purchaseOrder?.orderDate ?? today);
   const [expectedDate, setExpectedDate] = useState(
@@ -143,7 +158,7 @@ export function PurchaseOrderForm({
           productId: p.productId,
           itemNumber: p.itemNumber,
           description: p.description,
-          qtyOrdered: 1,
+          qtyOrdered: 0,
           unitCost: Number(p.landedCost) > 0 ? p.landedCost : '',
         },
       ];
@@ -180,6 +195,11 @@ export function PurchaseOrderForm({
     for (const l of lines) {
       if (l.qtyOrdered <= 0) {
         toast.error(`Qty must be > 0 for ${l.itemNumber}.`);
+        return null;
+      }
+      const cost = Number(l.unitCost);
+      if (!l.unitCost || Number.isNaN(cost) || cost <= 0) {
+        toast.error(`Unit cost is required for ${l.itemNumber}.`);
         return null;
       }
     }
@@ -236,21 +256,22 @@ export function PurchaseOrderForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="orderDate">Order Date</Label>
-            <Input
+            <DatePicker
               id="orderDate"
-              type="date"
               value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              required
+              onChange={setOrderDate}
+              aria-label="Order Date"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="expectedDate">Expected Date</Label>
-            <Input
+            <Label htmlFor="expectedDate">
+              Expected Date <OptionalTag />
+            </Label>
+            <DatePicker
               id="expectedDate"
-              type="date"
               value={expectedDate}
-              onChange={(e) => setExpectedDate(e.target.value)}
+              onChange={setExpectedDate}
+              aria-label="Expected Date"
             />
           </div>
         </div>
@@ -326,22 +347,37 @@ export function PurchaseOrderForm({
                   <Input
                     type="number"
                     min={1}
-                    value={l.qtyOrdered}
-                    onChange={(e) =>
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={l.qtyOrdered === 0 ? '' : l.qtyOrdered}
+                    onChange={(e) => {
+                      // Strip everything but digits, then coerce.
+                      const digits = e.target.value.replace(/\D/g, '');
                       updateLine(l.key, {
-                        qtyOrdered: Number(e.target.value) || 0,
-                      })
-                    }
+                        qtyOrdered: digits ? Number(digits) : 0,
+                      });
+                    }}
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Unit Cost</Label>
                   <Input
                     inputMode="decimal"
+                    placeholder="0.00"
+                    required
                     value={Number(l.unitCost) === 0 ? '' : l.unitCost}
-                    onChange={(e) =>
-                      updateLine(l.key, { unitCost: e.target.value })
-                    }
+                    onChange={(e) => {
+                      // Allow digits and a single decimal point.
+                      let v = e.target.value.replace(/[^\d.]/g, '');
+                      const firstDot = v.indexOf('.');
+                      if (firstDot !== -1) {
+                        v =
+                          v.slice(0, firstDot + 1) +
+                          v.slice(firstDot + 1).replace(/\./g, '');
+                      }
+                      updateLine(l.key, { unitCost: v });
+                    }}
                   />
                 </div>
                 <div className="space-y-1">
@@ -367,22 +403,39 @@ export function PurchaseOrderForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="notes">Notes</Label>
+          <Label htmlFor="notes">
+            Notes <OptionalTag />
+          </Label>
           <Textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
+            maxLength={2000}
+            placeholder="Internal notes for this purchase order"
           />
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="freightAmount">Freight</Label>
+            <Label htmlFor="freightAmount">
+              Freight <OptionalTag />
+            </Label>
             <Input
               id="freightAmount"
               inputMode="decimal"
+              placeholder="0.00"
               value={freightAmount}
-              onChange={(e) => setFreightAmount(e.target.value)}
+              onChange={(e) => {
+                // Allow digits and a single decimal point.
+                let v = e.target.value.replace(/[^\d.]/g, '');
+                const firstDot = v.indexOf('.');
+                if (firstDot !== -1) {
+                  v =
+                    v.slice(0, firstDot + 1) +
+                    v.slice(firstDot + 1).replace(/\./g, '');
+                }
+                setFreightAmount(v);
+              }}
             />
           </div>
           <div className="border-t pt-4 text-sm">

@@ -53,28 +53,6 @@ export async function createCustomer(
 
     const customerNumber = await generateCustomerNumber();
 
-    // Validate shipping address fields when not same as billing
-    if (!sameAsBilling) {
-        if (!shipAddress1) {
-            return {
-                success: false,
-                error: 'Shipping street address is required.',
-            };
-        }
-        if (!shipCity) {
-            return { success: false, error: 'Shipping city is required.' };
-        }
-        if (!shipStateCode) {
-            return { success: false, error: 'Shipping state is required.' };
-        }
-        if (!shipPostalCode) {
-            return {
-                success: false,
-                error: 'Shipping postal code is required.',
-            };
-        }
-    }
-
     const customerResult = await createCustomerRecord({
         ...customerData,
         customerNumber,

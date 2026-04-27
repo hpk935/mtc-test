@@ -156,17 +156,20 @@ export async function updateVendor(
 async function generatePoNumber(
     tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
 ): Promise<string> {
-    const year = new Date().getFullYear();
-    const prefix = `PO-${year}-`;
+    // Sequential PO numbers starting at PO100001.
+    const prefix = 'PO';
+    const start = 100001;
     const fromPos = prefix.length + 1;
     const [{ maxSuffix }] = await tx
         .select({
             maxSuffix: sql<number>`coalesce(max(substring(${purchaseOrders.poNumber} from ${fromPos}::int)::int), 0)`,
         })
         .from(purchaseOrders)
-        .where(sql`${purchaseOrders.poNumber} like ${`${prefix}%`}`);
-    const next = (maxSuffix ?? 0) + 1;
-    return `${prefix}${String(next).padStart(4, '0')}`;
+        .where(
+            sql`${purchaseOrders.poNumber} like ${`${prefix}%`} and substring(${purchaseOrders.poNumber} from ${fromPos}::int) ~ '^[0-9]+$'`,
+        );
+    const next = Math.max((maxSuffix ?? 0) + 1, start);
+    return `${prefix}${next}`;
 }
 
 async function loadProductsForItems(

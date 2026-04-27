@@ -37,6 +37,18 @@ export function ChangePasswordForm({ onBack }: ChangePasswordFormProps) {
     }
   }, [state, onBack]);
 
+  // Client preflight: catches identical-password submissions before the
+  // server round-trip and shows the same error toast.
+  function handleSubmit(formData: FormData) {
+    const currentPassword = String(formData.get('currentPassword') ?? '');
+    const newPassword = String(formData.get('newPassword') ?? '');
+    if (currentPassword && newPassword && currentPassword === newPassword) {
+      toast.error('New password must be different from current password.');
+      return;
+    }
+    formAction(formData);
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
@@ -46,7 +58,7 @@ export function ChangePasswordForm({ onBack }: ChangePasswordFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-4">
+        <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

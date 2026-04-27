@@ -191,6 +191,7 @@ export function UserForm({ user }: UserFormProps) {
                 name="firstName"
                 value={formValues.firstName}
                 onChange={handleChange}
+                maxLength={100}
                 required
               />
             </div>
@@ -201,6 +202,7 @@ export function UserForm({ user }: UserFormProps) {
                 name="lastName"
                 value={formValues.lastName}
                 onChange={handleChange}
+                maxLength={100}
                 required
               />
             </div>
@@ -212,7 +214,9 @@ export function UserForm({ user }: UserFormProps) {
               id="email"
               name="email"
               type="email"
-              defaultValue={user?.email ?? ''}
+              value={formValues.email}
+              onChange={handleChange}
+              maxLength={255}
               required
             />
           </div>
@@ -225,6 +229,7 @@ export function UserForm({ user }: UserFormProps) {
                 name="password"
                 type="password"
                 minLength={8}
+                maxLength={128}
                 required
               />
               <p className="text-muted-foreground text-xs">
@@ -235,10 +240,11 @@ export function UserForm({ user }: UserFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select
-              name="role"
-              value={formValues.role}
-              onValueChange={handleRoleChange}>
+            {/* Hidden input drives FormData. Radix Select's `name` prop
+                renders a hidden native <select> that silently falls back to
+                the first <option> when value is '', bypassing validation. */}
+            <input type="hidden" name="role" value={formValues.role} />
+            <Select value={formValues.role} onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -255,8 +261,12 @@ export function UserForm({ user }: UserFormProps) {
           {isEdit && (
             <div className="space-y-2">
               <Label htmlFor="isActive">Status</Label>
-              <Select
+              <input
+                type="hidden"
                 name="isActive"
+                value={formValues.isActive}
+              />
+              <Select
                 value={formValues.isActive}
                 onValueChange={(v) =>
                   setFormValues((prev) => ({ ...prev, isActive: v }))

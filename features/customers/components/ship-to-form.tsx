@@ -80,7 +80,11 @@ export function ShipToForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    const digitsOnlyFields = ['mainPhone', 'postalCode'];
+    const next = digitsOnlyFields.includes(name)
+      ? value.replace(/\D/g, '')
+      : value;
+    setFormValues((prev) => ({ ...prev, [name]: next }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -215,11 +219,13 @@ export function ShipToForm({
                   <Input
                     id="postalCode"
                     name="postalCode"
+                    inputMode="numeric"
+                    pattern="\d*"
                     placeholder="90001"
                     value={formValues.postalCode}
                     onChange={handleChange}
                     required
-                    maxLength={20}
+                    maxLength={10}
                   />
                 </div>
               </div>
@@ -252,7 +258,10 @@ export function ShipToForm({
                 <Input
                   id="shipMainPhone"
                   name="mainPhone"
-                  placeholder="(555) 123-4567"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  placeholder="5551234567"
                   value={formValues.mainPhone}
                   onChange={handleChange}
                   maxLength={20}
@@ -291,6 +300,7 @@ export function ShipToForm({
                 value={formValues.customerNote}
                 onChange={handleChange}
                 rows={2}
+                maxLength={2000}
               />
             </div>
           </div>

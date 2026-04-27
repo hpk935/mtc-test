@@ -7,21 +7,41 @@ const lineItemSchema = z.object({
     discount: z.coerce.number().min(0).default(0),
 });
 
+// ISO date (YYYY-MM-DD) — what <input type="date"> emits.
+const isoDateSchema = z
+    .string()
+    .min(1, 'Order date is required')
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Order date must be a valid date')
+    .refine((v) => !Number.isNaN(new Date(v).getTime()), {
+        message: 'Order date must be a valid date',
+    });
+
 export const createOrderSchema = z.object({
-    customerNumber: z.string().min(1, 'Customer is required'),
-    salespersonCode: z.string().min(1, 'Salesperson is required'),
-    orderDate: z.string().min(1, 'Order date is required'),
+    customerNumber: z.string().min(1, 'Customer is required').max(20),
+    salespersonCode: z.string().min(1, 'Salesperson is required').max(10),
+    orderDate: isoDateSchema,
     customerPoReference: z.string().max(50).optional().default(''),
-    freightTerm: z.string().min(1, 'Freight term is required'),
-    shipToId: z.string().min(1, 'Ship-to address is required'),
-    termCode: z.string().min(1, 'Term code is required'),
-    territoryCode: z.string().min(1, 'Territory is required'),
-    freightAmount: z.coerce.number().min(0).default(0),
-    salesTaxAmount: z.coerce.number().min(0).default(0),
-    shippingNote: z.string().optional().default(''),
+    // Optional. Stored as '' until DB columns are made nullable.
+    freightTerm: z.string().max(50).optional().default(''),
+    shipToId: z.string().min(1, 'Ship-to address is required').max(20),
+    termCode: z.string().max(10).optional().default(''),
+    territoryCode: z.string().max(20).optional().default(''),
+    freightAmount: z.coerce
+        .number({ message: 'Freight amount must be a number' })
+        .min(0, 'Freight amount must be 0 or greater')
+        .default(0),
+    salesTaxAmount: z.coerce
+        .number({ message: 'Sales tax must be a number' })
+        .min(0, 'Sales tax must be 0 or greater')
+        .default(0),
+    shippingNote: z.string().max(2000).optional().default(''),
     lineItems: z
         .array(lineItemSchema)
-        .min(1, 'At least one line item is required'),
+        .min(1, 'At least one line item is required')
+        .refine((items) => items.some((i) => i.qtyOrdered > 0), {
+            message:
+                'At least one line item must have a quantity greater than 0',
+        }),
 });
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;

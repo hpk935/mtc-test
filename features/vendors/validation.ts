@@ -2,6 +2,8 @@ import { z } from 'zod/v4';
 import { PO_STATUSES, VENDOR_TYPES } from './constants';
 
 const trimmed = (max: number) => z.string().trim().max(max);
+const required = (max: number, label: string) =>
+    z.string().trim().min(1, `${label} is required`).max(max);
 const optional = (max: number) =>
     z
         .string()
@@ -14,27 +16,61 @@ const numericString = z
     .regex(/^\d*\.?\d*$/, 'Must be a number')
     .default('0');
 
+const PHONE_MESSAGE =
+    'Phone number must contain 7–20 digits, no spaces or symbols';
+const requiredPhoneSchema = z
+    .string()
+    .min(1, 'Phone number is required')
+    .regex(/^\d{7,20}$/, PHONE_MESSAGE);
+const optionalPhoneSchema = z
+    .string()
+    .optional()
+    .default('')
+    .refine((v) => v === '' || /^\d{7,20}$/.test(v), {
+        message: PHONE_MESSAGE,
+    });
+
+const POSTAL_MESSAGE =
+    'Postal code must contain 3–10 digits, no spaces or symbols';
+const requiredPostalSchema = z
+    .string()
+    .min(1, 'Postal code is required')
+    .regex(/^\d{3,10}$/, POSTAL_MESSAGE);
+
+const optionalIsoDateSchema = z
+    .string()
+    .optional()
+    .default('')
+    .refine(
+        (v) =>
+            v === '' ||
+            (/^\d{4}-\d{2}-\d{2}$/.test(v) &&
+                !Number.isNaN(new Date(v).getTime())),
+        { message: 'Date added must be a valid date' },
+    )
+    .transform((v) => (v && v.length > 0 ? v : undefined));
+
 export const createVendorSchema = z.object({
     vendorCode: trimmed(10).min(1, 'Vendor code is required'),
     name: trimmed(255).min(1, 'Name is required'),
-    address1: optional(255),
+    address1: required(255, 'Address 1'),
     address2: optional(255),
-    city: optional(100),
-    state: optional(10),
-    zip: optional(20),
-    phone: optional(20),
-    fax: optional(20),
+    city: required(100, 'City'),
+    state: required(10, 'State'),
+    zip: requiredPostalSchema,
+    phone: requiredPhoneSchema,
+    fax: optionalPhoneSchema,
     accountNumber: optional(50),
-    contactName: optional(100),
+    contactName: required(100, 'Contact name'),
     taxId: optional(20),
     send1099: z
         .string()
         .optional()
         .transform((v) => v === 'on' || v === 'true'),
-    vendorType: z.enum(VENDOR_TYPES).default('CS'),
+    vendorType: z.enum(VENDOR_TYPES, { message: 'Vendor type is required' }),
     paymentTerms: optional(10),
     glAccountCode: optional(10),
-    dateAdded: optional(10),
+    dateAdded: optionalIsoDateSchema,
     isActive: z
         .string()
         .optional()
@@ -49,7 +85,11 @@ export type UpdateVendorInput = z.infer<typeof updateVendorSchema>;
 export const purchaseOrderItemSchema = z.object({
     productId: z.coerce.number().int().positive('Product is required'),
     qtyOrdered: z.coerce.number().int().positive('Qty must be > 0'),
-    unitCost: numericString,
+    unitCost: z
+        .string()
+        .min(1, 'Unit cost is required')
+        .regex(/^\d*\.?\d+$/, 'Unit cost must be a number')
+        .refine((v) => Number(v) > 0, { message: 'Unit cost must be > 0' }),
 });
 export type PurchaseOrderItemInput = z.infer<typeof purchaseOrderItemSchema>;
 

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -605,8 +606,82 @@ export function OrderForm({
 
   // --- Submit handler ---
   function handleSubmit(formData: FormData) {
+    // Client-side guards. Server re-validates with Zod regardless.
+    if (!customer) {
+      toast.error('Please select a customer.');
+      return;
+    }
+    if (!shipToId) {
+      toast.error('Please select a ship-to address.');
+      return;
+    }
+    if (!salespersonCode) {
+      toast.error('Please select a salesperson.');
+      return;
+    }
+    if (!orderDate) {
+      toast.error('Please select an order date.');
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(orderDate)) {
+      toast.error('Order date must be a valid date.');
+      return;
+    }
+    if (freight < 0 || Number.isNaN(freight)) {
+      toast.error('Freight amount must be 0 or greater.');
+      return;
+    }
+    if (tax < 0 || Number.isNaN(tax)) {
+      toast.error('Sales tax must be 0 or greater.');
+      return;
+    }
+
+    const cleanedLineItems = lineItems
+      .filter((li) => li.itemNumber.trim() !== '')
+      .map((li) => ({
+        itemNumber: li.itemNumber.trim(),
+        qtyOrdered: li.qtyOrdered,
+        unitPrice: li.unitPrice,
+        discount: li.discount,
+      }));
+
+    if (cleanedLineItems.length === 0) {
+      toast.error('Please add at least one line item.');
+      return;
+    }
+    if (
+      cleanedLineItems.some(
+        (li) => !Number.isFinite(li.qtyOrdered) || li.qtyOrdered < 1,
+      )
+    ) {
+      toast.error('Each line item must have a quantity of at least 1.');
+      return;
+    }
+    if (!cleanedLineItems.some((li) => li.qtyOrdered > 0)) {
+      toast.error(
+        'At least one line item must have a quantity greater than 0.',
+      );
+      return;
+    }
+    if (
+      cleanedLineItems.some(
+        (li) => !Number.isFinite(li.unitPrice) || li.unitPrice < 0,
+      )
+    ) {
+      toast.error('Line item price must be 0 or greater.');
+      return;
+    }
+    if (
+      cleanedLineItems.some(
+        (li) => !Number.isFinite(li.discount) || li.discount < 0,
+      )
+    ) {
+      toast.error('Line item discount must be 0 or greater.');
+      return;
+    }
+
     const orderData = {
-      customerNumber: customer?.customerNumber ?? '',
+      customerNumber: customer.customerNumber,
       salespersonCode,
       orderDate,
       customerPoReference,
@@ -617,14 +692,7 @@ export function OrderForm({
       freightAmount: freight,
       salesTaxAmount: tax,
       shippingNote,
-      lineItems: lineItems
-        .filter((li) => li.itemNumber.trim() !== '')
-        .map((li) => ({
-          itemNumber: li.itemNumber,
-          qtyOrdered: li.qtyOrdered,
-          unitPrice: li.unitPrice,
-          discount: li.discount,
-        })),
+      lineItems: cleanedLineItems,
     };
     formData.set('orderData', JSON.stringify(orderData));
     formAction(formData);
@@ -843,12 +911,11 @@ export function OrderForm({
         description="Date, PO reference, sales rep, and shipping terms.">
         <div className="space-y-2">
           <Label htmlFor="orderDate">Order Date</Label>
-          <Input
+          <DatePicker
             id="orderDate"
-            type="date"
             value={orderDate}
-            onChange={(e) => setOrderDate(e.target.value)}
-            required
+            onChange={setOrderDate}
+            aria-label="Order Date"
           />
         </div>
         <div className="space-y-2">
@@ -882,8 +949,10 @@ export function OrderForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="freightTerm">Freight Term</Label>
-          <Select value={freightTerm} onValueChange={setFreightTerm} required>
+          <Label htmlFor="freightTerm">
+            Freight Term <OptionalTag />
+          </Label>
+          <Select value={freightTerm} onValueChange={setFreightTerm}>
             <SelectTrigger id="freightTerm">
               <SelectValue placeholder="Select freight term" />
             </SelectTrigger>
@@ -897,24 +966,26 @@ export function OrderForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="termCode">Payment Terms</Label>
+          <Label htmlFor="termCode">
+            Payment Terms <OptionalTag />
+          </Label>
           <Input
             id="termCode"
             placeholder="e.g. 30, 60, CH"
             value={termCode}
             onChange={(e) => setTermCode(e.target.value)}
-            required
             maxLength={10}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="territoryCode">Territory</Label>
+          <Label htmlFor="territoryCode">
+            Territory <OptionalTag />
+          </Label>
           <Input
             id="territoryCode"
             placeholder="e.g. TX-10"
             value={territoryCode}
             onChange={(e) => setTerritoryCode(e.target.value)}
-            required
             maxLength={20}
           />
         </div>

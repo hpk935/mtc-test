@@ -2,9 +2,17 @@ import { requirePermission } from '@/lib/auth';
 import { getActiveVendorsForSelect } from '@/features/vendors/queries';
 import { PurchaseOrderForm } from '@/features/vendors/components/purchase-order-form';
 
-export default async function NewPurchaseOrderPage() {
+export default async function NewPurchaseOrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ vendorId?: string }>;
+}) {
   await requirePermission('vendors:view');
   const vendors = await getActiveVendorsForSelect();
+  const { vendorId } = await searchParams;
+  const parsed = vendorId ? Number(vendorId) : NaN;
+  const defaultVendorId =
+    Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -16,7 +24,11 @@ export default async function NewPurchaseOrderPage() {
           Draft a purchase order. Stock only updates when items are received.
         </p>
       </div>
-      <PurchaseOrderForm vendors={vendors} mode="create" />
+      <PurchaseOrderForm
+        vendors={vendors}
+        defaultVendorId={defaultVendorId}
+        mode="create"
+      />
     </div>
   );
 }

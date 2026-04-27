@@ -176,7 +176,19 @@ export function CustomerForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
+    // Phone-like fields: keep digits only.
+    const digitsOnlyFields = [
+      'mainPhone',
+      'phoneExtension',
+      'faxNumber',
+      'shipPhone',
+      'billingPostalCode',
+      'shipPostalCode',
+    ];
+    const next = digitsOnlyFields.includes(name)
+      ? value.replace(/\D/g, '')
+      : value;
+    setFormValues((prev) => ({ ...prev, [name]: next }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -275,7 +287,9 @@ export function CustomerForm({
             id="mainPhone"
             name="mainPhone"
             type="tel"
-            placeholder="(555) 123-4567"
+            inputMode="numeric"
+            pattern="\d*"
+            placeholder="5551234567"
             value={formValues.mainPhone}
             onChange={handleChange}
             required
@@ -289,6 +303,8 @@ export function CustomerForm({
           <Input
             id="phoneExtension"
             name="phoneExtension"
+            inputMode="numeric"
+            pattern="\d*"
             placeholder="e.g. 204"
             value={formValues.phoneExtension}
             onChange={handleChange}
@@ -302,7 +318,9 @@ export function CustomerForm({
           <Input
             id="faxNumber"
             name="faxNumber"
-            placeholder="(555) 123-4568"
+            inputMode="numeric"
+            pattern="\d*"
+            placeholder="5551234568"
             value={formValues.faxNumber}
             onChange={handleChange}
             maxLength={20}
@@ -369,11 +387,13 @@ export function CustomerForm({
           <Input
             id="billingPostalCode"
             name="billingPostalCode"
+            inputMode="numeric"
+            pattern="\d*"
             placeholder="e.g. 75165"
             value={formValues.billingPostalCode}
             onChange={handleChange}
             required
-            maxLength={20}
+            maxLength={10}
           />
         </div>
         <div className="space-y-2">
@@ -480,11 +500,13 @@ export function CustomerForm({
                   <Input
                     id="shipPostalCode"
                     name="shipPostalCode"
+                    inputMode="numeric"
+                    pattern="\d*"
                     placeholder="e.g. 75165"
                     value={formValues.shipPostalCode}
                     onChange={handleChange}
                     required
-                    maxLength={20}
+                    maxLength={10}
                   />
                 </div>
                 <div className="space-y-2">
@@ -519,7 +541,10 @@ export function CustomerForm({
               <Input
                 id="shipPhone"
                 name="shipPhone"
-                placeholder="(555) 123-4567"
+                type="tel"
+                inputMode="numeric"
+                pattern="\d*"
+                placeholder="5551234567"
                 value={formValues.shipPhone}
                 onChange={handleChange}
                 maxLength={20}
@@ -555,9 +580,15 @@ export function CustomerForm({
         description="Terms, territory, and sales rep.">
         <div className="space-y-2">
           <Label htmlFor="salespersonCode">Salesperson</Label>
-          <Select
+          {/* Hidden input drives FormData. Radix Select's built-in `name`
+              prop falls back to the first <option> when value is '',
+              which silently bypasses required validation. */}
+          <input
+            type="hidden"
             name="salespersonCode"
-            required
+            value={formValues.salespersonCode}
+          />
+          <Select
             value={formValues.salespersonCode}
             onValueChange={(v) => handleSelectChange('salespersonCode', v)}>
             <SelectTrigger id="salespersonCode">
@@ -591,38 +622,41 @@ export function CustomerForm({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="termCode">Payment Terms</Label>
+          <Label htmlFor="termCode">
+            Payment Terms <OptionalTag />
+          </Label>
           <Input
             id="termCode"
             name="termCode"
             placeholder="e.g. 30, 60, CH"
             value={formValues.termCode}
             onChange={handleChange}
-            required
             maxLength={10}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="territoryCode">Territory</Label>
+          <Label htmlFor="territoryCode">
+            Territory <OptionalTag />
+          </Label>
           <Input
             id="territoryCode"
             name="territoryCode"
             placeholder="e.g. TX-10"
             value={formValues.territoryCode}
             onChange={handleChange}
-            required
             maxLength={20}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="defaultFreightTerm">Freight Term</Label>
+          <Label htmlFor="defaultFreightTerm">
+            Freight Term <OptionalTag />
+          </Label>
           <Input
             id="defaultFreightTerm"
             name="defaultFreightTerm"
             placeholder="e.g. 10% Freight"
             value={formValues.defaultFreightTerm}
             onChange={handleChange}
-            required
             maxLength={50}
           />
         </div>

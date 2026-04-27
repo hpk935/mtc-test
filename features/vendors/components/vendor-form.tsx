@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -40,6 +41,16 @@ function FormSection({
   );
 }
 
+function OptionalTag() {
+  return (
+    <span className="text-muted-foreground ml-1 text-xs font-normal">
+      (optional)
+    </span>
+  );
+}
+
+const DIGIT_ONLY_FIELDS = new Set(['phone', 'fax', 'zip']);
+
 type Props = {
   vendor?: Vendor;
   mode?: 'create' | 'edit';
@@ -62,7 +73,7 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
     contactName: vendor?.contactName ?? '',
     taxId: vendor?.taxId ?? '',
     send1099: vendor?.send1099 ?? false,
-    vendorType: vendor?.vendorType ?? 'CS',
+    vendorType: vendor?.vendorType ?? '',
     paymentTerms: vendor?.paymentTerms ?? '',
     glAccountCode: vendor?.glAccountCode ?? '',
     dateAdded: vendor?.dateAdded ?? '',
@@ -71,12 +82,56 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
 
   const [values, setValues] = useState(initial);
 
+  // Edit mode: disable submit until something actually changed.
+  const isDirty = (Object.keys(initial) as Array<keyof typeof initial>).some(
+    (k) => values[k] !== initial[k],
+  );
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setValues((prev) => ({ ...prev, [name]: value }));
+    const next = DIGIT_ONLY_FIELDS.has(name) ? value.replace(/\D/g, '') : value;
+    setValues((prev) => ({ ...prev, [name]: next }));
   };
 
   async function action(_: ActionResult | null, formData: FormData) {
+    // Client-side guards (mirrors Zod schema; surfaces toast for first error).
+    if (!values.vendorCode.trim()) {
+      toast.error('Vendor code is required.');
+      return { success: false, error: 'Vendor code is required.' };
+    }
+    if (!values.name.trim()) {
+      toast.error('Name is required.');
+      return { success: false, error: 'Name is required.' };
+    }
+    if (!values.vendorType) {
+      toast.error('Vendor type is required.');
+      return { success: false, error: 'Vendor type is required.' };
+    }
+    if (!values.contactName.trim()) {
+      toast.error('Contact name is required.');
+      return { success: false, error: 'Contact name is required.' };
+    }
+    if (!/^\d{7,20}$/.test(values.phone)) {
+      toast.error('Phone must contain 7–20 digits.');
+      return { success: false, error: 'Phone is required.' };
+    }
+    if (!values.address1.trim()) {
+      toast.error('Address 1 is required.');
+      return { success: false, error: 'Address 1 is required.' };
+    }
+    if (!values.city.trim()) {
+      toast.error('City is required.');
+      return { success: false, error: 'City is required.' };
+    }
+    if (!values.state.trim()) {
+      toast.error('State is required.');
+      return { success: false, error: 'State is required.' };
+    }
+    if (!/^\d{3,10}$/.test(values.zip)) {
+      toast.error('Zip must contain 3–10 digits.');
+      return { success: false, error: 'Zip is required.' };
+    }
+
     // Sync checkboxes (radix) into formData
     formData.set('send1099', values.send1099 ? 'on' : 'off');
     formData.set('isActive', values.isActive ? 'on' : 'off');
@@ -117,6 +172,7 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             onChange={handleChange}
             required
             maxLength={10}
+            placeholder="e.g. ACME01"
           />
         </div>
         <div className="space-y-2">
@@ -128,17 +184,19 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             onChange={handleChange}
             required
             maxLength={255}
+            placeholder="Vendor name"
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="vendorType">Type</Label>
+          {/* Hidden input drives FormData. Avoids the Radix Select's hidden
+              native <select> falling back to the first option when value=''. */}
+          <input type="hidden" name="vendorType" value={values.vendorType} />
           <Select
             value={values.vendorType}
-            onValueChange={(v) =>
-              setValues((p) => ({ ...p, vendorType: v as 'CS' | 'CO' }))
-            }>
+            onValueChange={(v) => setValues((p) => ({ ...p, vendorType: v }))}>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
               {VENDOR_TYPES.map((t) => (
@@ -171,7 +229,9 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             name="contactName"
             value={values.contactName}
             onChange={handleChange}
+            required
             maxLength={100}
+            placeholder="Full name"
           />
         </div>
         <div className="space-y-2">
@@ -181,27 +241,39 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             name="phone"
             value={values.phone}
             onChange={handleChange}
+            required
+            inputMode="numeric"
+            pattern="\d*"
             maxLength={20}
+            placeholder="5551234567"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="fax">Fax</Label>
+          <Label htmlFor="fax">
+            Fax <OptionalTag />
+          </Label>
           <Input
             id="fax"
             name="fax"
             value={values.fax}
             onChange={handleChange}
+            inputMode="numeric"
+            pattern="\d*"
             maxLength={20}
+            placeholder="5551234567"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="accountNumber">Acct ID</Label>
+          <Label htmlFor="accountNumber">
+            Acct ID <OptionalTag />
+          </Label>
           <Input
             id="accountNumber"
             name="accountNumber"
             value={values.accountNumber}
             onChange={handleChange}
             maxLength={50}
+            placeholder="Vendor-assigned account #"
           />
         </div>
       </FormSection>
@@ -216,17 +288,22 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             name="address1"
             value={values.address1}
             onChange={handleChange}
+            required
             maxLength={255}
+            placeholder="Street address"
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="address2">Address 2</Label>
+          <Label htmlFor="address2">
+            Address 2 <OptionalTag />
+          </Label>
           <Input
             id="address2"
             name="address2"
             value={values.address2}
             onChange={handleChange}
             maxLength={255}
+            placeholder="Suite, unit, etc."
           />
         </div>
         <div className="space-y-2">
@@ -236,7 +313,9 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             name="city"
             value={values.city}
             onChange={handleChange}
+            required
             maxLength={100}
+            placeholder="City"
           />
         </div>
         <div className="space-y-2">
@@ -246,7 +325,9 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             name="state"
             value={values.state}
             onChange={handleChange}
+            required
             maxLength={10}
+            placeholder="e.g. CA"
           />
         </div>
         <div className="space-y-2">
@@ -256,7 +337,11 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             name="zip"
             value={values.zip}
             onChange={handleChange}
-            maxLength={20}
+            required
+            inputMode="numeric"
+            pattern="\d*"
+            maxLength={10}
+            placeholder="12345"
           />
         </div>
       </FormSection>
@@ -267,13 +352,16 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
         title="Accounting"
         description="Tax ID, 1099 status, terms, and account no.">
         <div className="space-y-2">
-          <Label htmlFor="taxId">Tax ID</Label>
+          <Label htmlFor="taxId">
+            Tax ID <OptionalTag />
+          </Label>
           <Input
             id="taxId"
             name="taxId"
             value={values.taxId}
             onChange={handleChange}
             maxLength={20}
+            placeholder="EIN or SSN"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -287,7 +375,9 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
           <Label htmlFor="send1099">Send 1099</Label>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="paymentTerms">Payment Terms</Label>
+          <Label htmlFor="paymentTerms">
+            Payment Terms <OptionalTag />
+          </Label>
           <Input
             id="paymentTerms"
             name="paymentTerms"
@@ -298,24 +388,32 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="glAccountCode">Account No</Label>
+          <Label htmlFor="glAccountCode">
+            Account No <OptionalTag />
+          </Label>
           <Input
             id="glAccountCode"
             name="glAccountCode"
             value={values.glAccountCode}
             onChange={handleChange}
             maxLength={10}
+            placeholder="GL account code"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dateAdded">Date Added</Label>
-          <Input
+          <Label htmlFor="dateAdded">
+            Date Added <OptionalTag />
+          </Label>
+          <DatePicker
             id="dateAdded"
-            name="dateAdded"
-            type="date"
             value={values.dateAdded}
-            onChange={handleChange}
+            onChange={(value) =>
+              setValues((prev) => ({ ...prev, dateAdded: value }))
+            }
+            aria-label="Date Added"
           />
+          {/* FormData carries the date for the server action. */}
+          <input type="hidden" name="dateAdded" value={values.dateAdded} />
         </div>
       </FormSection>
 
@@ -325,7 +423,7 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
             Cancel
           </Link>
         </Button>
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
           {pending ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Vendor'}
         </Button>
       </div>

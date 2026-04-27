@@ -100,8 +100,10 @@ export function ProductForm({
     minimumPackPrice: product?.minimumPackPrice ?? '',
     casePrice: product?.casePrice ?? '',
     qtyInStock: product?.qtyInStock != null ? String(product.qtyInStock) : '',
-    qtyCommitted: product?.qtyCommitted != null ? String(product.qtyCommitted) : '',
-    qtyAvailable: product?.qtyAvailable != null ? String(product.qtyAvailable) : '',
+    qtyCommitted:
+      product?.qtyCommitted != null ? String(product.qtyCommitted) : '',
+    qtyAvailable:
+      product?.qtyAvailable != null ? String(product.qtyAvailable) : '',
     qtyOnOrder: product?.qtyOnOrder != null ? String(product.qtyOnOrder) : '',
     nob: String(product?.nob ?? ''),
     isDiscontinued: product?.isDiscontinued ?? false,
@@ -205,11 +207,12 @@ export function ProductForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="productType">Product Type</Label>
+          <Label htmlFor="productType">
+            Product Type <OptionalTag />
+          </Label>
           <Input
             id="productType"
             name="productType"
-            required
             placeholder="e.g. A01"
             value={formValues.productType}
             onChange={handleChange}
@@ -257,6 +260,8 @@ export function ProductForm({
             name="minQty"
             type="number"
             min={0}
+            step={1}
+            required
             value={formValues.minQty}
             onChange={handleChange}
           />
@@ -268,6 +273,8 @@ export function ProductForm({
             name="maxQty"
             type="number"
             min={0}
+            step={1}
+            required
             value={formValues.maxQty}
             onChange={handleChange}
           />
@@ -278,6 +285,8 @@ export function ProductForm({
             id="dimensionsL"
             name="dimensionsL"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.dimensionsL}
             onChange={handleChange}
           />
@@ -288,6 +297,8 @@ export function ProductForm({
             id="dimensionsW"
             name="dimensionsW"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.dimensionsW}
             onChange={handleChange}
           />
@@ -298,6 +309,8 @@ export function ProductForm({
             id="dimensionsH"
             name="dimensionsH"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.dimensionsH}
             onChange={handleChange}
           />
@@ -318,15 +331,23 @@ export function ProductForm({
             id="caseWeight"
             name="caseWeight"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.caseWeight}
             onChange={handleChange}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="unitSoldBy">Unit Sold By</Label>
-          <Select
+          {/* Hidden input drives FormData. Radix Select's built-in `name`
+              prop falls back to the first <option> when value is '',
+              which silently bypasses required validation. */}
+          <input
+            type="hidden"
             name="unitSoldBy"
-            required
+            value={formValues.unitSoldBy}
+          />
+          <Select
             value={formValues.unitSoldBy}
             onValueChange={(v) => handleSelectChange('unitSoldBy', v)}>
             <SelectTrigger id="unitSoldBy">
@@ -355,6 +376,8 @@ export function ProductForm({
             id="landedCost"
             name="landedCost"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.landedCost}
             onChange={handleChange}
           />
@@ -365,6 +388,8 @@ export function ProductForm({
             id="minimumPackPrice"
             name="minimumPackPrice"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.minimumPackPrice}
             onChange={handleChange}
           />
@@ -375,6 +400,8 @@ export function ProductForm({
             id="casePrice"
             name="casePrice"
             placeholder="0.00"
+            required
+            inputMode="decimal"
             value={formValues.casePrice}
             onChange={handleChange}
           />
@@ -394,6 +421,8 @@ export function ProductForm({
             name="qtyInStock"
             type="number"
             min={0}
+            step={1}
+            required
             value={formValues.qtyInStock}
             onChange={handleChange}
           />
