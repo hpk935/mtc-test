@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -235,13 +236,18 @@ export function CustomerForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="accountOpenDate">Account Open Date</Label>
-          <Input
+          <DatePicker
             id="accountOpenDate"
-            name="accountOpenDate"
-            type="date"
             value={formValues.accountOpenDate}
-            onChange={handleChange}
-            required
+            onChange={(value) =>
+              setFormValues((prev) => ({ ...prev, accountOpenDate: value }))
+            }
+            aria-label="Account Open Date"
+          />
+          <input
+            type="hidden"
+            name="accountOpenDate"
+            value={formValues.accountOpenDate}
           />
         </div>
       </FormSection>

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface ReportDateInputProps {
   paramName: string;
@@ -21,10 +21,10 @@ export function ReportDateInput({
   const searchParams = useSearchParams();
   const current = searchParams.get(paramName) ?? defaultValue ?? '';
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set(paramName, e.target.value);
+    if (value) {
+      params.set(paramName, value);
     } else {
       params.delete(paramName);
     }
@@ -37,7 +37,7 @@ export function ReportDateInput({
       <label className="text-muted-foreground mb-1 block text-xs font-medium">
         {label}
       </label>
-      <Input type="date" value={current} onChange={handleChange} />
+      <DatePicker value={current} onChange={handleChange} aria-label={label} />
     </div>
   );
 }

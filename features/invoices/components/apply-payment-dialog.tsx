@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -110,12 +111,12 @@ export function ApplyPaymentDialog({
 
             <div className="space-y-2">
               <Label htmlFor="payment-date">Payment Date</Label>
-              <Input
+              <DatePicker
                 id="payment-date"
-                type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
+                onChange={setDate}
+                modal
+                aria-label="Payment Date"
               />
             </div>
 
