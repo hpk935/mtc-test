@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import type { ReactNode } from 'react';
+import { useIsClient } from '@/hooks/use-is-client';
 
 interface ReportPrintShellProps {
   title: string;
@@ -16,13 +17,18 @@ export function ReportPrintShell({
   meta,
   children,
 }: ReportPrintShellProps) {
-  const printedAt = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date());
+  // Computed in the browser only: the server's clock and timezone differ from
+  // the user's, which caused hydration errors and UTC print times.
+  const isClient = useIsClient();
+  const printedAt = isClient
+    ? new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(new Date())
+    : null;
 
   return (
     <>

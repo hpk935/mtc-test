@@ -18,9 +18,7 @@ async function verify() {
         sql`SELECT account_status, count(*) FROM customers GROUP BY account_status ORDER BY account_status`,
     );
     console.log('\n--- Status Distribution ---');
-    statuses.forEach((r: any) =>
-        console.log(`  ${r.account_status}: ${r.count}`),
-    );
+    statuses.forEach((r) => console.log(`  ${r.account_status}: ${r.count}`));
 
     // Salesperson count
     const [sp] = await db.execute(

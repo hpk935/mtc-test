@@ -64,8 +64,7 @@ export function OrderTable({ orders }: OrderTableProps) {
         {orders.map((order) => (
           <ClickableRow
             key={order.orderNumber}
-            href={`/orders/${order.orderNumber}`}
-          >
+            href={`/orders/${order.orderNumber}`}>
             <TableCell className="font-medium">
               <Link href={`/orders/${order.orderNumber}`} className="block">
                 {order.orderNumber}
@@ -74,8 +73,7 @@ export function OrderTable({ orders }: OrderTableProps) {
             <TableCell>
               <Link
                 href={`/customers/${order.customerNumber}`}
-                className="hover:underline"
-              >
+                className="hover:underline">
                 {order.customerName}
               </Link>
               <span className="text-muted-foreground ml-1 text-xs">

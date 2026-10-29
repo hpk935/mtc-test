@@ -48,8 +48,7 @@ export function UserTable({ users }: UserTableProps) {
             <TableCell>
               <Link
                 href={`/users/${user.id}`}
-                className="font-mono font-medium"
-              >
+                className="font-mono font-medium">
                 {user.employeeId}
               </Link>
             </TableCell>
@@ -66,8 +65,9 @@ export function UserTable({ users }: UserTableProps) {
             </TableCell>
             <TableCell>
               <Badge
-                variant={STATUS_VARIANT[String(user.isActive)] ?? 'destructive'}
-              >
+                variant={
+                  STATUS_VARIANT[String(user.isActive)] ?? 'destructive'
+                }>
                 {user.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </TableCell>

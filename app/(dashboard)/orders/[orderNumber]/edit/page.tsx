@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSalespersons } from '@/features/customers/queries';
 import { FREIGHT_TERMS } from '@/features/customers/constants';
 import { getOrderForEdit } from '@/features/orders/queries';
@@ -18,9 +18,9 @@ export default async function EditOrderPage({
     getSalespersons(),
   ]);
 
-  if (!data || data.order.orderStatus !== 'open') {
-    notFound();
-  }
+  if (!data) notFound();
+  // Only open orders are editable; send anything else back to its detail page.
+  if (data.order.orderStatus !== 'open') redirect(`/orders/${orderNumber}`);
 
   const initialData = {
     customerNumber: data.order.customerNumber,

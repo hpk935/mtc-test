@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateTrackingNumber } from '@/features/orders/actions';
@@ -17,15 +17,15 @@ export function TrackingNumberForm({
 }: TrackingNumberFormProps) {
   const [value, setValue] = useState(trackingNumber ?? '');
   const [isPending, startTransition] = useTransition();
-  const savedValue = useRef(trackingNumber ?? '');
+  const [savedValue, setSavedValue] = useState(trackingNumber ?? '');
 
-  const isDirty = value !== savedValue.current;
+  const isDirty = value !== savedValue;
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       const result = await updateTrackingNumber(orderNumber, formData);
       if (result.success) {
-        savedValue.current = value;
+        setSavedValue(value);
         toast.success('Tracking number updated.');
       } else {
         toast.error(result.error);

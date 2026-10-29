@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { getCustomers } from '@/features/customers/queries';
 import { createCustomerSchema } from '@/features/customers/validation';
-import { createCustomerRecord } from '@/features/customers/service';
+import {
+    createCustomerRecord,
+    generateCustomerNumber,
+} from '@/features/customers/service';
 
 export async function GET(request: NextRequest) {
     try {
@@ -56,7 +59,10 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    const result = await createCustomerRecord(parsed.data);
+    const result = await createCustomerRecord({
+        ...parsed.data,
+        customerNumber: await generateCustomerNumber(),
+    });
     if (!result.success) {
         return NextResponse.json(result, { status: 409 });
     }

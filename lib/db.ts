@@ -9,7 +9,7 @@ if (!DATABASE_URL) {
   );
 }
 
-let cached = global as typeof globalThis & {
+const cached = global as typeof globalThis & {
   pg: ReturnType<typeof drizzle> | null;
 };
 

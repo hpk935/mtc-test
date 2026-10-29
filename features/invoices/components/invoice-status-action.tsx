@@ -152,7 +152,7 @@ export function InvoiceStatusAction({
               )}
               ?
               {pendingStatus === 'voided' && (
-                <span className="mt-2 block text-sm font-medium text-destructive">
+                <span className="text-destructive mt-2 block text-sm font-medium">
                   This action cannot be undone.
                 </span>
               )}

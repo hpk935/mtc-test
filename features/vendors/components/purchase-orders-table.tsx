@@ -63,8 +63,7 @@ export function PurchaseOrdersTable({
               <TableCell>
                 <Link
                   href={`/vendors/${po.vendorId}`}
-                  className="hover:underline"
-                >
+                  className="hover:underline">
                   {po.vendorName}
                 </Link>
                 <span className="text-muted-foreground block text-xs">

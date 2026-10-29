@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useIsClient } from '@/hooks/use-is-client';
 import type { OrderPrintData } from '../queries';
 
 interface OrderPickSheetProps {
@@ -9,6 +10,9 @@ interface OrderPickSheetProps {
 
 export function OrderPickSheet({ data }: OrderPickSheetProps) {
   const { order, items } = data;
+  // Browser-only so the date uses the user's timezone and matches on hydration.
+  const isClient = useIsClient();
+  const printedOn = isClient ? new Date().toLocaleDateString() : null;
 
   return (
     <>
@@ -237,7 +241,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
 
           {/* Print footer */}
           <p className="mt-4 text-center text-xs text-gray-400 print:mt-2">
-            Printed {new Date().toLocaleDateString()} &middot; Order #
+            {printedOn && <>Printed {printedOn} &middot; </>}Order #
             {order.orderNumber} &middot; {items.length} items
           </p>
         </div>

@@ -179,35 +179,43 @@ async function seedOrders() {
 async function seedInvoices() {
     const rows = readCsv('invoices.csv');
 
-    const values = rows.map((r) => ({
-        invoiceNumber: r.invoice_number,
-        orderNumber: r.order_number,
-        customerNumber: r.customer_number,
-        salespersonCode: r.salesperson_code,
-        invoiceDate: r.invoice_date,
-        customerPoReference: emptyToNull(r.customer_po_reference),
-        freightTerm: r.freight_term,
-        shipToId: r.ship_to_id,
-        shipToName: r.ship_to_name,
-        shipToAddress1: r.ship_to_address_1,
-        shipToAddress2: emptyToNull(r.ship_to_address_2),
-        shipToCity: r.ship_to_city,
-        shipToStateCode: r.ship_to_state_code,
-        shipToPostalCode: r.ship_to_postal_code,
-        termCode: r.term_code,
-        territoryCode: r.territory_code,
-        salesTaxAmount: parseMoney(r.sales_tax_amount),
-        subtotalAmount: parseMoney(r.subtotal_amount),
-        freightAmount: parseMoney(r.freight_amount),
-        totalAmount: parseMoney(r.total_amount),
-        costAmount: parseMoney(r.cost_amount),
-        invoiceStatus: r.invoice_status as
+    const values = rows.map((r) => {
+        const totalAmount = parseMoney(r.total_amount);
+        const status = r.invoice_status as
             | 'open'
             | 'paid'
             | 'partially_paid'
-            | 'voided',
-        shippingNote: emptyToNull(r.shipping_note),
-    }));
+            | 'voided';
+        return {
+            invoiceNumber: r.invoice_number,
+            orderNumber: r.order_number,
+            customerNumber: r.customer_number,
+            salespersonCode: r.salesperson_code,
+            invoiceDate: r.invoice_date,
+            customerPoReference: emptyToNull(r.customer_po_reference),
+            freightTerm: r.freight_term,
+            shipToId: r.ship_to_id,
+            shipToName: r.ship_to_name,
+            shipToAddress1: r.ship_to_address_1,
+            shipToAddress2: emptyToNull(r.ship_to_address_2),
+            shipToCity: r.ship_to_city,
+            shipToStateCode: r.ship_to_state_code,
+            shipToPostalCode: r.ship_to_postal_code,
+            termCode: r.term_code,
+            territoryCode: r.territory_code,
+            salesTaxAmount: parseMoney(r.sales_tax_amount),
+            subtotalAmount: parseMoney(r.subtotal_amount),
+            freightAmount: parseMoney(r.freight_amount),
+            totalAmount,
+            costAmount: parseMoney(r.cost_amount),
+            invoiceStatus: status,
+            // AR columns, matching scripts/import/import-invoices.ts
+            amountPaid: status === 'paid' ? totalAmount : '0',
+            balanceDue:
+                status === 'paid' || status === 'voided' ? '0' : totalAmount,
+            shippingNote: emptyToNull(r.shipping_note),
+        };
+    });
 
     await db.insert(invoices).values(values).onConflictDoNothing();
     console.log(`  Invoices: ${values.length} rows`);

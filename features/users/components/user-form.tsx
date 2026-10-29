@@ -98,7 +98,7 @@ export function UserForm({ user }: UserFormProps) {
     isEdit && savedPermissions.length > 0
       ? savedPermissions
       : DEFAULT_PERMISSIONS[initialRole];
-  const [selectedPerms, setSelectedPerms] = useState<Set<string>>(
+  const [selectedPerms, setSelectedPerms] = useState<Set<Permission>>(
     new Set(defaultPermissions),
   );
 

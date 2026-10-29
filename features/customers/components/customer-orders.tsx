@@ -88,8 +88,7 @@ export function PurchaseHistory({
                   {invoices.map((invoice) => (
                     <ClickableRow
                       key={invoice.invoiceNumber}
-                      href={`/invoices/${invoice.invoiceNumber}`}
-                    >
+                      href={`/invoices/${invoice.invoiceNumber}`}>
                       <TableCell className="font-medium">
                         <Link href={`/invoices/${invoice.invoiceNumber}`}>
                           {invoice.invoiceNumber}
@@ -103,8 +102,7 @@ export function PurchaseHistory({
                         <Badge
                           variant={
                             STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'
-                          }
-                        >
+                          }>
                           {STATUS_LABEL[invoice.invoiceStatus] ??
                             invoice.invoiceStatus}
                         </Badge>

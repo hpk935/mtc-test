@@ -105,7 +105,7 @@ export function OrderDetailView({
                       )}
                       <Link
                         href={`/invoices/${num}`}
-                        className="text-primary hover:underline dark:text-primary-accent">
+                        className="text-primary dark:text-primary-accent hover:underline">
                         {num}
                       </Link>
                     </span>
@@ -131,7 +131,7 @@ export function OrderDetailView({
             <DetailRow label="Name">
               <Link
                 href={`/customers/${order.customerNumber}`}
-                className="text-primary hover:underline dark:text-primary-accent">
+                className="text-primary dark:text-primary-accent hover:underline">
                 {order.customerName}
               </Link>
             </DetailRow>

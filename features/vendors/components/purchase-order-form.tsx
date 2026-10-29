@@ -182,8 +182,8 @@ export function PurchaseOrderForm({
   const total = subtotal + Number(freightAmount || 0);
 
   async function onSubmit(
-    _: ActionResult | null,
-  ): Promise<ActionResult | null> {
+    _: ActionResult<unknown> | null,
+  ): Promise<ActionResult<unknown> | null> {
     if (!vendorId) {
       toast.error('Please select a vendor.');
       return null;
@@ -237,10 +237,10 @@ export function PurchaseOrderForm({
     return result;
   }
 
-  const [, formAction, pending] = useActionState<ActionResult | null, FormData>(
-    (state) => onSubmit(state),
-    null,
-  );
+  const [, formAction, pending] = useActionState<
+    ActionResult<unknown> | null,
+    FormData
+  >((state) => onSubmit(state), null);
 
   return (
     <form action={formAction} className="space-y-8">

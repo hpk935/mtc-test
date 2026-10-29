@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseIdParam } from '@/lib/params';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,10 @@ export default async function EditProductPage({
 }) {
   const session = await requirePermission('products:view');
   const { productId } = await params;
-  const product = await findProductById(Number(productId));
+  const id = parseIdParam(productId);
+  if (id === null) notFound();
+
+  const product = await findProductById(id);
 
   if (!product) {
     notFound();

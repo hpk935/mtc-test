@@ -11,6 +11,11 @@ import {
 } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+// Every dashboard page shows live business data. Without this, pages that
+// don't read cookies (e.g. while auth is disabled) get prerendered at build
+// time and their numbers never update.
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({
   children,
 }: {

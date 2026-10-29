@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { parseIdParam } from '@/lib/params';
 import { Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,8 +21,8 @@ export default async function VendorDetailPage({
 }) {
   await requirePermission('vendors:view');
   const { id } = await params;
-  const numericId = Number(id);
-  if (!Number.isFinite(numericId)) notFound();
+  const numericId = parseIdParam(id);
+  if (numericId === null) notFound();
 
   const vendor = await findVendorById(numericId);
   if (!vendor) notFound();

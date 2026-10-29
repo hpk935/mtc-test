@@ -125,7 +125,9 @@ export function DashboardSearch() {
 
       <p className="text-muted-foreground mt-2 text-center text-sm">
         Don&apos;t remember their name?{' '}
-        <Link href="/customers" className="text-primary hover:underline dark:text-primary-accent">
+        <Link
+          href="/customers"
+          className="text-primary dark:text-primary-accent hover:underline">
           View All Clients
         </Link>
       </p>

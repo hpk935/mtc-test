@@ -44,8 +44,7 @@ export function ProductTable({ products }: ProductTableProps) {
         {products.map((product) => (
           <ClickableRow
             key={product.productId}
-            href={`/products/${product.productId}`}
-          >
+            href={`/products/${product.productId}`}>
             <TableCell className="font-medium">
               <Link href={`/products/${product.productId}`}>
                 {product.itemNumber}

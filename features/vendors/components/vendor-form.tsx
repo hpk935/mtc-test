@@ -93,7 +93,10 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
     setValues((prev) => ({ ...prev, [name]: next }));
   };
 
-  async function action(_: ActionResult | null, formData: FormData) {
+  async function action(
+    _: ActionResult<unknown> | null,
+    formData: FormData,
+  ): Promise<ActionResult<unknown>> {
     // Client-side guards (mirrors Zod schema; surfaces toast for first error).
     if (!values.vendorCode.trim()) {
       toast.error('Vendor code is required.');
@@ -153,10 +156,10 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
     return result;
   }
 
-  const [, formAction, pending] = useActionState<ActionResult | null, FormData>(
-    action,
-    null,
-  );
+  const [, formAction, pending] = useActionState<
+    ActionResult<unknown> | null,
+    FormData
+  >(action, null);
 
   return (
     <form action={formAction} className="space-y-8">

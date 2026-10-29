@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { parseIdParam } from '@/lib/params';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -33,8 +34,8 @@ export default async function PurchaseOrderDetailPage({
 }) {
   await requirePermission('vendors:view');
   const { id } = await params;
-  const numericId = Number(id);
-  if (!Number.isFinite(numericId)) notFound();
+  const numericId = parseIdParam(id);
+  if (numericId === null) notFound();
 
   const po = await findPurchaseOrderById(numericId);
   if (!po) notFound();
@@ -69,7 +70,10 @@ export default async function PurchaseOrderDetailPage({
           label="Received"
           value={po.receivedDate ? formatDate(po.receivedDate) : '—'}
         />
-        <InfoCard label="Created By" value={po.creatorName ?? po.createdBy} />
+        <InfoCard
+          label="Created By"
+          value={po.creatorName ?? po.createdBy ?? '—'}
+        />
       </section>
 
       <section className="space-y-4">

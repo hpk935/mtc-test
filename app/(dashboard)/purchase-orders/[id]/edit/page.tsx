@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseIdParam } from '@/lib/params';
 import {
   findPurchaseOrderById,
   getActiveVendorsForSelect,
@@ -13,8 +14,8 @@ export default async function EditPurchaseOrderPage({
 }) {
   await requirePermission('vendors:view');
   const { id } = await params;
-  const numericId = Number(id);
-  if (!Number.isFinite(numericId)) notFound();
+  const numericId = parseIdParam(id);
+  if (numericId === null) notFound();
 
   const po = await findPurchaseOrderById(numericId);
   if (!po) notFound();

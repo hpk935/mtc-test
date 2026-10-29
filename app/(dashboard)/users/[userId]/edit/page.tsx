@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { parseIdParam } from '@/lib/params';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,8 @@ export default async function EditUserPage({
 }) {
   await requireAdmin();
   const { userId } = await params;
-  const id = Number(userId);
-
-  if (isNaN(id)) {
-    notFound();
-  }
+  const id = parseIdParam(userId);
+  if (id === null) notFound();
 
   const user = await findUserById(id);
   if (!user) {
@@ -49,7 +47,7 @@ export default async function EditUserPage({
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          permissions: (user.permissions ?? []) as string[],
+          permissions: user.permissions ?? [],
           isActive: user.isActive,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
