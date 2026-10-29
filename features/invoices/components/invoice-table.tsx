@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import {
   Table,
   TableBody,
@@ -67,11 +68,15 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
       </TableHeader>
       <TableBody>
         {invoices.map((invoice) => (
-          <TableRow key={invoice.invoiceNumber} className="group">
+          <ClickableRow
+            key={invoice.invoiceNumber}
+            href={`/invoices/${invoice.invoiceNumber}`}
+          >
             <TableCell className="font-medium">
               <Link
                 href={`/invoices/${invoice.invoiceNumber}`}
-                className="block group-hover:underline">
+                className="block"
+              >
                 {invoice.invoiceNumber}
               </Link>
             </TableCell>
@@ -79,7 +84,8 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
             <TableCell>
               <Link
                 href={`/customers/${invoice.customerNumber}`}
-                className="hover:underline">
+                className="hover:underline"
+              >
                 {invoice.customerName}
               </Link>
               <span className="text-muted-foreground ml-1 text-xs">
@@ -95,11 +101,12 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
             </TableCell>
             <TableCell>
               <Badge
-                variant={STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'}>
+                variant={STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'}
+              >
                 {STATUS_LABEL[invoice.invoiceStatus] ?? invoice.invoiceStatus}
               </Badge>
             </TableCell>
-          </TableRow>
+          </ClickableRow>
         ))}
       </TableBody>
     </Table>

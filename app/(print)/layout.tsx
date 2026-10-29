@@ -7,5 +7,11 @@ export default async function PrintLayout({
 }) {
   await requireAuth();
 
-  return <>{children}</>;
+  // Print previews always render light so the on-screen page matches paper,
+  // regardless of the user's dashboard theme.
+  return (
+    <div className="theme-light bg-background text-foreground min-h-screen">
+      {children}
+    </div>
+  );
 }

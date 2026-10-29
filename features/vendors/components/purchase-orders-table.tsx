@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import {
   Table,
   TableBody,
@@ -52,11 +53,9 @@ export function PurchaseOrdersTable({
       </TableHeader>
       <TableBody>
         {rows.map((po) => (
-          <TableRow key={po.id} className="group">
+          <ClickableRow key={po.id} href={`/purchase-orders/${po.id}`}>
             <TableCell className="font-medium">
-              <Link
-                href={`/purchase-orders/${po.id}`}
-                className="block group-hover:underline">
+              <Link href={`/purchase-orders/${po.id}`} className="block">
                 {po.poNumber}
               </Link>
             </TableCell>
@@ -64,7 +63,8 @@ export function PurchaseOrdersTable({
               <TableCell>
                 <Link
                   href={`/vendors/${po.vendorId}`}
-                  className="hover:underline">
+                  className="hover:underline"
+                >
                   {po.vendorName}
                 </Link>
                 <span className="text-muted-foreground block text-xs">
@@ -87,7 +87,7 @@ export function PurchaseOrdersTable({
             <TableCell className="text-right tabular-nums">
               {formatCurrency(Number(po.totalAmount))}
             </TableCell>
-          </TableRow>
+          </ClickableRow>
         ))}
       </TableBody>
     </Table>

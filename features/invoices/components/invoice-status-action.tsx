@@ -152,12 +152,12 @@ export function InvoiceStatusAction({
               )}
               ?
               {pendingStatus === 'voided' && (
-                <span className="mt-2 block text-sm font-medium text-red-600">
+                <span className="mt-2 block text-sm font-medium text-destructive">
                   This action cannot be undone.
                 </span>
               )}
               {pendingStatus === 'paid' && (
-                <span className="mt-2 block text-sm font-medium text-amber-600">
+                <span className="mt-2 block text-sm font-medium text-amber-600 dark:text-amber-400">
                   Once fully paid, the status cannot be changed.
                 </span>
               )}

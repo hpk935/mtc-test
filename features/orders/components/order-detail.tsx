@@ -105,7 +105,7 @@ export function OrderDetailView({
                       )}
                       <Link
                         href={`/invoices/${num}`}
-                        className="text-primary hover:underline">
+                        className="text-primary hover:underline dark:text-primary-accent">
                         {num}
                       </Link>
                     </span>
@@ -131,7 +131,7 @@ export function OrderDetailView({
             <DetailRow label="Name">
               <Link
                 href={`/customers/${order.customerNumber}`}
-                className="text-primary hover:underline">
+                className="text-primary hover:underline dark:text-primary-accent">
                 {order.customerName}
               </Link>
             </DetailRow>
@@ -197,7 +197,7 @@ export function OrderDetailView({
             <Button
               variant="outline"
               size="sm"
-              className="border-primary text-primary hover:bg-primary/5 hover:text-primary/80"
+              className="border-primary text-primary hover:bg-primary/5 hover:text-primary/80 dark:border-primary-accent/60 dark:text-primary-accent dark:hover:bg-primary-accent/10 dark:hover:text-primary-accent"
               asChild>
               <Link href={`/orders/${order.orderNumber}/print`} target="_blank">
                 <Printer className="mr-2 size-4" />

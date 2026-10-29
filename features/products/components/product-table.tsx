@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import {
   Table,
   TableBody,
@@ -41,11 +42,12 @@ export function ProductTable({ products }: ProductTableProps) {
       </TableHeader>
       <TableBody>
         {products.map((product) => (
-          <TableRow key={product.productId} className="cursor-pointer">
+          <ClickableRow
+            key={product.productId}
+            href={`/products/${product.productId}`}
+          >
             <TableCell className="font-medium">
-              <Link
-                href={`/products/${product.productId}`}
-                className="hover:underline">
+              <Link href={`/products/${product.productId}`}>
                 {product.itemNumber}
               </Link>
             </TableCell>
@@ -68,7 +70,7 @@ export function ProductTable({ products }: ProductTableProps) {
                 <Badge variant="default">Active</Badge>
               )}
             </TableCell>
-          </TableRow>
+          </ClickableRow>
         ))}
       </TableBody>
     </Table>

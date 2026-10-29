@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -85,11 +86,12 @@ export function PurchaseHistory({
                 </TableHeader>
                 <TableBody>
                   {invoices.map((invoice) => (
-                    <TableRow key={invoice.invoiceNumber} className="group">
+                    <ClickableRow
+                      key={invoice.invoiceNumber}
+                      href={`/invoices/${invoice.invoiceNumber}`}
+                    >
                       <TableCell className="font-medium">
-                        <Link
-                          href={`/invoices/${invoice.invoiceNumber}`}
-                          className="group-hover:underline">
+                        <Link href={`/invoices/${invoice.invoiceNumber}`}>
                           {invoice.invoiceNumber}
                         </Link>
                       </TableCell>
@@ -101,12 +103,13 @@ export function PurchaseHistory({
                         <Badge
                           variant={
                             STATUS_VARIANT[invoice.invoiceStatus] ?? 'secondary'
-                          }>
+                          }
+                        >
                           {STATUS_LABEL[invoice.invoiceStatus] ??
                             invoice.invoiceStatus}
                         </Badge>
                       </TableCell>
-                    </TableRow>
+                    </ClickableRow>
                   ))}
                 </TableBody>
               </Table>

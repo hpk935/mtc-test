@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import {
   Table,
   TableBody,
@@ -57,11 +58,15 @@ export function CustomerTable({ customers }: CustomerTableProps) {
       </TableHeader>
       <TableBody>
         {customers.map((customer) => (
-          <TableRow key={customer.customerNumber} className="group">
+          <ClickableRow
+            key={customer.customerNumber}
+            href={`/customers/${customer.customerNumber}`}
+          >
             <TableCell className="font-medium">
               <Link
                 href={`/customers/${customer.customerNumber}`}
-                className="block group-hover:underline">
+                className="block"
+              >
                 {customer.customerName}
               </Link>
               <span className="text-muted-foreground text-xs">
@@ -76,11 +81,12 @@ export function CustomerTable({ customers }: CustomerTableProps) {
             </TableCell>
             <TableCell>
               <Badge
-                variant={STATUS_VARIANT[customer.accountStatus] ?? 'secondary'}>
+                variant={STATUS_VARIANT[customer.accountStatus] ?? 'secondary'}
+              >
                 {STATUS_LABEL[customer.accountStatus] ?? customer.accountStatus}
               </Badge>
             </TableCell>
-          </TableRow>
+          </ClickableRow>
         ))}
       </TableBody>
     </Table>

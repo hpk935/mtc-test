@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import {
   Table,
   TableBody,
@@ -42,11 +43,9 @@ export function VendorTable({ vendors }: { vendors: VendorListItem[] }) {
       </TableHeader>
       <TableBody>
         {vendors.map((v) => (
-          <TableRow key={v.id} className="group">
+          <ClickableRow key={v.id} href={`/vendors/${v.id}`}>
             <TableCell className="font-medium">
-              <Link
-                href={`/vendors/${v.id}`}
-                className="block group-hover:underline">
+              <Link href={`/vendors/${v.id}`} className="block">
                 {v.name}
               </Link>
               <span className="text-muted-foreground text-xs">
@@ -70,7 +69,7 @@ export function VendorTable({ vendors }: { vendors: VendorListItem[] }) {
                 {v.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </TableCell>
-          </TableRow>
+          </ClickableRow>
         ))}
       </TableBody>
     </Table>

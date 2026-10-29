@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ClickableRow } from '@/components/data/clickable-row';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -43,11 +44,12 @@ export function UserTable({ users }: UserTableProps) {
       </TableHeader>
       <TableBody>
         {users.map((user) => (
-          <TableRow key={user.id} className="cursor-pointer">
+          <ClickableRow key={user.id} href={`/users/${user.id}`}>
             <TableCell>
               <Link
                 href={`/users/${user.id}`}
-                className="font-mono font-medium">
+                className="font-mono font-medium"
+              >
                 {user.employeeId}
               </Link>
             </TableCell>
@@ -64,16 +66,15 @@ export function UserTable({ users }: UserTableProps) {
             </TableCell>
             <TableCell>
               <Badge
-                variant={
-                  STATUS_VARIANT[String(user.isActive)] ?? 'destructive'
-                }>
+                variant={STATUS_VARIANT[String(user.isActive)] ?? 'destructive'}
+              >
                 {user.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </TableCell>
             <TableCell className="text-muted-foreground">
               {new Date(user.createdAt).toLocaleDateString()}
             </TableCell>
-          </TableRow>
+          </ClickableRow>
         ))}
       </TableBody>
     </Table>
