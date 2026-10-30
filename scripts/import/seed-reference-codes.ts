@@ -4,13 +4,12 @@
 import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
 
-import { TERMS, TERRITORY_NAMES } from './reference-codes';
+import { TERMS, TERRITORIES } from './reference-codes';
 
 async function main() {
     const { default: db } = await import('../../lib/db');
-    const { terms, territories } = await import(
-        '../../features/reference-codes/schema'
-    );
+    const { terms, territories } =
+        await import('../../features/reference-codes/schema');
     const { sql } = await import('drizzle-orm');
 
     await db
@@ -27,16 +26,18 @@ async function main() {
         });
     console.log(`  Terms applied: ${TERMS.length}`);
 
-    if (TERRITORY_NAMES.length > 0) {
-        await db
-            .insert(territories)
-            .values(TERRITORY_NAMES)
-            .onConflictDoUpdate({
-                target: territories.code,
-                set: { name: sql`excluded.name`, updatedAt: new Date() },
-            });
-    }
-    console.log(`  Territory names applied: ${TERRITORY_NAMES.length}`);
+    await db
+        .insert(territories)
+        .values(TERRITORIES)
+        .onConflictDoUpdate({
+            target: territories.code,
+            set: {
+                name: sql`excluded.name`,
+                isActive: sql`excluded.is_active`,
+                updatedAt: new Date(),
+            },
+        });
+    console.log(`  Territories applied: ${TERRITORIES.length}`);
 
     console.log('\n✅ Reference codes applied.\n');
     process.exit(0);

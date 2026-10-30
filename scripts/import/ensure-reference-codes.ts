@@ -1,8 +1,8 @@
 // scripts/import/ensure-reference-codes.ts — Register legacy codes before insert
 //
 // Imported rows must keep their legacy codes, and the foreign keys need each code
-// to exist. Codes not yet defined are added like the migration's backfill: terms
-// inactive until confirmed in reference-codes.ts, territories named by their code.
+// to exist. Codes not defined in reference-codes.ts are added inactive, using the
+// code as the name, so they stay off the dropdowns until confirmed.
 
 import type { ReferenceCodes } from '../../features/reference-codes/types';
 
@@ -11,9 +11,8 @@ export async function ensureReferenceCodes(
     { dryRun = false }: { dryRun?: boolean } = {},
 ) {
     const { default: db } = await import('../../lib/db');
-    const { terms, territories } = await import(
-        '../../features/reference-codes/schema'
-    );
+    const { terms, territories } =
+        await import('../../features/reference-codes/schema');
 
     const existingTerms = await db.select({ code: terms.code }).from(terms);
     const existingTerritories = await db
@@ -26,15 +25,17 @@ export async function ensureReferenceCodes(
     const newTerms = [...new Set(rows.map((r) => r.termCode))].filter(
         (code) => !knownTerms.has(code),
     );
-    const newTerritories = [...new Set(rows.map((r) => r.territoryCode))].filter(
-        (code) => !knownTerritories.has(code),
-    );
+    const newTerritories = [
+        ...new Set(rows.map((r) => r.territoryCode)),
+    ].filter((code) => !knownTerritories.has(code));
 
     if (newTerms.length > 0) {
         console.log(`  New inactive term codes: ${newTerms.join(', ')}`);
     }
     if (newTerritories.length > 0) {
-        console.log(`  New territory codes: ${newTerritories.join(', ')}`);
+        console.log(
+            `  New inactive territory codes: ${newTerritories.join(', ')}`,
+        );
     }
     if (dryRun) return;
 
@@ -53,7 +54,13 @@ export async function ensureReferenceCodes(
     if (newTerritories.length > 0) {
         await db
             .insert(territories)
-            .values(newTerritories.map((code) => ({ code, name: code })))
+            .values(
+                newTerritories.map((code) => ({
+                    code,
+                    name: code,
+                    isActive: false,
+                })),
+            )
             .onConflictDoNothing();
     }
 }

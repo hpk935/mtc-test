@@ -1,9 +1,9 @@
 // scripts/import/reference-codes.ts — Term and territory definitions
 // Edit this file, then apply it with: npx tsx scripts/import/seed-reference-codes.ts
 //
-// To make a term selectable on customers and orders, set its description and
-// netDays and change isActive to true. Use netDays: 0 for terms due on receipt.
-// Inactive terms stay valid on the records that already use them.
+// Taken from the legacy TermCode and Territory exports. Only active codes are
+// selectable on customers and orders; inactive codes stay valid on the records
+// that already use them. Active terms need netDays (0 means due on receipt).
 
 interface TermDefinition {
     code: string;
@@ -12,40 +12,199 @@ interface TermDefinition {
     isActive: boolean;
 }
 
-interface TerritoryName {
+interface TerritoryDefinition {
     code: string;
     name: string;
+    isActive: boolean;
 }
 
 export const TERMS: TermDefinition[] = [
-    { code: '10', description: 'Net 10', netDays: 10, isActive: true },
-    { code: '15', description: 'Net 15', netDays: 15, isActive: true },
-    { code: '21', description: 'Net 21', netDays: 21, isActive: true },
-    { code: '30', description: 'Net 30', netDays: 30, isActive: true },
-    { code: '45', description: 'Net 45', netDays: 45, isActive: true },
-    { code: '60', description: 'Net 60', netDays: 60, isActive: true },
-    { code: '90', description: 'Net 90', netDays: 90, isActive: true },
+    {
+        code: '1%15',
+        description: '1% NET 15 DAYS',
+        netDays: 15,
+        isActive: true,
+    },
+    {
+        code: '1%30',
+        description: '1% NET 30 DAYS',
+        netDays: 30,
+        isActive: true,
+    },
+    {
+        code: '1%60',
+        description: '1% NET 60 DAYS',
+        netDays: 60,
+        isActive: true,
+    },
+    { code: '10', description: 'NET 10 DAYS', netDays: 10, isActive: true },
+    { code: '120', description: 'NET 120 DAYS', netDays: 120, isActive: true },
+    { code: '14', description: 'NET 14 DAYS', netDays: 14, isActive: false },
+    { code: '15', description: 'NET 15 DAYS', netDays: 15, isActive: false },
+    {
+        code: '2%10',
+        description: '2% NET 10 DAYS',
+        netDays: 10,
+        isActive: true,
+    },
+    {
+        code: '2%30',
+        description: '2% NET 30 DAYS',
+        netDays: 30,
+        isActive: true,
+    },
+    { code: '21', description: 'NET 21 DAYS', netDays: 21, isActive: true },
+    { code: '30', description: 'NET 30 DAYS', netDays: 30, isActive: true },
+    { code: '45', description: 'NET 45 DAYS', netDays: 45, isActive: true },
+    { code: '5', description: 'NET 5 DAYS', netDays: 5, isActive: true },
+    { code: '60', description: 'NET 60 DAYS', netDays: 60, isActive: true },
+    { code: '7', description: 'NET 7 DAYS', netDays: 7, isActive: false },
+    { code: '75', description: 'NET 75 DAYS', netDays: 75, isActive: false },
+    { code: '90', description: 'NET 90 DAYS', netDays: 90, isActive: true },
+    { code: 'CA', description: 'PAID CASH', netDays: 0, isActive: false },
+    {
+        code: 'CC',
+        description: 'COD - COMPANY CHECK',
+        netDays: 0,
+        isActive: false,
+    },
+    {
+        code: 'CDMO',
+        description: 'COD MONEY ORDER',
+        netDays: 0,
+        isActive: true,
+    },
+    { code: 'CH', description: 'CREDIT CARD', netDays: 0, isActive: true },
+    { code: 'CHK', description: 'PAID BY CHECK', netDays: 0, isActive: true },
+    { code: 'COD', description: 'COD CHECK', netDays: 0, isActive: true },
+    { code: 'COMM', description: 'SEE COMMENTS', netDays: 0, isActive: true },
+    { code: 'CR', description: 'CREDIT MEMO', netDays: 0, isActive: true },
+    {
+        code: 'LC',
+        description: 'LETTER OF CREDIT',
+        netDays: 0,
+        isActive: false,
+    },
+    { code: 'N30', description: 'NET 30', netDays: 30, isActive: false },
+    {
+        code: 'NS',
+        description: 'NO PRESENT STATUS',
+        netDays: 0,
+        isActive: false,
+    },
+    { code: 'PP', description: 'PREPAID', netDays: 0, isActive: true },
+    {
+        code: 'RG',
+        description: 'RECEIPT OF GOODS',
+        netDays: 0,
+        isActive: false,
+    },
+    { code: 'SP', description: 'SPECIAL TERMS', netDays: 0, isActive: false },
+    {
+        code: 'UPS',
+        description: 'COLLECT TO UPS A/C',
+        netDays: 0,
+        isActive: false,
+    },
+    {
+        code: 'WIRE',
+        description: 'WIRE IN W/PROFORMA',
+        netDays: 5,
+        isActive: true,
+    },
 
-    // Unconfirmed legacy codes. The trailing comments are guesses.
-    { code: 'CH', description: 'CH', netDays: null, isActive: false }, // check?
-    { code: 'CHK', description: 'CHK', netDays: null, isActive: false }, // check?
-    { code: 'CA', description: 'CA', netDays: null, isActive: false }, // cash?
-    { code: 'ca', description: 'ca', netDays: null, isActive: false }, // cash?
-    { code: 'CC', description: 'CC', netDays: null, isActive: false }, // credit card?
-    { code: 'COD', description: 'COD', netDays: null, isActive: false }, // cash on delivery?
-    { code: 'PP', description: 'PP', netDays: null, isActive: false }, // prepaid?
-    { code: 'WIRE', description: 'WIRE', netDays: null, isActive: false }, // wire transfer?
-    { code: 'N30', description: 'N30', netDays: null, isActive: false }, // net 30?
-    { code: '1%15', description: '1%15', netDays: null, isActive: false }, // 1% discount, net 15?
-    { code: '1%30', description: '1%30', netDays: null, isActive: false }, // 1% discount, net 30?
-    { code: 'COMM', description: 'COMM', netDays: null, isActive: false }, // unknown
-    { code: 'NS', description: 'NS', netDays: null, isActive: false }, // unknown
-    { code: 'RG', description: 'RG', netDays: null, isActive: false }, // unknown
-    { code: 'CDMO', description: 'CDMO', netDays: null, isActive: false }, // unknown
-    { code: 'UPS', description: 'UPS', netDays: null, isActive: false }, // unknown
-    { code: '??', description: '??', netDays: null, isActive: false }, // unknown
+    // On legacy records but missing from the TermCode export.
+    { code: 'ca', description: 'ca', netDays: null, isActive: false },
+    { code: '??', description: '??', netDays: null, isActive: false },
 ];
 
-// Legacy exports only hold territory codes, so a territory's name is its code
-// until it is listed here, e.g. { code: '44', name: 'Northern California' }.
-export const TERRITORY_NAMES: TerritoryName[] = [];
+export const TERRITORIES: TerritoryDefinition[] = [
+    { code: '1', name: 'ALASKA', isActive: true },
+    { code: '2', name: 'ALABAMA', isActive: true },
+    { code: '3', name: 'ARKANSAS', isActive: true },
+    { code: '4', name: 'ARIZONA', isActive: true },
+    { code: '5', name: 'CALIFORNIA', isActive: true },
+    { code: '6', name: 'COLORADO', isActive: true },
+    { code: '7', name: 'CONNECTICUT', isActive: true },
+    { code: '8', name: 'DELAWARE', isActive: true },
+    { code: '9', name: 'DIST. OF COLUMBIA', isActive: true },
+    { code: '10', name: 'FLORIDA', isActive: true },
+    { code: '11', name: 'GEORGIA', isActive: true },
+    { code: '12', name: 'HAWAII', isActive: true },
+    { code: '13', name: 'IOWA', isActive: true },
+    { code: '14', name: 'IDAHO', isActive: true },
+    { code: '15', name: 'ILLINOIS', isActive: true },
+    { code: '16', name: 'INDIANA', isActive: true },
+    { code: '17', name: 'KANSAS', isActive: true },
+    { code: '18', name: 'KENTUCKY', isActive: true },
+    { code: '19', name: 'LOUISIANA', isActive: true },
+    { code: '20', name: 'MASSACHUSETTS', isActive: true },
+    { code: '21', name: 'MARYLAND', isActive: true },
+    { code: '22', name: 'MAINE', isActive: true },
+    { code: '23', name: 'MICHIGAN', isActive: true },
+    { code: '24', name: 'MINNESOTA', isActive: true },
+    { code: '25', name: 'MISSOURI', isActive: true },
+    { code: '26', name: 'MISSISSIPPI', isActive: true },
+    { code: '27', name: 'MONTANA', isActive: true },
+    { code: '28', name: 'NORTH CAROLINA', isActive: true },
+    { code: '29', name: 'NORTH DAKOTA', isActive: true },
+    { code: '30', name: 'NEBRASKA', isActive: true },
+    { code: '31', name: 'NEW HAMPSHIRE', isActive: true },
+    { code: '32', name: 'NEW JERSEY', isActive: true },
+    { code: '33', name: 'NEW MEXICO', isActive: true },
+    { code: '34', name: 'NEVADA', isActive: true },
+    { code: '35', name: 'NEW YORK', isActive: true },
+    { code: '36', name: 'OHIO', isActive: true },
+    { code: '37', name: 'OKLAHOMA', isActive: true },
+    { code: '38', name: 'OREGON', isActive: true },
+    { code: '39', name: 'PENNSYLVANIA', isActive: true },
+    { code: '40', name: 'RHODE ISLAND', isActive: true },
+    { code: '41', name: 'SOUTH CAROLINA', isActive: true },
+    { code: '42', name: 'SOUTH DAKOTA', isActive: true },
+    { code: '43', name: 'TENNESSEE', isActive: true },
+    { code: '44', name: 'TEXAS', isActive: true },
+    { code: '45', name: 'UTAH', isActive: true },
+    { code: '46', name: 'VIRGINIA', isActive: true },
+    { code: '47', name: 'VERMONT', isActive: true },
+    { code: '48', name: 'WASHINGTON', isActive: true },
+    { code: '49', name: 'WISCONSIN', isActive: true },
+    { code: '50', name: 'WEST VIRGINIA', isActive: true },
+    { code: '51', name: 'WYOMING', isActive: true },
+    { code: '52', name: 'PUERTO RICO', isActive: true },
+    { code: '53', name: 'CANADA', isActive: true },
+    { code: '54', name: 'VIRGIN ISLANDS', isActive: true },
+    { code: '55', name: 'BAHAMAS', isActive: true },
+    { code: '56', name: 'GUAM', isActive: true },
+    { code: '57', name: 'MEXICO', isActive: true },
+    { code: '58', name: 'PANAMA', isActive: true },
+    { code: '59', name: 'SAIPAN', isActive: true },
+    { code: '60', name: 'COLUMBIA', isActive: true },
+    { code: '61', name: 'ARUBA', isActive: true },
+    { code: '62', name: 'GUYANA', isActive: true },
+    { code: '63', name: 'TRINIDAD', isActive: true },
+    { code: '64', name: 'CENTRAL AMERICA', isActive: true },
+    { code: '65', name: 'DOMINICAN REPUBLIC', isActive: true },
+    { code: '66', name: 'FRANCE', isActive: true },
+    { code: '67', name: 'JAMAICA', isActive: true },
+    { code: '68', name: 'SOUTH AMERICA', isActive: true },
+    { code: '69', name: 'UNITED KINGDOM', isActive: true },
+    { code: '70', name: 'WEST INDIES', isActive: true },
+    { code: '71', name: 'DUPLICATE USE #60', isActive: false },
+    { code: '72', name: 'HONDURAS', isActive: true },
+    { code: '73', name: 'SOUTH AFRICA', isActive: true },
+    { code: '74', name: 'FIJI ISLANDS', isActive: true },
+    { code: '99', name: 'HONG KONG', isActive: true },
+    { code: '100', name: 'INDIA', isActive: true },
+    { code: '101', name: 'NETHERLAND ANTILLES', isActive: true },
+    { code: '102', name: 'ANTIGUA', isActive: true },
+    { code: '103', name: 'AUSTRALIA', isActive: true },
+    { code: '104', name: 'MICHIGAN', isActive: true },
+    { code: '105', name: 'CARRIBEAN', isActive: true },
+
+    // On legacy records but missing from the Territory export.
+    { code: '0', name: '0', isActive: false },
+    { code: '196', name: '196', isActive: false },
+    { code: 'CH', name: 'CH', isActive: false },
+    { code: 'FL', name: 'FL', isActive: false },
+    { code: 'OK', name: 'OK', isActive: false },
+];
