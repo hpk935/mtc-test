@@ -43,3 +43,8 @@ next-env.d.ts
 .github
 todo.md
 /data
+
+# local-only tests (vitest is installed with --no-save)
+/vitest.config.ts
+/tests/**/*.test.ts
+/tests/**/*.test.tsx

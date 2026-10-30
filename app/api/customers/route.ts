@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getCustomers } from '@/features/customers/queries';
 import { createCustomerSchema } from '@/features/customers/validation';
 import {
@@ -32,11 +32,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        await requireAuth();
-    } catch {
+        await requireAdmin();
+    } catch (error) {
+        const forbidden =
+            error instanceof Error && error.message === 'Forbidden';
         return NextResponse.json(
-            { success: false, error: 'Unauthorized' },
-            { status: 401 },
+            { success: false, error: forbidden ? 'Forbidden' : 'Unauthorized' },
+            { status: forbidden ? 403 : 401 },
         );
     }
 
