@@ -1,5 +1,6 @@
 import { and, asc, count, desc, eq, gte, lte, ne, or, sql } from 'drizzle-orm';
 import db from '@/lib/db';
+import { todayIso } from '@/lib/dates';
 import { customers } from '@/features/customers/schema';
 import { invoices } from '@/features/invoices/schema';
 import { users } from '@/features/users/schema';
@@ -26,8 +27,8 @@ export async function getAgingBySalesperson(
     const pageSize = filters.pageSize ?? AGING_SALES_PAGE_SIZE;
     const offset = (page - 1) * pageSize;
 
-    const now = new Date();
-    const asOfIso = now.toISOString().slice(0, 10);
+    const asOfIso = todayIso();
+    const now = new Date(`${asOfIso}T00:00:00Z`);
     const { startDate: mtdStart } = getMtdRange(now);
     const { startDate: ytdStart } = getYtdRange(now);
     const { startDate: l12mStart } = getPeriodRange('12m', now);
@@ -272,8 +273,8 @@ export async function findSalespersonByEmployeeId(employeeId: string) {
 export async function getSalespersonAgingDetail(
     filters: SalespersonAgingDetailFilters,
 ) {
-    const now = new Date();
-    const asOfIso = now.toISOString().slice(0, 10);
+    const asOfIso = todayIso();
+    const now = new Date(`${asOfIso}T00:00:00Z`);
     const { startDate: mtdStart } = getMtdRange(now);
     const { startDate: ytdStart } = getYtdRange(now);
     const { startDate: l12mStart } = getPeriodRange('12m', now);

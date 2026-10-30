@@ -1,5 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
+import { todayIso } from '@/lib/dates';
 import { invoices, invoiceItems, payments } from './schema';
 import { orders } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
@@ -70,7 +71,7 @@ export async function updateInvoiceStatusRecord(
     }
 
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const today = todayIso(now);
 
     const updateData: Record<string, unknown> = {
         invoiceStatus: newStatus,

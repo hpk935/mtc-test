@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { todayIso } from '@/lib/dates';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
@@ -38,14 +39,12 @@ export function ApplyPaymentDialog({
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(
-    () => new Date().toISOString().split('T')[0],
-  );
+  const [date, setDate] = useState(() => todayIso());
   const [ref, setRef] = useState('');
 
   function resetForm() {
     setAmount('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(todayIso());
     setRef('');
   }
 

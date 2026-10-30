@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BUSINESS_TIME_ZONE } from '@/lib/dates';
 import { ClickableRow } from '@/components/data/clickable-row';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -72,7 +73,9 @@ export function UserTable({ users }: UserTableProps) {
               </Badge>
             </TableCell>
             <TableCell className="text-muted-foreground">
-              {new Date(user.createdAt).toLocaleDateString()}
+              {new Date(user.createdAt).toLocaleDateString('en-US', {
+                timeZone: BUSINESS_TIME_ZONE,
+              })}
             </TableCell>
           </ClickableRow>
         ))}

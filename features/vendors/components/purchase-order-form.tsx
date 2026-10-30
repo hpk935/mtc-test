@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { Check, Plus, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { todayIso } from '@/lib/dates';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -77,7 +78,7 @@ export function PurchaseOrderForm({
   mode?: 'create' | 'edit';
 }) {
   const isEdit = mode === 'edit';
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const [vendorId, setVendorId] = useState(
     purchaseOrder?.vendorId

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { todayIso } from '@/lib/dates';
 import {
   Dialog,
   DialogContent,
@@ -66,9 +67,7 @@ export function PurchaseOrderActions({ po }: { po: PurchaseOrderDetail }) {
 
 function ReceiveDialog({ po }: { po: PurchaseOrderDetail }) {
   const [open, setOpen] = useState(false);
-  const [receivedDate, setReceivedDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [receivedDate, setReceivedDate] = useState(todayIso);
   const [qtyMap, setQtyMap] = useState<Record<number, string>>({});
   const [pending, setPending] = useState(false);
 

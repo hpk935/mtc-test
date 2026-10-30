@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { todayIso } from '@/lib/dates';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
@@ -106,7 +107,7 @@ export function CustomerForm({
 }: CustomerFormProps) {
   const serverAction = mode === 'edit' ? updateCustomer : createCustomer;
   const isEdit = mode === 'edit';
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayIso();
 
   async function actionWithToast(
     _prevState: ActionResult,

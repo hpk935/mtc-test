@@ -1,12 +1,14 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { BUSINESS_TIME_ZONE } from '@/lib/dates';
 
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
     month: '2-digit',
     day: '2-digit',
     year: 'numeric',
+    timeZone: BUSINESS_TIME_ZONE,
   });
 }
 
@@ -16,6 +18,7 @@ function formatTime(date: Date) {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: BUSINESS_TIME_ZONE,
     })
     .toLowerCase();
 }

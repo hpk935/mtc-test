@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { BUSINESS_TIME_ZONE } from '@/lib/dates';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ROLE_LABEL, PERMISSIONS, DEFAULT_PERMISSIONS } from '../constants';
 import type { Permission } from '../constants';
@@ -57,7 +58,11 @@ export function UserDetailView({ user }: UserDetailViewProps) {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created</span>
-              <span>{new Date(user.createdAt).toLocaleDateString()}</span>
+              <span>
+                {new Date(user.createdAt).toLocaleDateString('en-US', {
+                  timeZone: BUSINESS_TIME_ZONE,
+                })}
+              </span>
             </div>
           </CardContent>
         </Card>

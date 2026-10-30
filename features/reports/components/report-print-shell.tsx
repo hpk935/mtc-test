@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { BUSINESS_TIME_ZONE } from '@/lib/dates';
 import type { ReactNode } from 'react';
 import { useIsClient } from '@/hooks/use-is-client';
 
@@ -17,8 +18,8 @@ export function ReportPrintShell({
   meta,
   children,
 }: ReportPrintShellProps) {
-  // Computed in the browser only: the server's clock and timezone differ from
-  // the user's, which caused hydration errors and UTC print times.
+  // Computed in the browser only, so the minute matches on hydration; shown in
+  // Pacific time whatever the viewer's or server's time zone.
   const isClient = useIsClient();
   const printedAt = isClient
     ? new Intl.DateTimeFormat('en-US', {
@@ -27,6 +28,8 @@ export function ReportPrintShell({
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        timeZone: BUSINESS_TIME_ZONE,
+        timeZoneName: 'short',
       }).format(new Date())
     : null;
 

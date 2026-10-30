@@ -1,16 +1,23 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { BUSINESS_TIME_ZONE } from './dates';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 export function formatDate(date: Date | string): string {
+    // A date-only value (YYYY-MM-DD) is a calendar date: show that day as-is.
+    // Anything else is a moment in time: show its Pacific date.
+    const isCalendarDate = typeof date === 'string' && DATE_ONLY.test(date);
     return new Intl.DateTimeFormat('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
-    }).format(new Date(date));
+        timeZone: isCalendarDate ? 'UTC' : BUSINESS_TIME_ZONE,
+    }).format(isCalendarDate ? new Date(`${date}T00:00:00Z`) : new Date(date));
 }
 
 export function formatCurrency(amount: number): string {

@@ -13,6 +13,7 @@ import {
     sql,
 } from 'drizzle-orm';
 import db from '@/lib/db';
+import { todayIso } from '@/lib/dates';
 import { customers } from '@/features/customers/schema';
 import { invoices, invoiceItems, payments } from '@/features/invoices/schema';
 import { products } from '@/features/products/schema';
@@ -137,7 +138,7 @@ export async function getCustomerListingReport(
                 inactive: sql<number>`count(*) filter (where ${customers.accountStatus} = 'inactive')`,
                 onHold: sql<number>`count(*) filter (where ${customers.accountStatus} = 'on_hold')`,
                 territories: countDistinct(customers.territoryCode),
-                newLast90: sql<number>`count(*) filter (where ${customers.accountOpenDate} >= current_date - interval '90 days')`,
+                newLast90: sql<number>`count(*) filter (where ${customers.accountOpenDate} >= ${todayIso()}::date - interval '90 days')`,
             })
             .from(customers)
             .where(buildListingWhere({ ...filters, status: 'all' })),
@@ -681,10 +682,8 @@ export async function getAgingSummary(filters: AgingSummaryFilters) {
     const pageSize = filters.pageSize ?? AGING_PAGE_SIZE;
     const offset = (page - 1) * pageSize;
 
-    const now = filters.asOf
-        ? new Date(filters.asOf + 'T00:00:00Z')
-        : new Date();
-    const asOfIso = filters.asOf ?? now.toISOString().slice(0, 10);
+    const asOfIso = filters.asOf ?? todayIso();
+    const now = new Date(`${asOfIso}T00:00:00Z`);
     const { startDate: mtdStart } = getMtdRange(now);
     const { startDate: ytdStart } = getYtdRange(now);
     const { startDate: l12mStart } = getPeriodRange('12m', now);

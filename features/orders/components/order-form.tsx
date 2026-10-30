@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { todayIso } from '@/lib/dates';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -247,7 +248,7 @@ export function OrderForm({
   const action = isEdit ? updateOrder.bind(null, orderNumber) : createOrder;
 
   const [state, formAction, pending] = useActionState(action, initialState);
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayIso();
 
   // --- Customer state ---
   const [customer, setCustomer] = useState<CustomerInfo | null>(

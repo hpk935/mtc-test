@@ -1,5 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
+import { todayIso } from '@/lib/dates';
 import { orders, orderItems } from './schema';
 import { getMaxOrderNumber } from './queries';
 import { findCustomerByNumber } from '@/features/customers/queries';
@@ -466,7 +467,7 @@ export async function postOrderToInvoice(orderNumber: string) {
 
     const maxInvoice = await getMaxInvoiceNumber();
     const invoiceNumber = String(Math.max(10001, maxInvoice + 1));
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayIso();
 
     await db.transaction(async (tx) => {
         // Create the invoice record

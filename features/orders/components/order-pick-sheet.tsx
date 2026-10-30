@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { BUSINESS_TIME_ZONE } from '@/lib/dates';
 import { useIsClient } from '@/hooks/use-is-client';
 import type { OrderPrintData } from '../queries';
 
@@ -10,9 +11,11 @@ interface OrderPickSheetProps {
 
 export function OrderPickSheet({ data }: OrderPickSheetProps) {
   const { order, items } = data;
-  // Browser-only so the date uses the user's timezone and matches on hydration.
+  // Browser-only so it matches on hydration; shown in Pacific time.
   const isClient = useIsClient();
-  const printedOn = isClient ? new Date().toLocaleDateString() : null;
+  const printedOn = isClient
+    ? new Date().toLocaleDateString('en-US', { timeZone: BUSINESS_TIME_ZONE })
+    : null;
 
   return (
     <>
