@@ -69,18 +69,27 @@ function ReceiveDialog({ po }: { po: PurchaseOrderDetail }) {
   const [receivedDate, setReceivedDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
-  const [qtyMap, setQtyMap] = useState<Record<number, string>>(() =>
-    Object.fromEntries(
-      po.items.map((i) => {
-        const remaining = Math.max(0, i.qtyOrdered - i.qtyReceived);
-        return [i.id, remaining > 0 ? String(remaining) : ''];
-      }),
-    ),
-  );
+  const [qtyMap, setQtyMap] = useState<Record<number, string>>({});
   const [pending, setPending] = useState(false);
+
+  // Prefill from the PO as it is now; it changes after each receipt.
+  function onOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setQtyMap(
+        Object.fromEntries(
+          po.items.map((i) => {
+            const remaining = Math.max(0, i.qtyOrdered - i.qtyReceived);
+            return [i.id, remaining > 0 ? String(remaining) : ''];
+          }),
+        ),
+      );
+    }
+    setOpen(nextOpen);
+  }
 
   async function onReceive() {
     const lines = po.items
+      .filter((i) => i.qtyOrdered - i.qtyReceived > 0)
       .map((i) => ({
         lineId: i.id,
         qtyToReceive: Math.max(0, Number(qtyMap[i.id] ?? 0)),
@@ -106,7 +115,7 @@ function ReceiveDialog({ po }: { po: PurchaseOrderDetail }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button>Receive Items</Button>
       </DialogTrigger>

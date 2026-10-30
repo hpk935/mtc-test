@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
 import { products } from './schema';
 import {
@@ -98,9 +98,6 @@ export async function updateProductRecord(
             landedCost: input.landedCost,
             minimumPackPrice: input.minimumPackPrice,
             casePrice: input.casePrice,
-            qtyInStock: input.qtyInStock,
-            qtyAvailable: sql`${input.qtyInStock} - ${products.qtyCommitted}`,
-            qtyOnOrder: input.qtyOnOrder,
             nob: input.nob ?? null,
             isDiscontinued: input.isDiscontinued,
             htsCode: normalizeOptional(input.htsCode),

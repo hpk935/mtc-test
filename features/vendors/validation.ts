@@ -125,7 +125,14 @@ export type ReceiveLineInput = z.infer<typeof receiveLineSchema>;
 export const receivePurchaseOrderSchema = z.object({
     purchaseOrderId: z.coerce.number().int().positive(),
     receivedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date'),
-    lines: z.array(receiveLineSchema).min(1),
+    lines: z
+        .array(receiveLineSchema)
+        .min(1)
+        .refine(
+            (lines) =>
+                new Set(lines.map((l) => l.lineId)).size === lines.length,
+            { message: 'Each line can only appear once per receipt.' },
+        ),
 });
 export type ReceivePurchaseOrderInput = z.infer<
     typeof receivePurchaseOrderSchema

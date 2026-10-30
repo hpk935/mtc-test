@@ -172,6 +172,12 @@ export function CustomerForm({
         savedValues[key as keyof typeof savedValues],
     );
 
+  // Imported customers can hold legacy-format contact values. Leave those to
+  // the server, which accepts them while unchanged, instead of letting the
+  // browser's format checks block the whole save.
+  const keepsStoredValue = (name: keyof typeof formValues) =>
+    isEdit && formValues[name] === savedValues[name];
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -273,7 +279,7 @@ export function CustomerForm({
           <Input
             id="mainEmail"
             name="mainEmail"
-            type="email"
+            type={keepsStoredValue('mainEmail') ? 'text' : 'email'}
             placeholder="orders@example.com"
             value={formValues.mainEmail}
             onChange={handleChange}
@@ -288,7 +294,7 @@ export function CustomerForm({
             name="mainPhone"
             type="tel"
             inputMode="numeric"
-            pattern="\d*"
+            pattern={keepsStoredValue('mainPhone') ? undefined : '\\d*'}
             placeholder="5551234567"
             value={formValues.mainPhone}
             onChange={handleChange}
@@ -319,7 +325,7 @@ export function CustomerForm({
             id="faxNumber"
             name="faxNumber"
             inputMode="numeric"
-            pattern="\d*"
+            pattern={keepsStoredValue('faxNumber') ? undefined : '\\d*'}
             placeholder="5551234568"
             value={formValues.faxNumber}
             onChange={handleChange}
@@ -388,7 +394,7 @@ export function CustomerForm({
             id="billingPostalCode"
             name="billingPostalCode"
             inputMode="numeric"
-            pattern="\d*"
+            pattern={keepsStoredValue('billingPostalCode') ? undefined : '\\d*'}
             placeholder="e.g. 75165"
             value={formValues.billingPostalCode}
             onChange={handleChange}

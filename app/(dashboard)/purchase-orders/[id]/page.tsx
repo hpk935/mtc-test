@@ -32,7 +32,7 @@ export default async function PurchaseOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requirePermission('vendors:view');
+  const session = await requirePermission('vendors:view');
   const { id } = await params;
   const numericId = parseIdParam(id);
   if (numericId === null) notFound();
@@ -57,7 +57,7 @@ export default async function PurchaseOrderDetailPage({
             ({po.vendorCode})
           </p>
         </div>
-        <PurchaseOrderActions po={po} />
+        {session.role === 'admin' && <PurchaseOrderActions po={po} />}
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { products } from '@/features/products/schema';
 import { purchaseOrderItems, purchaseOrders, vendors } from './schema';
 import {
@@ -30,7 +30,7 @@ function firstIssue(issues: { message: string }[], fallback: string) {
 export async function createVendor(
     formData: FormData,
 ): Promise<ActionResult<{ id: number }>> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = createVendorSchema.safeParse(
         Object.fromEntries(formData.entries()),
@@ -86,7 +86,7 @@ export async function updateVendor(
     id: number,
     formData: FormData,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = updateVendorSchema.safeParse(
         Object.fromEntries(formData.entries()),
@@ -199,7 +199,7 @@ async function loadProductsForItems(
 export async function createPurchaseOrder(
     input: unknown,
 ): Promise<ActionResult<{ id: number; poNumber: string }>> {
-    const session = await requireAuth();
+    const session = await requireAdmin();
 
     const parsed = createPurchaseOrderSchema.safeParse(input);
     if (!parsed.success) {
@@ -298,7 +298,7 @@ export async function updatePurchaseOrderDraft(
     purchaseOrderId: number,
     input: unknown,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = updatePurchaseOrderDraftSchema.safeParse(input);
     if (!parsed.success) {
@@ -398,7 +398,7 @@ export async function updatePurchaseOrderDraft(
 export async function submitPurchaseOrder(
     purchaseOrderId: number,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     try {
         await db.transaction(async (tx) => {
@@ -467,7 +467,7 @@ export async function submitPurchaseOrder(
 export async function receivePurchaseOrderItems(
     input: unknown,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     const parsed = receivePurchaseOrderSchema.safeParse(input);
     if (!parsed.success) {
@@ -589,7 +589,7 @@ export async function receivePurchaseOrderItems(
 export async function cancelPurchaseOrder(
     purchaseOrderId: number,
 ): Promise<ActionResult> {
-    await requireAuth();
+    await requireAdmin();
 
     try {
         await db.transaction(async (tx) => {

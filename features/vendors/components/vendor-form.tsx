@@ -54,9 +54,10 @@ const DIGIT_ONLY_FIELDS = new Set(['phone', 'fax', 'zip']);
 type Props = {
   vendor?: Vendor;
   mode?: 'create' | 'edit';
+  readOnly?: boolean;
 };
 
-export function VendorForm({ vendor, mode = 'create' }: Props) {
+export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
   const isEdit = mode === 'edit';
 
   const initial = {
@@ -420,16 +421,19 @@ export function VendorForm({ vendor, mode = 'create' }: Props) {
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" asChild>
-          <Link href={isEdit && vendor ? `/vendors/${vendor.id}` : '/vendors'}>
-            Cancel
-          </Link>
-        </Button>
-        <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
-          {pending ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Vendor'}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" asChild>
+            <Link
+              href={isEdit && vendor ? `/vendors/${vendor.id}` : '/vendors'}>
+              Cancel
+            </Link>
+          </Button>
+          <Button type="submit" disabled={pending || (isEdit && !isDirty)}>
+            {pending ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Vendor'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

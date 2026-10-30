@@ -22,10 +22,17 @@ export async function findUserById(id: number) {
 }
 
 export async function getNextEmployeeId(): Promise<string> {
+    // Compare the numeric part: as text, 'E99' sorts after 'E100'.
     const [result] = await db
-        .select({ maxId: sql<string>`max(${users.employeeId})` })
+        .select({
+            maxNum: sql<
+                number | null
+            >`max(substring(${users.employeeId} from 2)::int) filter (where ${users.employeeId} ~ '^E[0-9]+$')`,
+        })
         .from(users);
-    return generateEmployeeId(result?.maxId ?? null);
+    return generateEmployeeId(
+        result?.maxNum != null ? `E${result.maxNum}` : null,
+    );
 }
 
 export async function getAllUsers(isActive?: boolean) {

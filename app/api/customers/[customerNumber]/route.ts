@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { findCustomerByNumber } from '@/features/customers/queries';
-import { updateCustomerSchema } from '@/features/customers/validation';
+import { updateCustomerSchemaFor } from '@/features/customers/validation';
 import { updateCustomerRecord } from '@/features/customers/service';
 
 export async function GET(
@@ -46,6 +46,13 @@ export async function PATCH(
     }
 
     const { customerNumber } = await params;
+    const existing = await findCustomerByNumber(customerNumber);
+    if (!existing) {
+        return NextResponse.json(
+            { success: false, error: 'Customer not found.' },
+            { status: 404 },
+        );
+    }
 
     let body: unknown;
     try {
@@ -57,7 +64,7 @@ export async function PATCH(
         );
     }
 
-    const parsed = updateCustomerSchema.safeParse(body);
+    const parsed = updateCustomerSchemaFor(existing).safeParse(body);
     if (!parsed.success) {
         const firstError = parsed.error.issues[0]?.message;
         return NextResponse.json(

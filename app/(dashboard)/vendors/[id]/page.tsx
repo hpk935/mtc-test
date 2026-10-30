@@ -19,7 +19,8 @@ export default async function VendorDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ poPage?: string }>;
 }) {
-  await requirePermission('vendors:view');
+  const session = await requirePermission('vendors:view');
+  const isAdmin = session.role === 'admin';
   const { id } = await params;
   const numericId = parseIdParam(id);
   if (numericId === null) notFound();
@@ -50,16 +51,18 @@ export default async function VendorDetailPage({
             {vendor.vendorCode}
           </p>
         </div>
-        <Button asChild>
-          <Link href={`/purchase-orders/new?vendorId=${vendor.id}`}>
-            New Purchase Order
-          </Link>
-        </Button>
+        {isAdmin && (
+          <Button asChild>
+            <Link href={`/purchase-orders/new?vendorId=${vendor.id}`}>
+              New Purchase Order
+            </Link>
+          </Button>
+        )}
       </div>
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Details</h2>
-        <VendorForm vendor={vendor} mode="edit" />
+        <VendorForm vendor={vendor} mode="edit" readOnly={!isAdmin} />
       </section>
 
       <section className="space-y-4">

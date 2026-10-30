@@ -22,7 +22,7 @@ export default async function PurchaseOrdersPage({
 }: {
   searchParams: Promise<{ page?: string; status?: string }>;
 }) {
-  await requirePermission('vendors:view');
+  const session = await requirePermission('vendors:view');
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
   const status =
@@ -45,12 +45,14 @@ export default async function PurchaseOrdersPage({
             Inventory replenishment from vendors.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/purchase-orders/new">
-            <Plus className="mr-2 size-4" />
-            New Purchase Order
-          </Link>
-        </Button>
+        {session.role === 'admin' && (
+          <Button asChild>
+            <Link href="/purchase-orders/new">
+              <Plus className="mr-2 size-4" />
+              New Purchase Order
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Suspense fallback={null}>

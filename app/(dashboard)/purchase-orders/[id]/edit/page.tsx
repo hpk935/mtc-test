@@ -5,14 +5,14 @@ import {
   getActiveVendorsForSelect,
 } from '@/features/vendors/queries';
 import { PurchaseOrderForm } from '@/features/vendors/components/purchase-order-form';
-import { requirePermission } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 
 export default async function EditPurchaseOrderPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requirePermission('vendors:view');
+  await requireAdmin();
   const { id } = await params;
   const numericId = parseIdParam(id);
   if (numericId === null) notFound();

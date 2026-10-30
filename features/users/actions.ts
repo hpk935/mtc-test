@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { and, count, eq, ne } from 'drizzle-orm';
 import db from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import { users } from './schema';
@@ -14,8 +14,33 @@ import {
     resetPasswordSchema,
 } from './validation';
 import { DEFAULT_PERMISSIONS } from './constants';
-import type { Permission } from './constants';
+import type { Permission, UserRole } from './constants';
 import type { ActionResult } from '@/types';
+
+const LAST_ADMIN_ERROR =
+    'There must be at least one active admin. Make another user an admin first.';
+
+/** Would this change leave the app with no active admin? */
+async function removesLastActiveAdmin(
+    user: { id: number; role: UserRole; isActive: boolean },
+    next: { role: UserRole; isActive: boolean },
+): Promise<boolean> {
+    const isActiveAdmin = user.role === 'admin' && user.isActive;
+    const staysActiveAdmin = next.role === 'admin' && next.isActive;
+    if (!isActiveAdmin || staysActiveAdmin) return false;
+
+    const [{ others }] = await db
+        .select({ others: count() })
+        .from(users)
+        .where(
+            and(
+                eq(users.role, 'admin'),
+                eq(users.isActive, true),
+                ne(users.id, user.id),
+            ),
+        );
+    return others === 0;
+}
 
 /** Strip non-view permissions if the module's view permission is missing. */
 function sanitizePermissions(permissions: Permission[]): Permission[] {
@@ -118,6 +143,11 @@ export async function updateUser(
         }
     }
 
+    const nextIsActive = isActive ?? user.isActive;
+    if (await removesLastActiveAdmin(user, { role, isActive: nextIsActive })) {
+        return { success: false, error: LAST_ADMIN_ERROR };
+    }
+
     await db
         .update(users)
         .set({
@@ -126,7 +156,7 @@ export async function updateUser(
             email,
             role,
             permissions: sanitizePermissions(permissions),
-            isActive: isActive ?? user.isActive,
+            isActive: nextIsActive,
             updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
@@ -175,6 +205,15 @@ export async function toggleUserActive(userId: number): Promise<ActionResult> {
     const user = await findUserById(userId);
     if (!user) {
         return { success: false, error: 'User not found.' };
+    }
+
+    if (
+        await removesLastActiveAdmin(user, {
+            role: user.role,
+            isActive: !user.isActive,
+        })
+    ) {
+        return { success: false, error: LAST_ADMIN_ERROR };
     }
 
     await db

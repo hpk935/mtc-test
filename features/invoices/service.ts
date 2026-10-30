@@ -22,6 +22,7 @@ export async function updateInvoiceStatusRecord(
             invoiceNumber: invoices.invoiceNumber,
             invoiceStatus: invoices.invoiceStatus,
             totalAmount: invoices.totalAmount,
+            amountPaid: invoices.amountPaid,
         })
         .from(invoices)
         .where(eq(invoices.invoiceNumber, invoiceNumber))
@@ -29,6 +30,15 @@ export async function updateInvoiceStatusRecord(
 
     if (!invoice) {
         return { success: false, error: 'Invoice not found.' };
+    }
+
+    // Don't void away money received. Check the amount paid, not just payment
+    // rows: legacy imports and invoices marked paid by hand have none.
+    if (newStatus === 'voided' && Number(invoice.amountPaid) > 0) {
+        return {
+            success: false,
+            error: 'Cannot void an invoice that has payments recorded.',
+        };
     }
 
     // Prevent undoing a paid status when payments exist

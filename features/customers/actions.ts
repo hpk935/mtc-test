@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import {
     createCustomerWithShipToSchema,
-    updateCustomerSchema,
+    updateCustomerSchemaFor,
     createShipToSchema,
     updateShipToSchema,
 } from './validation';
@@ -18,6 +18,7 @@ import {
     updateShipToRecord,
     deleteShipToRecord,
 } from './service';
+import { findCustomerByNumber } from './queries';
 import type { ActionResult } from '@/types';
 
 export async function createCustomer(
@@ -104,8 +105,13 @@ export async function updateCustomer(
         return { success: false, error: 'Customer number is required.' };
     }
 
+    const existing = await findCustomerByNumber(customerNumber);
+    if (!existing) {
+        return { success: false, error: 'Customer not found.' };
+    }
+
     const raw = Object.fromEntries(formData);
-    const parsed = updateCustomerSchema.safeParse(raw);
+    const parsed = updateCustomerSchemaFor(existing).safeParse(raw);
 
     if (!parsed.success) {
         const firstError = parsed.error.issues[0]?.message;

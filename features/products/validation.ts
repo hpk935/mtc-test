@@ -59,6 +59,11 @@ export const createProductSchema = z.object({
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 
-export const updateProductSchema = createProductSchema;
+// After creation, stock and qty on order are maintained by purchase order
+// receipts and invoices, never by the product form.
+export const updateProductSchema = createProductSchema.omit({
+    qtyInStock: true,
+    qtyOnOrder: true,
+});
 
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;

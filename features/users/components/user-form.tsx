@@ -50,6 +50,10 @@ const PERMISSION_GROUPS: Record<
     label: 'Customers',
     permissions: ['customers:view'],
   },
+  vendors: {
+    label: 'Vendors & Purchase Orders',
+    permissions: ['vendors:view'],
+  },
   reports: {
     label: 'Reports',
     permissions: ['reports:view'],

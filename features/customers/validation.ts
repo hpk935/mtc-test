@@ -126,6 +126,37 @@ export const updateCustomerSchema = createCustomerSchema;
 
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
 
+// Imported customers hold contact values in legacy formats, e.g. phones like
+// "(555) 123-4567". An unchanged stored value is accepted as-is so the rest of
+// the record can still be edited; a changed value must pass the normal rules.
+const LEGACY_FORMAT_FIELDS = [
+    'mainPhone',
+    'faxNumber',
+    'mainEmail',
+    'billingPostalCode',
+] as const;
+
+type LegacyFormatField = (typeof LEGACY_FORMAT_FIELDS)[number];
+
+export function updateCustomerSchemaFor(
+    stored: Record<LegacyFormatField, string | null>,
+) {
+    const shape = Object.fromEntries(
+        LEGACY_FORMAT_FIELDS.map((field) => [
+            field,
+            z.union([
+                z.literal(stored[field] ?? ''),
+                createCustomerSchema.shape[field],
+            ]),
+        ]),
+    ) as {
+        [F in LegacyFormatField]: z.ZodUnion<
+            [z.ZodLiteral<string>, (typeof createCustomerSchema.shape)[F]]
+        >;
+    };
+    return updateCustomerSchema.extend(shape);
+}
+
 export const createShipToSchema = z.object({
     customerNumber: z.string().min(1, 'Customer number is required').max(20),
     locationName: z.string().min(1, 'Location name is required').max(255),

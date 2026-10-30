@@ -636,6 +636,19 @@ export function OrderForm({
       return;
     }
 
+    // Typing in a line's product box clears its product but keeps its price
+    // and discount, so the line still counts toward the total. Don't silently
+    // drop it.
+    const unselectedLineIndex = lineItems.findIndex(
+      (li) => li.itemNumber.trim() === '' && lineTotal(li) > 0,
+    );
+    if (unselectedLineIndex !== -1) {
+      toast.error(
+        `Line ${unselectedLineIndex + 1} has no product selected. Pick a product or remove the line.`,
+      );
+      return;
+    }
+
     const cleanedLineItems = lineItems
       .filter((li) => li.itemNumber.trim() !== '')
       .map((li) => ({

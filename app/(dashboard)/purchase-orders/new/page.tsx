@@ -1,4 +1,4 @@
-import { requirePermission } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { getActiveVendorsForSelect } from '@/features/vendors/queries';
 import { PurchaseOrderForm } from '@/features/vendors/components/purchase-order-form';
 
@@ -7,7 +7,7 @@ export default async function NewPurchaseOrderPage({
 }: {
   searchParams: Promise<{ vendorId?: string }>;
 }) {
-  await requirePermission('vendors:view');
+  await requireAdmin();
   const vendors = await getActiveVendorsForSelect();
   const { vendorId } = await searchParams;
   const parsed = vendorId ? Number(vendorId) : NaN;

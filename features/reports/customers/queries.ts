@@ -14,7 +14,7 @@ import {
 } from 'drizzle-orm';
 import db from '@/lib/db';
 import { customers } from '@/features/customers/schema';
-import { invoices, invoiceItems } from '@/features/invoices/schema';
+import { invoices, invoiceItems, payments } from '@/features/invoices/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
 import type { AccountStatus } from '@/features/customers/constants';
@@ -204,7 +204,17 @@ function rowsWithPagination<T>(
     };
 }
 
-function buildInvoiceWhere(filters: CustomerInvoicesFilters) {
+function buildInvoiceWhere(
+    filters: Pick<
+        CustomerInvoicesFilters,
+        | 'customerNumber'
+        | 'salesperson'
+        | 'territory'
+        | 'status'
+        | 'startDate'
+        | 'endDate'
+    >,
+) {
     const conditions = [];
     if (filters.customerNumber) {
         conditions.push(eq(invoices.customerNumber, filters.customerNumber));
@@ -231,7 +241,13 @@ function buildInvoiceWhere(filters: CustomerInvoicesFilters) {
 export async function getInvoiceSummaryPerCustomer(
     filters: CustomerInvoicesFilters & { customerNumber: string },
 ) {
-    const where = buildInvoiceWhere(filters);
+    // The Per Customer tab only offers customer + date filters. Ignore any
+    // salesperson/territory/status left in the URL by the All Customers tab.
+    const where = buildInvoiceWhere({
+        customerNumber: filters.customerNumber,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+    });
     const invPage = Math.max(1, filters.invPage ?? 1);
     const invPageSize = filters.invPageSize ?? PER_CUSTOMER_INVOICE_PAGE_SIZE;
 
@@ -309,7 +325,9 @@ export async function getInvoiceSummaryAllCustomers(
     const page = Math.max(1, filters.page ?? 1);
     const pageSize = filters.pageSize ?? INVOICE_PAGE_SIZE;
     const offset = (page - 1) * pageSize;
-    const where = buildInvoiceWhere(filters);
+    // The All Customers tab has no customer filter. Ignore a customer left in
+    // the URL by the Per Customer tab.
+    const where = buildInvoiceWhere({ ...filters, customerNumber: undefined });
 
     const subquery = db
         .select({
@@ -688,36 +706,70 @@ export async function getAgingSummary(filters: AgingSummaryFilters) {
         ? and(...customerFilter)
         : undefined;
 
+    // Balance each invoice had on the as-of date, rebuilt best-effort: today's
+    // balance plus whatever was paid after as-of. Payment rows count on their
+    // own dates; any paid amount without payment rows (legacy imports,
+    // invoices marked paid by hand) counts as paid on the invoice's paid date.
+    // Invoices dated after as-of are excluded below.
+    const paymentTotals = db
+        .select({
+            invoiceNumber: payments.invoiceNumber,
+            total: sql<string>`sum(${payments.amount})`.as('payments_total'),
+            afterAsOf:
+                sql<string>`coalesce(sum(${payments.amount}) filter (where ${payments.paymentDate} > ${asOfIso}::date), 0)`.as(
+                    'payments_after_as_of',
+                ),
+        })
+        .from(payments)
+        .groupBy(payments.invoiceNumber)
+        .as('payment_totals');
+
+    const unrecordedPaid = sql`greatest(${invoices.amountPaid} - coalesce(${paymentTotals.total}, 0), 0)`;
+    const paidAfterAsOf = sql`(coalesce(${paymentTotals.afterAsOf}, 0)
+        + case when ${invoices.paidDate} > ${asOfIso}::date
+            then ${unrecordedPaid} else 0 end)`;
+    const balanceAsOf = sql`least(${invoices.totalAmount}, ${invoices.balanceDue} + ${paidAfterAsOf})`;
+
     // Aging calc done in SQL using days-past-due on coalesce(due_date, invoice_date).
     const ref = sql`coalesce(${invoices.dueDate}, ${invoices.invoiceDate})`;
+    const age = sql`(${asOfIso}::date - ${ref})`;
 
     const agingAgg = db
         .select({
             customerNumber: invoices.customerNumber,
             current:
-                sql<string>`coalesce(sum(${invoices.balanceDue}) filter (where (${asOfIso}::date - ${ref}) <= 0), 0)`.as(
+                sql<string>`coalesce(sum(${balanceAsOf}) filter (where ${age} <= 0), 0)`.as(
                     'current',
                 ),
-            d1_30: sql<string>`coalesce(sum(${invoices.balanceDue}) filter (where (${asOfIso}::date - ${ref}) between 1 and 30), 0)`.as(
+            d1_30: sql<string>`coalesce(sum(${balanceAsOf}) filter (where ${age} between 1 and 30), 0)`.as(
                 'd1_30',
             ),
-            d31_60: sql<string>`coalesce(sum(${invoices.balanceDue}) filter (where (${asOfIso}::date - ${ref}) between 31 and 60), 0)`.as(
+            d31_60: sql<string>`coalesce(sum(${balanceAsOf}) filter (where ${age} between 31 and 60), 0)`.as(
                 'd31_60',
             ),
-            d61_90: sql<string>`coalesce(sum(${invoices.balanceDue}) filter (where (${asOfIso}::date - ${ref}) between 61 and 90), 0)`.as(
+            d61_90: sql<string>`coalesce(sum(${balanceAsOf}) filter (where ${age} between 61 and 90), 0)`.as(
                 'd61_90',
             ),
             d90_plus:
-                sql<string>`coalesce(sum(${invoices.balanceDue}) filter (where (${asOfIso}::date - ${ref}) > 90), 0)`.as(
+                sql<string>`coalesce(sum(${balanceAsOf}) filter (where ${age} > 90), 0)`.as(
                     'd90_plus',
                 ),
-            balanceDue:
-                sql<string>`coalesce(sum(${invoices.balanceDue}), 0)`.as(
-                    'balance_due',
-                ),
+            balanceDue: sql<string>`coalesce(sum(${balanceAsOf}), 0)`.as(
+                'balance_due',
+            ),
         })
         .from(invoices)
-        .where(sql`${invoices.balanceDue} > 0`)
+        .leftJoin(
+            paymentTotals,
+            eq(paymentTotals.invoiceNumber, invoices.invoiceNumber),
+        )
+        .where(
+            and(
+                lte(invoices.invoiceDate, asOfIso),
+                ne(invoices.invoiceStatus, 'voided'),
+                sql`${balanceAsOf} > 0`,
+            ),
+        )
         .groupBy(invoices.customerNumber)
         .as('aging_agg');
 

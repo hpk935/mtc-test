@@ -413,7 +413,11 @@ export function ProductForm({
       {/* Inventory */}
       <FormSection
         title="Inventory"
-        description="Current stock levels. Qty On Order is derived from open purchase orders.">
+        description={
+          isEdit
+            ? 'Stock levels are maintained by purchase order receipts and invoices.'
+            : 'Opening stock level. Qty On Order is derived from open purchase orders.'
+        }>
         <div className="space-y-2">
           <Label htmlFor="qtyInStock">Qty In Stock</Label>
           <Input
@@ -422,7 +426,9 @@ export function ProductForm({
             type="number"
             min={0}
             step={1}
-            required
+            required={!isEdit}
+            readOnly={isEdit}
+            disabled={isEdit}
             value={formValues.qtyInStock}
             onChange={handleChange}
           />
