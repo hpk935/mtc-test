@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 import { findCustomerByNumber } from '@/features/customers/queries';
 import { updateCustomerSchema } from '@/features/customers/validation';
 import { updateCustomerRecord } from '@/features/customers/service';
@@ -35,11 +35,13 @@ export async function PATCH(
     { params }: { params: Promise<{ customerNumber: string }> },
 ) {
     try {
-        await requireAuth();
-    } catch {
+        await requireAdmin();
+    } catch (error) {
+        const forbidden =
+            error instanceof Error && error.message === 'Forbidden';
         return NextResponse.json(
-            { success: false, error: 'Unauthorized' },
-            { status: 401 },
+            { success: false, error: forbidden ? 'Forbidden' : 'Unauthorized' },
+            { status: forbidden ? 403 : 401 },
         );
     }
 
