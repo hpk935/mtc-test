@@ -12,7 +12,6 @@ import { ReportColumnsFilter } from '@/features/reports/components/report-column
 import { parseVisibleColumns } from '@/features/reports/components/report-columns';
 import {
   getActiveSalespersons,
-  getDistinctTerritories,
   getInvoiceSummaryAllCustomers,
   getInvoiceSummaryPerCustomer,
 } from '@/features/reports/customers/queries';
@@ -27,6 +26,7 @@ import {
 } from '@/features/reports/customers/components/invoice-summary-all-table';
 import { formatCurrency } from '@/lib/utils';
 import { findCustomerByNumber } from '@/features/customers/queries';
+import { getAllTerritoryCodes } from '@/features/reference-codes/queries';
 
 const INVOICE_STATUS_OPTIONS = INVOICE_STATUSES.map((s) => ({
   label: s
@@ -54,7 +54,7 @@ export default async function CustomerInvoicesReportPage({
 
   const [salespersons, territories] = await Promise.all([
     getActiveSalespersons(),
-    getDistinctTerritories(),
+    getAllTerritoryCodes(),
   ]);
 
   const salespersonOptions = salespersons.map((s) => ({

@@ -13,3 +13,14 @@ const isoDateFormat = new Intl.DateTimeFormat('en-CA', {
 export function todayIso(now: Date = new Date()): string {
     return isoDateFormat.format(now);
 }
+
+/** Invoice due date, as YYYY-MM-DD. Null when the term has no net days. */
+export function calculateDueDate(
+    invoiceDate: string,
+    netDays: number | null,
+): string | null {
+    if (netDays === null) return null;
+    const due = new Date(`${invoiceDate}T00:00:00Z`);
+    due.setUTCDate(due.getUTCDate() + netDays);
+    return due.toISOString().slice(0, 10);
+}

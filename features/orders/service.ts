@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
-import { todayIso } from '@/lib/dates';
+import { calculateDueDate, todayIso } from '@/lib/dates';
 import { orders, orderItems } from './schema';
 import { getMaxOrderNumber } from './queries';
 import { findCustomerByNumber } from '@/features/customers/queries';
@@ -9,6 +9,8 @@ import { findProductByItemNumber } from '@/features/products/queries';
 import { products } from '@/features/products/schema';
 import { invoices } from '@/features/invoices/schema';
 import { invoiceItems } from '@/features/invoices/schema';
+import { findTerm } from '@/features/reference-codes/queries';
+import { validateReferenceCodes } from '@/features/reference-codes/service';
 import type { CreateOrderInput, UpdateOrderInput } from './validation';
 
 interface ValidatedItem {
@@ -120,6 +122,11 @@ export async function createOrderRecord(input: CreateOrderInput) {
             success: false as const,
             error: 'Ship-to address does not belong to this customer.',
         };
+    }
+
+    const codeError = await validateReferenceCodes(input);
+    if (codeError) {
+        return { success: false as const, error: codeError };
     }
 
     // Validate line items and look up products
@@ -249,6 +256,11 @@ export async function updateOrderRecord(
             success: false as const,
             error: 'Ship-to address does not belong to this customer.',
         };
+    }
+
+    const codeError = await validateReferenceCodes(input, existing);
+    if (codeError) {
+        return { success: false as const, error: codeError };
     }
 
     const validatedItems: ValidatedItem[] = [];
@@ -468,6 +480,8 @@ export async function postOrderToInvoice(orderNumber: string) {
     const maxInvoice = await getMaxInvoiceNumber();
     const invoiceNumber = String(Math.max(10001, maxInvoice + 1));
     const today = todayIso();
+    const term = await findTerm(order.termCode);
+    const dueDate = calculateDueDate(today, term?.netDays ?? null);
 
     await db.transaction(async (tx) => {
         // Create the invoice record
@@ -477,6 +491,7 @@ export async function postOrderToInvoice(orderNumber: string) {
             customerNumber: order.customerNumber,
             salespersonCode: order.salespersonCode,
             invoiceDate: today,
+            dueDate,
             customerPoReference: order.customerPoReference,
             freightTerm: order.freightTerm,
             shipToId: order.shipToId,

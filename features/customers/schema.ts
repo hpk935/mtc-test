@@ -12,6 +12,7 @@ import {
 import { users } from '@/features/users/schema';
 import { orders } from '@/features/orders/schema';
 import { invoices } from '@/features/invoices/schema';
+import { terms, territories } from '@/features/reference-codes/schema';
 import { ACCOUNT_STATUSES, LOCATION_STATUSES } from './constants';
 
 export const accountStatusEnum = pgEnum('account_status', ACCOUNT_STATUSES);
@@ -34,8 +35,12 @@ export const customers = pgTable('customers', {
     faxNumber: varchar('fax_number', { length: 20 }),
     mainEmail: varchar('main_email', { length: 255 }).notNull(),
     taxId: varchar('tax_id', { length: 20 }),
-    termCode: varchar('term_code', { length: 10 }).notNull(),
-    territoryCode: varchar('territory_code', { length: 20 }).notNull(),
+    termCode: varchar('term_code', { length: 10 })
+        .notNull()
+        .references(() => terms.code),
+    territoryCode: varchar('territory_code', { length: 20 })
+        .notNull()
+        .references(() => territories.code),
     salespersonCode: varchar('salesperson_code', { length: 10 })
         .notNull()
         .references(() => users.employeeId),

@@ -13,13 +13,13 @@ import { parseVisibleColumns } from '@/features/reports/components/report-column
 import {
   getActiveSalespersons,
   getCustomerListingReport,
-  getDistinctTerritories,
 } from '@/features/reports/customers/queries';
 import { customerListingFiltersSchema } from '@/features/reports/customers/validation';
 import {
   CUSTOMER_LISTING_COLUMNS,
   CustomerListingTable,
 } from '@/features/reports/customers/components/customer-listing-table';
+import { getAllTerritoryCodes } from '@/features/reference-codes/queries';
 
 const STATUS_OPTIONS = [
   ...ACCOUNT_STATUSES.map((s) => ({
@@ -49,7 +49,7 @@ export default async function CustomerListingReportPage({
       page: filters.page,
     }),
     getActiveSalespersons(),
-    getDistinctTerritories(),
+    getAllTerritoryCodes(),
   ]);
 
   const salespersonOptions = salespersons.map((s) => ({

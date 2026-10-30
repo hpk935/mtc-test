@@ -75,28 +75,35 @@ npm run db:migrate
 # 2. Seed admin user
 npm run db:seed
 
-# 3. Dry-run customers to review warnings
+# 3. Apply term and territory definitions (edit reference-codes.ts first)
+npx tsx scripts/import/seed-reference-codes.ts
+
+# 4. Dry-run customers to review warnings and any new reference codes
 npx tsx scripts/import/import-customers.ts --dry-run
 
-# 4. Import customers
+# 5. Import customers
 npx tsx scripts/import/import-customers.ts
 
-# 5. Dry-run ship-to addresses (generates skipped CSV)
+# 6. Dry-run ship-to addresses (generates skipped CSV)
 npx tsx scripts/import/import-ship-to-addresses.ts --dry-run
 
-# 6. Import ship-to addresses
+# 7. Import ship-to addresses
 npx tsx scripts/import/import-ship-to-addresses.ts
 
-# 7. Fix skipped ship-to rows with corrected customer numbers
+# 8. Fix skipped ship-to rows with corrected customer numbers
 npx tsx scripts/import/import-ship-to-addresses.ts --fix-skipped
 
-# 8. Verify
+# 9. Verify
 npx tsx scripts/import/verify-customers.ts
 ```
+
+Migrating an existing database keeps its codes but leaves every term inactive, so
+run `seed-reference-codes.ts` straight after `db:migrate`. Until then the payment
+terms dropdown has no options and new customers and orders can't be saved.
 
 ## Conventions
 
 - One script per entity/import source
 - Manual field validation with truncation warnings (not Zod — these handle messy legacy data)
 - Log results (imported count, skipped count, warnings)
-- Idempotent via `onConflictDoNothing()` — safe to re-run
+- Idempotent via `onConflictDoNothing()` — safe to re-run. `seed-reference-codes.ts` upserts instead, because `reference-codes.ts` is the source of truth for term definitions

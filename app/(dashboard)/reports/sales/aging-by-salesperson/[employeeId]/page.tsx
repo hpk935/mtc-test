@@ -6,12 +6,12 @@ import { ReportPrintButton } from '@/features/reports/components/report-print-bu
 import { ReportSelectFilter } from '@/features/reports/components/report-select-filter';
 import {
   findSalespersonByEmployeeId,
-  getInvoiceTerritories,
   getSalespersonAgingDetail,
 } from '@/features/reports/sales/queries';
 import { agingBySalespersonFiltersSchema } from '@/features/reports/sales/validation';
 import { SalespersonAgingDetailTable } from '@/features/reports/sales/components/salesperson-aging-detail-table';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { getAllTerritoryCodes } from '@/features/reference-codes/queries';
 
 export default async function SalespersonAgingDetailPage({
   params,
@@ -29,7 +29,7 @@ export default async function SalespersonAgingDetailPage({
 
   const [data, territories] = await Promise.all([
     getSalespersonAgingDetail({ employeeId, ...filters }),
-    getInvoiceTerritories(),
+    getAllTerritoryCodes(),
   ]);
   const territoryOptions = territories.map((t) => ({ label: t, value: t }));
 

@@ -75,7 +75,9 @@ export async function PATCH(
 
     const result = await updateCustomerRecord(customerNumber, parsed.data);
     if (!result.success) {
-        return NextResponse.json(result, { status: 404 });
+        return NextResponse.json(result, {
+            status: 'invalidInput' in result ? 400 : 404,
+        });
     }
 
     return NextResponse.json(result);

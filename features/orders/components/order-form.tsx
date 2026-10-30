@@ -32,6 +32,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { ReferenceCodeSelect } from '@/features/reference-codes/components/reference-code-select';
+import type { ReferenceCodeOption } from '@/features/reference-codes/types';
 import { createOrder, updateOrder } from '../actions';
 import type { ActionResult } from '@/types';
 
@@ -228,6 +230,8 @@ interface OrderFormInitialData {
 
 interface OrderFormProps {
   salespersons: Salesperson[];
+  termOptions: ReferenceCodeOption[];
+  territoryOptions: ReferenceCodeOption[];
   freightTerms: readonly string[];
   orderNumber?: string;
   initialData?: OrderFormInitialData;
@@ -239,6 +243,8 @@ const initialState: ActionResult = { success: false, error: '' };
 
 export function OrderForm({
   salespersons,
+  termOptions,
+  territoryOptions,
   freightTerms,
   orderNumber,
   initialData,
@@ -417,8 +423,17 @@ export function OrderForm({
         );
         // Auto-fill from customer defaults
         if (info.salespersonCode) setSalespersonCode(info.salespersonCode);
-        if (info.termCode) setTermCode(info.termCode);
-        if (info.territoryCode) setTerritoryCode(info.territoryCode);
+        // A retired customer default can't be used here, so staff choose instead.
+        setTermCode(
+          termOptions.some((o) => o.code === info.termCode)
+            ? info.termCode
+            : '',
+        );
+        setTerritoryCode(
+          territoryOptions.some((o) => o.code === info.territoryCode)
+            ? info.territoryCode
+            : '',
+        );
         if (info.defaultFreightTerm) setFreightTerm(info.defaultFreightTerm);
       }
     }
@@ -979,30 +994,22 @@ export function OrderForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="termCode">
-            Payment Terms <OptionalTag />
-          </Label>
-          <Input
-            id="termCode"
-            placeholder="e.g. 30, 60, CH"
-            value={termCode}
-            onChange={(e) => setTermCode(e.target.value)}
-            maxLength={10}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="territoryCode">
-            Territory <OptionalTag />
-          </Label>
-          <Input
-            id="territoryCode"
-            placeholder="e.g. TX-10"
-            value={territoryCode}
-            onChange={(e) => setTerritoryCode(e.target.value)}
-            maxLength={20}
-          />
-        </div>
+        <ReferenceCodeSelect
+          id="termCode"
+          label="Payment Terms"
+          placeholder="Select payment terms"
+          options={termOptions}
+          value={termCode}
+          onValueChange={setTermCode}
+        />
+        <ReferenceCodeSelect
+          id="territoryCode"
+          label="Territory"
+          placeholder="Select a territory"
+          options={territoryOptions}
+          value={territoryCode}
+          onValueChange={setTerritoryCode}
+        />
       </FormSection>
 
       <Separator />

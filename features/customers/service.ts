@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
+import { validateReferenceCodes } from '@/features/reference-codes/service';
 import { customers, shipToAddresses } from './schema';
 import {
     findCustomerByNumber,
@@ -43,6 +44,15 @@ export async function createCustomerRecord(
         };
     }
 
+    const codeError = await validateReferenceCodes(input);
+    if (codeError) {
+        return {
+            success: false as const,
+            error: codeError,
+            invalidInput: true as const,
+        };
+    }
+
     await db.insert(customers).values({
         customerNumber: input.customerNumber,
         customerName: input.customerName,
@@ -77,6 +87,15 @@ export async function updateCustomerRecord(
     const existing = await findCustomerByNumber(customerNumber);
     if (!existing) {
         return { success: false as const, error: 'Customer not found.' };
+    }
+
+    const codeError = await validateReferenceCodes(input, existing);
+    if (codeError) {
+        return {
+            success: false as const,
+            error: codeError,
+            invalidInput: true as const,
+        };
     }
 
     await db

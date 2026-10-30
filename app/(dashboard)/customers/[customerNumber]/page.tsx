@@ -9,6 +9,10 @@ import {
 } from '@/features/customers/queries';
 import { getInvoicesByCustomer } from '@/features/invoices/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
+import {
+  getTermOptions,
+  getTerritoryOptions,
+} from '@/features/reference-codes/queries';
 import { PurchaseHistory } from '@/features/customers/components/customer-orders';
 import { requirePermission } from '@/lib/auth';
 
@@ -37,6 +41,11 @@ export default async function CustomerDetailPage({
   }
 
   const shipToAddresses = shipToResult.rows;
+
+  const [termOptions, territoryOptions] = await Promise.all([
+    getTermOptions(customer.termCode),
+    getTerritoryOptions(customer.territoryCode),
+  ]);
 
   const customerData = {
     customerNumber: customer.customerNumber,
@@ -83,6 +92,8 @@ export default async function CustomerDetailPage({
           <CustomerForm
             key={String(customer.updatedAt)}
             salespersons={salespersons}
+            termOptions={termOptions}
+            territoryOptions={territoryOptions}
             customer={customerData}
             mode="edit"
             shipToAddresses={shipToAddresses}

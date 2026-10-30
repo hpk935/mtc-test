@@ -3,11 +3,19 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getSalespersons } from '@/features/customers/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
+import {
+  getTermOptions,
+  getTerritoryOptions,
+} from '@/features/reference-codes/queries';
 import { requireAdmin } from '@/lib/auth';
 
 export default async function NewCustomerPage() {
   await requireAdmin();
-  const salespersons = await getSalespersons();
+  const [salespersons, termOptions, territoryOptions] = await Promise.all([
+    getSalespersons(),
+    getTermOptions(),
+    getTerritoryOptions(),
+  ]);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -23,7 +31,11 @@ export default async function NewCustomerPage() {
           Set up a new customer account
         </p>
       </div>
-      <CustomerForm salespersons={salespersons} />
+      <CustomerForm
+        salespersons={salespersons}
+        termOptions={termOptions}
+        territoryOptions={territoryOptions}
+      />
     </div>
   );
 }

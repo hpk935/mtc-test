@@ -6,6 +6,7 @@ loadEnvConfig(process.cwd());
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { ensureReferenceCodes } from './ensure-reference-codes';
 import type { NewOrder } from '../../features/orders/types';
 
 const CSV_PATH = resolve(
@@ -477,6 +478,8 @@ async function main() {
         }
         console.log(`    ... and ${skipped.length - 20} more`);
     }
+
+    await ensureReferenceCodes(valid, { dryRun: isDryRun });
 
     if (isDryRun) {
         console.log('\n  Dry run — no database changes made.');

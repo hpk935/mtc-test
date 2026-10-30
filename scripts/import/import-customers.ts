@@ -6,6 +6,7 @@ loadEnvConfig(process.cwd());
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { ensureReferenceCodes } from './ensure-reference-codes';
 import type { AccountStatus } from '../../features/customers/constants';
 import type { NewCustomer } from '../../features/customers/types';
 
@@ -472,6 +473,8 @@ async function main() {
 
     // Collect salesperson codes
     const salespersonCodes = valid.map((r) => r.salespersonCode as string);
+
+    await ensureReferenceCodes(valid, { dryRun: isDryRun });
 
     if (isDryRun) {
         console.log('\n  Dry run — no database changes made.');

@@ -26,14 +26,6 @@ import { getMtdRange, getPeriodRange, getYtdRange } from '../service';
 // Shared filter helpers
 // -----------------------------------------------------------------------------
 
-export async function getDistinctTerritories(): Promise<string[]> {
-    const rows = await db
-        .selectDistinct({ code: customers.territoryCode })
-        .from(customers)
-        .orderBy(asc(customers.territoryCode));
-    return rows.map((r) => r.code).filter(Boolean);
-}
-
 export async function getActiveSalespersons() {
     return db
         .select({

@@ -8,7 +8,6 @@ import { ReportColumnsFilter } from '@/features/reports/components/report-column
 import { parseVisibleColumns } from '@/features/reports/components/report-columns';
 import {
   getAgingBySalesperson,
-  getInvoiceTerritories,
   getSalespersonOptions,
 } from '@/features/reports/sales/queries';
 import { agingBySalespersonFiltersSchema } from '@/features/reports/sales/validation';
@@ -17,6 +16,7 @@ import {
   AgingBySalespersonTable,
 } from '@/features/reports/sales/components/aging-by-salesperson-table';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { getAllTerritoryCodes } from '@/features/reference-codes/queries';
 
 export default async function AgingBySalespersonReportPage({
   searchParams,
@@ -32,7 +32,7 @@ export default async function AgingBySalespersonReportPage({
 
   const [data, territories, salespeople] = await Promise.all([
     getAgingBySalesperson(filters),
-    getInvoiceTerritories(),
+    getAllTerritoryCodes(),
     getSalespersonOptions(),
   ]);
 

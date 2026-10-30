@@ -3,6 +3,7 @@
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { ensureReferenceCodes } from './ensure-reference-codes';
 import db from '../../lib/db';
 import { users } from '../../features/users/schema';
 import { customers } from '../../features/customers/schema';
@@ -125,8 +126,8 @@ async function seedCustomers() {
         faxNumber: emptyToNull(r.fax_number),
         mainEmail: r.main_email,
         taxId: emptyToNull(r.tax_id),
-        termCode: r.term_code,
-        territoryCode: r.territory_code,
+        termCode: r.term_code || 'N/A',
+        territoryCode: r.territory_code || 'N/A',
         salespersonCode: r.salesperson_code,
         defaultFreightTerm: r.default_freight_term,
         creditBalance: parseMoney(r.credit_balance),
@@ -159,8 +160,8 @@ async function seedOrders() {
         shipToCity: r.ship_to_city,
         shipToStateCode: r.ship_to_state_code,
         shipToPostalCode: r.ship_to_postal_code,
-        termCode: r.term_code,
-        territoryCode: r.territory_code,
+        termCode: r.term_code || 'N/A',
+        territoryCode: r.territory_code || 'N/A',
         salesTaxAmount: parseMoney(r.sales_tax_amount),
         subtotalAmount: parseMoney(r.subtotal_amount),
         freightAmount: parseMoney(r.freight_amount),
@@ -201,8 +202,8 @@ async function seedInvoices() {
             shipToCity: r.ship_to_city,
             shipToStateCode: r.ship_to_state_code,
             shipToPostalCode: r.ship_to_postal_code,
-            termCode: r.term_code,
-            territoryCode: r.territory_code,
+            termCode: r.term_code || 'N/A',
+            territoryCode: r.territory_code || 'N/A',
             salesTaxAmount: parseMoney(r.sales_tax_amount),
             subtotalAmount: parseMoney(r.subtotal_amount),
             freightAmount: parseMoney(r.freight_amount),
@@ -239,6 +240,12 @@ async function main() {
 
     // Insert in dependency order
     await seedSalespersons(salespersonCodes);
+    await ensureReferenceCodes(
+        [...customerRows, ...orderRows, ...invoiceRows].map((r) => ({
+            termCode: r.term_code || 'N/A',
+            territoryCode: r.territory_code || 'N/A',
+        })),
+    );
     await seedCustomers();
     await seedOrders();
     await seedInvoices();

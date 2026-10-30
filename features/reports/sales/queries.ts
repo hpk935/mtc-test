@@ -212,15 +212,6 @@ export type AgingBySalespersonRow = Awaited<
     ReturnType<typeof getAgingBySalesperson>
 >['rows'][number];
 
-/** Distinct territory codes drawn from invoices table. */
-export async function getInvoiceTerritories(): Promise<string[]> {
-    const rows = await db
-        .selectDistinct({ code: invoices.territoryCode })
-        .from(invoices)
-        .orderBy(asc(invoices.territoryCode));
-    return rows.map((r) => r.code).filter(Boolean);
-}
-
 /** Salespeople (active + any with invoice activity) used for filter options. */
 export async function getSalespersonOptions(): Promise<
     Array<{ employeeId: string; name: string }>

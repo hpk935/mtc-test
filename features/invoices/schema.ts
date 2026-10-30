@@ -14,6 +14,7 @@ import { users } from '@/features/users/schema';
 import { customers, shipToAddresses } from '@/features/customers/schema';
 import { orders, orderItems } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
+import { terms, territories } from '@/features/reference-codes/schema';
 import { INVOICE_STATUSES } from './constants';
 
 export const invoiceStatusEnum = pgEnum('invoice_status', INVOICE_STATUSES);
@@ -41,8 +42,12 @@ export const invoices = pgTable('invoices', {
     shipToCity: varchar('ship_to_city', { length: 100 }).notNull(),
     shipToStateCode: varchar('ship_to_state_code', { length: 10 }).notNull(),
     shipToPostalCode: varchar('ship_to_postal_code', { length: 20 }).notNull(),
-    termCode: varchar('term_code', { length: 10 }).notNull(),
-    territoryCode: varchar('territory_code', { length: 20 }).notNull(),
+    termCode: varchar('term_code', { length: 10 })
+        .notNull()
+        .references(() => terms.code),
+    territoryCode: varchar('territory_code', { length: 20 })
+        .notNull()
+        .references(() => territories.code),
     salesTaxAmount: numeric('sales_tax_amount', { precision: 10, scale: 2 })
         .notNull()
         .default('0'),

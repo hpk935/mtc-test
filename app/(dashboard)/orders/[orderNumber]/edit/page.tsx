@@ -3,6 +3,10 @@ import { getSalespersons } from '@/features/customers/queries';
 import { FREIGHT_TERMS } from '@/features/customers/constants';
 import { getOrderForEdit } from '@/features/orders/queries';
 import { OrderForm } from '@/features/orders/components/order-form';
+import {
+  getTermOptions,
+  getTerritoryOptions,
+} from '@/features/reference-codes/queries';
 import { requireAdmin } from '@/lib/auth';
 
 export default async function EditOrderPage({
@@ -21,6 +25,11 @@ export default async function EditOrderPage({
   if (!data) notFound();
   // Only open orders are editable; send anything else back to its detail page.
   if (data.order.orderStatus !== 'open') redirect(`/orders/${orderNumber}`);
+
+  const [termOptions, territoryOptions] = await Promise.all([
+    getTermOptions(data.order.termCode),
+    getTerritoryOptions(data.order.territoryCode),
+  ]);
 
   const initialData = {
     customerNumber: data.order.customerNumber,
@@ -50,6 +59,8 @@ export default async function EditOrderPage({
       </div>
       <OrderForm
         salespersons={salespersons}
+        termOptions={termOptions}
+        territoryOptions={territoryOptions}
         freightTerms={FREIGHT_TERMS}
         orderNumber={orderNumber}
         initialData={initialData}

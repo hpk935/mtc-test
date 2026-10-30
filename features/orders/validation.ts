@@ -24,8 +24,8 @@ export const createOrderSchema = z.object({
     // Optional. Stored as '' until DB columns are made nullable.
     freightTerm: z.string().max(50).optional().default(''),
     shipToId: z.string().min(1, 'Ship-to address is required').max(20),
-    termCode: z.string().max(10).optional().default(''),
-    territoryCode: z.string().max(20).optional().default(''),
+    termCode: z.string().min(1, 'Payment term is required').max(10),
+    territoryCode: z.string().min(1, 'Territory is required').max(20),
     freightAmount: z.coerce
         .number({ message: 'Freight amount must be a number' })
         .min(0, 'Freight amount must be 0 or greater')

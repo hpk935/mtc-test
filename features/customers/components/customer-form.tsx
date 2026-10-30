@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { ReferenceCodeSelect } from '@/features/reference-codes/components/reference-code-select';
+import type { ReferenceCodeOption } from '@/features/reference-codes/types';
 import { createCustomer, updateCustomer } from '../actions';
 import { ACCOUNT_STATUSES } from '../constants';
 import { ShipToList } from './ship-to-list';
@@ -62,6 +64,8 @@ interface CustomerData {
 
 interface CustomerFormProps {
   salespersons: Salesperson[];
+  termOptions: ReferenceCodeOption[];
+  territoryOptions: ReferenceCodeOption[];
   customer?: CustomerData;
   mode?: 'create' | 'edit';
   shipToAddresses?: ShipToAddress[];
@@ -100,6 +104,8 @@ const initialState: ActionResult = { success: false, error: '' };
 
 export function CustomerForm({
   salespersons,
+  termOptions,
+  territoryOptions,
   customer,
   mode = 'create',
   shipToAddresses,
@@ -628,32 +634,24 @@ export function CustomerForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="termCode">
-            Payment Terms <OptionalTag />
-          </Label>
-          <Input
-            id="termCode"
-            name="termCode"
-            placeholder="e.g. 30, 60, CH"
-            value={formValues.termCode}
-            onChange={handleChange}
-            maxLength={10}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="territoryCode">
-            Territory <OptionalTag />
-          </Label>
-          <Input
-            id="territoryCode"
-            name="territoryCode"
-            placeholder="e.g. TX-10"
-            value={formValues.territoryCode}
-            onChange={handleChange}
-            maxLength={20}
-          />
-        </div>
+        <ReferenceCodeSelect
+          id="termCode"
+          name="termCode"
+          label="Payment Terms"
+          placeholder="Select payment terms"
+          options={termOptions}
+          value={formValues.termCode}
+          onValueChange={(v) => handleSelectChange('termCode', v)}
+        />
+        <ReferenceCodeSelect
+          id="territoryCode"
+          name="territoryCode"
+          label="Territory"
+          placeholder="Select a territory"
+          options={territoryOptions}
+          value={formValues.territoryCode}
+          onValueChange={(v) => handleSelectChange('territoryCode', v)}
+        />
         <div className="space-y-2">
           <Label htmlFor="defaultFreightTerm">
             Freight Term <OptionalTag />

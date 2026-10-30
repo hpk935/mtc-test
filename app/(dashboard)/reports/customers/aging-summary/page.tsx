@@ -11,7 +11,6 @@ import { parseVisibleColumns } from '@/features/reports/components/report-column
 import {
   getActiveSalespersons,
   getAgingSummary,
-  getDistinctTerritories,
 } from '@/features/reports/customers/queries';
 import { agingSummaryFiltersSchema } from '@/features/reports/customers/validation';
 import {
@@ -20,6 +19,7 @@ import {
 } from '@/features/reports/customers/components/aging-summary-table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { findCustomerByNumber } from '@/features/customers/queries';
+import { getAllTerritoryCodes } from '@/features/reference-codes/queries';
 
 export default async function AgingSummaryReportPage({
   searchParams,
@@ -33,7 +33,7 @@ export default async function AgingSummaryReportPage({
   const [data, salespersons, territories, initialCustomer] = await Promise.all([
     getAgingSummary(filters),
     getActiveSalespersons(),
-    getDistinctTerritories(),
+    getAllTerritoryCodes(),
     filters.customerNumber
       ? findCustomerByNumber(filters.customerNumber)
       : Promise.resolve(null),
