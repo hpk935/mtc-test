@@ -1,4 +1,9 @@
 import { z } from 'zod/v4';
+import {
+    isValidPostalCode,
+    normalizePostalCode,
+    POSTAL_CODE_MESSAGE,
+} from '@/lib/postal';
 import { PO_STATUSES, VENDOR_TYPES } from './constants';
 
 const trimmed = (max: number) => z.string().trim().max(max);
@@ -30,12 +35,16 @@ const optionalPhoneSchema = z
         message: PHONE_MESSAGE,
     });
 
-const POSTAL_MESSAGE =
-    'Postal code must contain 3–10 digits, no spaces or symbols';
+// Postal code: US ZIP (+4 optional) or international, see lib/postal.
 const requiredPostalSchema = z
     .string()
-    .min(1, 'Postal code is required')
-    .regex(/^\d{3,10}$/, POSTAL_MESSAGE);
+    .transform(normalizePostalCode)
+    .pipe(
+        z
+            .string()
+            .min(1, 'Postal code is required')
+            .refine(isValidPostalCode, POSTAL_CODE_MESSAGE),
+    );
 
 const optionalIsoDateSchema = z
     .string()
@@ -80,6 +89,40 @@ export type CreateVendorInput = z.infer<typeof createVendorSchema>;
 
 export const updateVendorSchema = createVendorSchema;
 export type UpdateVendorInput = z.infer<typeof updateVendorSchema>;
+
+// Imported vendors can have blank or legacy-format contact and address values.
+// An unchanged stored value is accepted as-is so the rest of the record can
+// still be edited; a changed value must pass the normal rules.
+export const LEGACY_VENDOR_FIELDS = [
+    'address1',
+    'city',
+    'state',
+    'zip',
+    'phone',
+    'fax',
+    'contactName',
+] as const;
+
+export type LegacyVendorField = (typeof LEGACY_VENDOR_FIELDS)[number];
+
+export function updateVendorSchemaFor(
+    stored: Record<LegacyVendorField, string | null>,
+) {
+    const shape = Object.fromEntries(
+        LEGACY_VENDOR_FIELDS.map((field) => [
+            field,
+            z.union([
+                z.literal(stored[field] ?? ''),
+                createVendorSchema.shape[field],
+            ]),
+        ]),
+    ) as {
+        [F in LegacyVendorField]: z.ZodUnion<
+            [z.ZodLiteral<string>, (typeof createVendorSchema.shape)[F]]
+        >;
+    };
+    return updateVendorSchema.extend(shape);
+}
 
 // Purchase order item (line) — used inside create/update PO payloads.
 export const purchaseOrderItemSchema = z.object({

@@ -142,23 +142,31 @@ const US_POSTAL_STATE_CODES = new Set([
 
 function normalizePostalCode(
     postalCode: string,
+    plus4: string,
     stateCode: string,
     rowId: string,
     warnings: string[],
 ): string {
-    if (!postalCode) return '00000';
+    // Blank stays blank: imports skip form validation, and the edit form
+    // accepts an unchanged blank (see updateShipToSchemaFor).
+    if (!postalCode) return '';
+    let zip = postalCode;
     if (
         /^\d+$/.test(postalCode) &&
         postalCode.length < 5 &&
         US_POSTAL_STATE_CODES.has(stateCode.toUpperCase())
     ) {
-        const padded = postalCode.padStart(5, '0');
+        zip = postalCode.padStart(5, '0');
         warnings.push(
-            `  [${rowId}] postalCode padded: "${postalCode}" → "${padded}"`,
+            `  [${rowId}] postalCode padded: "${postalCode}" → "${zip}"`,
         );
-        return padded;
     }
-    return postalCode;
+    // Append the +4 to 5-digit US zips. Like the zip, it may have lost its
+    // leading zeros in the legacy export ("999" → "0999").
+    if (/^\d{5}$/.test(zip) && /^\d{1,4}$/.test(plus4)) {
+        return `${zip}-${plus4.padStart(4, '0')}`;
+    }
+    return zip;
 }
 
 function stripTrailingComma(value: string): string {
@@ -242,7 +250,7 @@ function readSkippedCsv(): Record<string, string>[] {
     const content = readFileSync(SKIPPED_CSV_PATH, 'utf-8');
     const lines = content.split('\n').filter((l) => l.trim());
     const headers = parseCsvLine(lines[0]);
-    // Skipped CSV columns: CSV Line, Skip Reason, Cust Number, ShiptoAddressNo, LocationName, ShipToStreet, AddressLine2, ShiptoCity, ShiptoState, ShiptoZip, Contact, Phone Number
+    // Skipped CSV columns: CSV Line, Skip Reason, Cust Number, ShiptoAddressNo, LocationName, ShipToStreet, AddressLine2, ShiptoCity, ShiptoState, ShiptoZip, Contact, Phone Number, ShiptoZip4
     const rows: Record<string, string>[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -269,6 +277,7 @@ function readSkippedCsv(): Record<string, string>[] {
             ShiptoCity: row['ShiptoCity'] || '',
             ShiptoState: row['ShiptoState'] || '',
             ShiptoZip: row['ShiptoZip'] || '',
+            ShiptoZip4: row['ShiptoZip4'] || '',
             Contact: row['Contact'] || '',
             'Phone Number': row['Phone Number'] || '',
         });
@@ -401,6 +410,7 @@ function transformRows(
         const cityRaw = r['ShiptoCity']?.trim() || '';
         const stateRaw = r['ShiptoState']?.trim() || '';
         const zipRaw = r['ShiptoZip']?.trim() || '';
+        const zip4Raw = r['ShiptoZip4']?.trim() || '';
         const contactRaw = r['Contact']?.trim() || '';
         const phoneRaw = r['Phone Number']?.trim() || '';
 
@@ -419,18 +429,19 @@ function transformRows(
             );
         }
 
-        // Derive address1: use street, fallback to N/A
-        const address1 = streetRaw || 'N/A';
+        // Address fields stay blank when the legacy row has none
+        const address1 = streetRaw;
 
         // Clean city
-        const city = stripTrailingComma(cityRaw) || 'N/A';
+        const city = stripTrailingComma(cityRaw);
 
         // State
-        const stateCode = stateRaw || 'N/A';
+        const stateCode = stateRaw;
 
         // Normalize postal code
         const postalCode = normalizePostalCode(
             zipRaw,
+            zip4Raw,
             stateRaw,
             rowId,
             warnings,
@@ -803,6 +814,7 @@ async function main() {
                 'ShiptoZip',
                 'Contact',
                 'Phone Number',
+                'ShiptoZip4',
             ];
             const escapeCsv = (val: string) => {
                 if (
@@ -830,6 +842,7 @@ async function main() {
                         s.originalRow['ShiptoZip'] || '',
                         s.originalRow['Contact'] || '',
                         s.originalRow['Phone Number'] || '',
+                        s.originalRow['ShiptoZip4'] || '',
                     ]
                         .map(escapeCsv)
                         .join(','),

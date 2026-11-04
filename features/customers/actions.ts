@@ -7,7 +7,7 @@ import {
     createCustomerWithShipToSchema,
     updateCustomerSchemaFor,
     createShipToSchema,
-    updateShipToSchema,
+    updateShipToSchemaFor,
 } from './validation';
 import {
     createCustomerRecord,
@@ -18,7 +18,7 @@ import {
     updateShipToRecord,
     deleteShipToRecord,
 } from './service';
-import { findCustomerByNumber } from './queries';
+import { findCustomerByNumber, findShipToAddress } from './queries';
 import type { ActionResult } from '@/types';
 
 export async function createCustomer(
@@ -176,8 +176,13 @@ export async function updateShipTo(
         };
     }
 
+    const existing = await findShipToAddress(shipToId);
+    if (!existing) {
+        return { success: false, error: 'Shipping address not found.' };
+    }
+
     const raw = Object.fromEntries(formData);
-    const parsed = updateShipToSchema.safeParse(raw);
+    const parsed = updateShipToSchemaFor(existing).safeParse(raw);
 
     if (!parsed.success) {
         const firstError = parsed.error.issues[0]?.message;

@@ -22,8 +22,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  POSTAL_CODE_HTML_PATTERN,
+  POSTAL_CODE_MAX_LENGTH,
+  sanitizePostalCodeInput,
+} from '@/lib/postal';
 import { createShipTo, updateShipTo, deleteShipTo } from '../actions';
 import { LOCATION_STATUSES } from '../constants';
+import type { LegacyShipToField } from '../validation';
 import type { ShipToAddress } from '../types';
 import type { ActionResult } from '@/types';
 
@@ -71,6 +77,12 @@ export function ShipToForm({
 
   const [formValues, setFormValues] = useState(buildValues);
 
+  // Imported addresses can have blank or legacy-format values. Leave unchanged
+  // ones to the server, which accepts them as-is, instead of letting the
+  // browser block the save; a changed value must pass the checks.
+  const mustCheck = (name: LegacyShipToField) =>
+    !isEdit || formValues[name] !== (address?.[name] ?? '');
+
   useEffect(() => {
     if (open) setFormValues(buildValues());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,10 +92,12 @@ export function ShipToForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    const digitsOnlyFields = ['mainPhone', 'postalCode'];
-    const next = digitsOnlyFields.includes(name)
-      ? value.replace(/\D/g, '')
-      : value;
+    const next =
+      name === 'mainPhone'
+        ? value.replace(/\D/g, '')
+        : name === 'postalCode'
+          ? sanitizePostalCodeInput(value)
+          : value;
     setFormValues((prev) => ({ ...prev, [name]: next }));
   };
 
@@ -168,7 +182,7 @@ export function ShipToForm({
                 placeholder="Street address"
                 value={formValues.address1}
                 onChange={handleChange}
-                required
+                required={mustCheck('address1')}
                 maxLength={255}
               />
             </div>
@@ -197,7 +211,7 @@ export function ShipToForm({
                   name="city"
                   value={formValues.city}
                   onChange={handleChange}
-                  required
+                  required={mustCheck('city')}
                   maxLength={100}
                 />
               </div>
@@ -210,22 +224,25 @@ export function ShipToForm({
                     placeholder="CA"
                     value={formValues.stateCode}
                     onChange={handleChange}
-                    required
+                    required={mustCheck('stateCode')}
                     maxLength={10}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="postalCode">Zip Code</Label>
+                  <Label htmlFor="postalCode">ZIP / Postal Code</Label>
                   <Input
                     id="postalCode"
                     name="postalCode"
-                    inputMode="numeric"
-                    pattern="\d*"
-                    placeholder="90001"
+                    pattern={
+                      mustCheck('postalCode')
+                        ? POSTAL_CODE_HTML_PATTERN
+                        : undefined
+                    }
+                    placeholder="90001 or 90001-1234"
                     value={formValues.postalCode}
                     onChange={handleChange}
-                    required
-                    maxLength={10}
+                    required={mustCheck('postalCode')}
+                    maxLength={POSTAL_CODE_MAX_LENGTH}
                   />
                 </div>
               </div>
@@ -260,7 +277,7 @@ export function ShipToForm({
                   name="mainPhone"
                   type="tel"
                   inputMode="numeric"
-                  pattern="\d*"
+                  pattern={mustCheck('mainPhone') ? '\\d*' : undefined}
                   placeholder="5551234567"
                   value={formValues.mainPhone}
                   onChange={handleChange}

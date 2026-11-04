@@ -1,31 +1,23 @@
 // scripts/import/import-vendors.ts — Import legacy vendor data from CSV
 // Run with: npx tsx scripts/import/import-vendors.ts [--limit N] [--dry-run]
 //
-// Vendor.csv is headerless. Columns (0-indexed):
-//   0  vendorCode
-//   1  name
-//   2  address1
-//   3  address2
-//   4  city
-//   5  state
-//   6  zip
-//   7  phone
-//   8  (unused)
-//   9  fax
-//   10 accountNumber
-//   11 contactName
-//   12 taxId
-//   13 dateAdded (MM/DD/YYYY hh:mm:ss)
-//   14 (unused flag)
-//   15 (unused)
-//   16 send1099 (Y/N)
-//   17 vendorType (CS/CO)
-//   18 (unused category code)
-//   19 (unused code)
-//   20 paymentTerms
-//   21 glAccountCode
-//   22 (unused)
-//   23 inactive flag (0=active, 1=inactive) — inverted into isActive
+// Reads data/new_data/Vendor.csv. Columns are looked up by header name:
+//   Vendor_number → vendorCode
+//   Name          → name
+//   Address1/2    → address1/address2
+//   City, State   → city, state
+//   Zip_Code      → zip (with Zip_Code4 appended as ZIP+4 when present)
+//   Phone, Fax    → phone, fax
+//   Acct_ID       → accountNumber
+//   Contact       → contactName
+//   Federal_ID    → taxId
+//   Date_Opened   → dateAdded (MM/DD/YY[YY] hh:mm:ss)
+//   1099          → send1099 (Y/N)
+//   APType        → vendorType (CS/CO)
+//   TermsCode     → paymentTerms
+//   AccountNo     → glAccountCode
+//   Delete        → inactive flag (0=active, 1=inactive) — inverted into isActive
+// Unused: Ext, Alt_Sequence, Hold_Invoices, DistCode, PaymentGroup
 
 import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
@@ -35,7 +27,32 @@ import { resolve } from 'path';
 import type { NewVendor } from '../../features/vendors/types';
 import type { VendorType } from '../../features/vendors/constants';
 
-const CSV_PATH = resolve(__dirname, '../../data/Vendor.csv');
+const CSV_PATH = resolve(__dirname, '../../data/new_data/Vendor.csv');
+
+const COLUMNS = [
+    'Vendor_number',
+    'Name',
+    'Address1',
+    'Address2',
+    'City',
+    'State',
+    'Zip_Code',
+    'Zip_Code4',
+    'Phone',
+    'Fax',
+    'Acct_ID',
+    'Contact',
+    'Federal_ID',
+    'Date_Opened',
+    '1099',
+    'APType',
+    'TermsCode',
+    'AccountNo',
+    'Delete',
+] as const;
+
+type Column = (typeof COLUMNS)[number];
+type CsvRow = Record<Column, string>;
 
 // --- CLI ---
 
@@ -93,9 +110,22 @@ function parseCsv(text: string): string[][] {
     return rows;
 }
 
-function readCsv(): string[][] {
-    const text = readFileSync(CSV_PATH, 'utf-8');
-    return parseCsv(text);
+function readCsv(): CsvRow[] {
+    const text = readFileSync(CSV_PATH, 'utf-8').replace(/^﻿/, '');
+    const [header, ...rows] = parseCsv(text);
+    const headerIndex = new Map(header.map((h, i) => [h.trim(), i]));
+
+    const missing = COLUMNS.filter((c) => !headerIndex.has(c));
+    if (missing.length > 0) {
+        throw new Error(`Vendor.csv is missing columns: ${missing.join(', ')}`);
+    }
+
+    return rows.map(
+        (r) =>
+            Object.fromEntries(
+                COLUMNS.map((c) => [c, r[headerIndex.get(c)!] ?? '']),
+            ) as CsvRow,
+    );
 }
 
 function cleanStr(v: string | undefined): string {
@@ -152,6 +182,13 @@ function parseDateAdded(raw: string | undefined): string | null {
     return `${year}-${month}-${day}`;
 }
 
+/** Zip_Code + Zip_Code4 → "12345-6789", or just the 5-digit zip. */
+function joinZip(zip: string, plus4: string): string {
+    const z = cleanStr(zip);
+    const p = cleanStr(plus4);
+    return z && p ? `${z}-${p}` : z;
+}
+
 function parseYesNo(raw: string | undefined): boolean {
     return cleanStr(raw).toUpperCase() === 'Y';
 }
@@ -169,7 +206,7 @@ interface SkippedRow {
     reason: string;
 }
 
-function transformRows(rows: string[][]) {
+function transformRows(rows: CsvRow[]) {
     const valid: NewVendor[] = [];
     const skipped: SkippedRow[] = [];
     const warnings: string[] = [];
@@ -177,11 +214,11 @@ function transformRows(rows: string[][]) {
 
     for (let i = 0; i < rows.length; i++) {
         const r = rows[i];
-        const vendorCode = cleanStr(r[0]);
+        const vendorCode = cleanStr(r.Vendor_number);
 
         if (!vendorCode) {
             skipped.push({
-                line: i + 1,
+                line: i + 2,
                 vendorCode: '(empty)',
                 reason: 'Missing vendor code',
             });
@@ -190,7 +227,7 @@ function transformRows(rows: string[][]) {
 
         if (seen.has(vendorCode)) {
             skipped.push({
-                line: i + 1,
+                line: i + 2,
                 vendorCode,
                 reason: 'Duplicate vendor code in CSV',
             });
@@ -198,17 +235,17 @@ function transformRows(rows: string[][]) {
         }
         seen.add(vendorCode);
 
-        const name = cleanStr(r[1]);
+        const name = cleanStr(r.Name);
         if (!name) {
             skipped.push({
-                line: i + 1,
+                line: i + 2,
                 vendorCode,
                 reason: 'Missing vendor name',
             });
             continue;
         }
 
-        const inactiveFlag = cleanStr(r[23]);
+        const inactiveFlag = cleanStr(r.Delete);
         const isActive = inactiveFlag !== '1';
 
         valid.push({
@@ -221,51 +258,63 @@ function transformRows(rows: string[][]) {
             ),
             name: truncate(name, 255, 'name', vendorCode, warnings),
             address1: truncateOrNull(
-                r[2],
+                r.Address1,
                 255,
                 'address1',
                 vendorCode,
                 warnings,
             ),
             address2: truncateOrNull(
-                r[3],
+                r.Address2,
                 255,
                 'address2',
                 vendorCode,
                 warnings,
             ),
-            city: truncateOrNull(r[4], 100, 'city', vendorCode, warnings),
-            state: truncateOrNull(r[5], 10, 'state', vendorCode, warnings),
-            zip: truncateOrNull(r[6], 20, 'zip', vendorCode, warnings),
-            phone: truncateOrNull(r[7], 20, 'phone', vendorCode, warnings),
-            fax: truncateOrNull(r[9], 20, 'fax', vendorCode, warnings),
+            city: truncateOrNull(r.City, 100, 'city', vendorCode, warnings),
+            state: truncateOrNull(r.State, 10, 'state', vendorCode, warnings),
+            zip: truncateOrNull(
+                joinZip(r.Zip_Code, r.Zip_Code4),
+                20,
+                'zip',
+                vendorCode,
+                warnings,
+            ),
+            phone: truncateOrNull(r.Phone, 20, 'phone', vendorCode, warnings),
+            fax: truncateOrNull(r.Fax, 20, 'fax', vendorCode, warnings),
             accountNumber: truncateOrNull(
-                r[10],
+                r.Acct_ID,
                 50,
                 'accountNumber',
                 vendorCode,
                 warnings,
             ),
             contactName: truncateOrNull(
-                r[11],
+                r.Contact,
                 100,
                 'contactName',
                 vendorCode,
                 warnings,
             ),
-            taxId: truncateOrNull(r[12], 20, 'taxId', vendorCode, warnings),
-            dateAdded: parseDateAdded(r[13]),
-            send1099: parseYesNo(r[16]),
-            vendorType: parseVendorType(r[17]),
+            taxId: truncateOrNull(
+                r.Federal_ID,
+                20,
+                'taxId',
+                vendorCode,
+                warnings,
+            ),
+            dateAdded: parseDateAdded(r.Date_Opened),
+            send1099: parseYesNo(r['1099']),
+            vendorType: parseVendorType(r.APType),
             paymentTerms: truncateOrNull(
-                r[20],
+                r.TermsCode,
                 10,
                 'paymentTerms',
                 vendorCode,
                 warnings,
             ),
             glAccountCode: truncateOrNull(
-                r[21],
+                r.AccountNo,
                 10,
                 'glAccountCode',
                 vendorCode,

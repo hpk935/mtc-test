@@ -11,7 +11,7 @@ import {
     createVendorSchema,
     receivePurchaseOrderSchema,
     updatePurchaseOrderDraftSchema,
-    updateVendorSchema,
+    updateVendorSchemaFor,
 } from './validation';
 import {
     canTransitionTo,
@@ -88,7 +88,26 @@ export async function updateVendor(
 ): Promise<ActionResult> {
     await requireAdmin();
 
-    const parsed = updateVendorSchema.safeParse(
+    const [existing] = await db
+        .select({
+            id: vendors.id,
+            vendorCode: vendors.vendorCode,
+            address1: vendors.address1,
+            city: vendors.city,
+            state: vendors.state,
+            zip: vendors.zip,
+            phone: vendors.phone,
+            fax: vendors.fax,
+            contactName: vendors.contactName,
+        })
+        .from(vendors)
+        .where(eq(vendors.id, id))
+        .limit(1);
+    if (!existing) {
+        return { success: false, error: 'Vendor not found.' };
+    }
+
+    const parsed = updateVendorSchemaFor(existing).safeParse(
         Object.fromEntries(formData.entries()),
     );
     if (!parsed.success) {
@@ -96,15 +115,6 @@ export async function updateVendor(
             success: false,
             error: firstIssue(parsed.error.issues, 'Invalid vendor data.'),
         };
-    }
-
-    const [existing] = await db
-        .select({ id: vendors.id, vendorCode: vendors.vendorCode })
-        .from(vendors)
-        .where(eq(vendors.id, id))
-        .limit(1);
-    if (!existing) {
-        return { success: false, error: 'Vendor not found.' };
     }
 
     if (parsed.data.vendorCode !== existing.vendorCode) {
@@ -121,20 +131,21 @@ export async function updateVendor(
         }
     }
 
+    // `|| null`: an unchanged blank legacy value arrives as ''; keep it null.
     await db
         .update(vendors)
         .set({
             vendorCode: parsed.data.vendorCode,
             name: parsed.data.name,
-            address1: parsed.data.address1 ?? null,
+            address1: parsed.data.address1 || null,
             address2: parsed.data.address2 ?? null,
-            city: parsed.data.city ?? null,
-            state: parsed.data.state ?? null,
-            zip: parsed.data.zip ?? null,
-            phone: parsed.data.phone ?? null,
-            fax: parsed.data.fax ?? null,
+            city: parsed.data.city || null,
+            state: parsed.data.state || null,
+            zip: parsed.data.zip || null,
+            phone: parsed.data.phone || null,
+            fax: parsed.data.fax || null,
             accountNumber: parsed.data.accountNumber ?? null,
-            contactName: parsed.data.contactName ?? null,
+            contactName: parsed.data.contactName || null,
             taxId: parsed.data.taxId ?? null,
             send1099: parsed.data.send1099,
             vendorType: parsed.data.vendorType,

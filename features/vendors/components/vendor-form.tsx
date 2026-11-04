@@ -16,7 +16,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+  isValidPostalCode,
+  POSTAL_CODE_HTML_PATTERN,
+  POSTAL_CODE_MAX_LENGTH,
+  POSTAL_CODE_MESSAGE,
+  sanitizePostalCodeInput,
+} from '@/lib/postal';
 import { createVendor, updateVendor } from '../actions';
+import type { LegacyVendorField } from '../validation';
 import { VENDOR_TYPES, VENDOR_TYPE_LABEL } from '../constants';
 import type { Vendor } from '../types';
 import type { ActionResult } from '@/types';
@@ -49,7 +57,7 @@ function OptionalTag() {
   );
 }
 
-const DIGIT_ONLY_FIELDS = new Set(['phone', 'fax', 'zip']);
+const DIGIT_ONLY_FIELDS = new Set(['phone', 'fax']);
 
 type Props = {
   vendor?: Vendor;
@@ -88,9 +96,20 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
     (k) => values[k] !== initial[k],
   );
 
+  // Imported vendors can have blank or legacy-format contact and address
+  // values. Leave those unchanged ones to the server, which accepts them as-is,
+  // instead of blocking the save here; a changed value must pass the checks.
+  const keepsStoredValue = (name: LegacyVendorField) =>
+    isEdit && values[name] === initial[name];
+  const mustCheck = (name: LegacyVendorField) => !keepsStoredValue(name);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const next = DIGIT_ONLY_FIELDS.has(name) ? value.replace(/\D/g, '') : value;
+    const next = DIGIT_ONLY_FIELDS.has(name)
+      ? value.replace(/\D/g, '')
+      : name === 'zip'
+        ? sanitizePostalCodeInput(value)
+        : value;
     setValues((prev) => ({ ...prev, [name]: next }));
   };
 
@@ -111,29 +130,29 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
       toast.error('Vendor type is required.');
       return { success: false, error: 'Vendor type is required.' };
     }
-    if (!values.contactName.trim()) {
+    if (mustCheck('contactName') && !values.contactName.trim()) {
       toast.error('Contact name is required.');
       return { success: false, error: 'Contact name is required.' };
     }
-    if (!/^\d{7,20}$/.test(values.phone)) {
+    if (mustCheck('phone') && !/^\d{7,20}$/.test(values.phone)) {
       toast.error('Phone must contain 7–20 digits.');
       return { success: false, error: 'Phone is required.' };
     }
-    if (!values.address1.trim()) {
+    if (mustCheck('address1') && !values.address1.trim()) {
       toast.error('Address 1 is required.');
       return { success: false, error: 'Address 1 is required.' };
     }
-    if (!values.city.trim()) {
+    if (mustCheck('city') && !values.city.trim()) {
       toast.error('City is required.');
       return { success: false, error: 'City is required.' };
     }
-    if (!values.state.trim()) {
+    if (mustCheck('state') && !values.state.trim()) {
       toast.error('State is required.');
       return { success: false, error: 'State is required.' };
     }
-    if (!/^\d{3,10}$/.test(values.zip)) {
-      toast.error('Zip must contain 3–10 digits.');
-      return { success: false, error: 'Zip is required.' };
+    if (mustCheck('zip') && !isValidPostalCode(values.zip)) {
+      toast.error(POSTAL_CODE_MESSAGE);
+      return { success: false, error: POSTAL_CODE_MESSAGE };
     }
 
     // Sync checkboxes (radix) into formData
@@ -233,7 +252,7 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
             name="contactName"
             value={values.contactName}
             onChange={handleChange}
-            required
+            required={mustCheck('contactName')}
             maxLength={100}
             placeholder="Full name"
           />
@@ -245,9 +264,9 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
             name="phone"
             value={values.phone}
             onChange={handleChange}
-            required
+            required={mustCheck('phone')}
             inputMode="numeric"
-            pattern="\d*"
+            pattern={mustCheck('phone') ? '\\d*' : undefined}
             maxLength={20}
             placeholder="5551234567"
           />
@@ -262,7 +281,7 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
             value={values.fax}
             onChange={handleChange}
             inputMode="numeric"
-            pattern="\d*"
+            pattern={mustCheck('fax') ? '\\d*' : undefined}
             maxLength={20}
             placeholder="5551234567"
           />
@@ -292,7 +311,7 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
             name="address1"
             value={values.address1}
             onChange={handleChange}
-            required
+            required={mustCheck('address1')}
             maxLength={255}
             placeholder="Street address"
           />
@@ -317,7 +336,7 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
             name="city"
             value={values.city}
             onChange={handleChange}
-            required
+            required={mustCheck('city')}
             maxLength={100}
             placeholder="City"
           />
@@ -329,23 +348,22 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
             name="state"
             value={values.state}
             onChange={handleChange}
-            required
+            required={mustCheck('state')}
             maxLength={10}
             placeholder="e.g. CA"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="zip">Zip</Label>
+          <Label htmlFor="zip">ZIP / Postal Code</Label>
           <Input
             id="zip"
             name="zip"
             value={values.zip}
             onChange={handleChange}
-            required
-            inputMode="numeric"
-            pattern="\d*"
-            maxLength={10}
-            placeholder="12345"
+            required={mustCheck('zip')}
+            pattern={mustCheck('zip') ? POSTAL_CODE_HTML_PATTERN : undefined}
+            maxLength={POSTAL_CODE_MAX_LENGTH}
+            placeholder="12345 or 12345-6789"
           />
         </div>
       </FormSection>

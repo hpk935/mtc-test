@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { todayIso } from '@/lib/dates';
+import {
+  POSTAL_CODE_HTML_PATTERN,
+  POSTAL_CODE_MAX_LENGTH,
+  sanitizePostalCodeInput,
+} from '@/lib/postal';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
@@ -195,12 +200,13 @@ export function CustomerForm({
       'phoneExtension',
       'faxNumber',
       'shipPhone',
-      'billingPostalCode',
-      'shipPostalCode',
     ];
+    const postalFields = ['billingPostalCode', 'shipPostalCode'];
     const next = digitsOnlyFields.includes(name)
       ? value.replace(/\D/g, '')
-      : value;
+      : postalFields.includes(name)
+        ? sanitizePostalCodeInput(value)
+        : value;
     setFormValues((prev) => ({ ...prev, [name]: next }));
   };
 
@@ -400,13 +406,16 @@ export function CustomerForm({
           <Input
             id="billingPostalCode"
             name="billingPostalCode"
-            inputMode="numeric"
-            pattern={keepsStoredValue('billingPostalCode') ? undefined : '\\d*'}
-            placeholder="e.g. 75165"
+            pattern={
+              keepsStoredValue('billingPostalCode')
+                ? undefined
+                : POSTAL_CODE_HTML_PATTERN
+            }
+            placeholder="e.g. 75165 or 75165-1234"
             value={formValues.billingPostalCode}
             onChange={handleChange}
             required
-            maxLength={10}
+            maxLength={POSTAL_CODE_MAX_LENGTH}
           />
         </div>
         <div className="space-y-2">
@@ -513,13 +522,12 @@ export function CustomerForm({
                   <Input
                     id="shipPostalCode"
                     name="shipPostalCode"
-                    inputMode="numeric"
-                    pattern="\d*"
-                    placeholder="e.g. 75165"
+                    pattern={POSTAL_CODE_HTML_PATTERN}
+                    placeholder="e.g. 75165 or 75165-1234"
                     value={formValues.shipPostalCode}
                     onChange={handleChange}
                     required
-                    maxLength={10}
+                    maxLength={POSTAL_CODE_MAX_LENGTH}
                   />
                 </div>
                 <div className="space-y-2">

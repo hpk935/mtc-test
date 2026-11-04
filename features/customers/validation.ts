@@ -1,4 +1,9 @@
 import { z } from 'zod/v4';
+import {
+    isValidPostalCode,
+    normalizePostalCode,
+    POSTAL_CODE_MESSAGE,
+} from '@/lib/postal';
 import { ACCOUNT_STATUSES, LOCATION_STATUSES } from './constants';
 
 const isoDateSchema = z
@@ -35,21 +40,24 @@ const optionalExtensionSchema = z
         message: 'Extension must contain digits only',
     });
 
-// Postal code: digits only, 3–10 digits.
-const POSTAL_MESSAGE =
-    'Postal code must contain 3–10 digits, no spaces or symbols';
-
+// Postal code: US ZIP (+4 optional) or international, see lib/postal.
 const requiredPostalSchema = z
     .string()
-    .min(1, 'Postal code is required')
-    .regex(/^\d{3,10}$/, POSTAL_MESSAGE);
+    .transform(normalizePostalCode)
+    .pipe(
+        z
+            .string()
+            .min(1, 'Postal code is required')
+            .refine(isValidPostalCode, POSTAL_CODE_MESSAGE),
+    );
 
 const optionalPostalSchema = z
     .string()
     .optional()
     .default('')
-    .refine((v) => v === '' || /^\d{3,10}$/.test(v), {
-        message: POSTAL_MESSAGE,
+    .transform(normalizePostalCode)
+    .refine((v) => v === '' || isValidPostalCode(v), {
+        message: POSTAL_CODE_MESSAGE,
     });
 
 export const createCustomerSchema = z.object({
@@ -183,3 +191,35 @@ export const updateShipToSchema = createShipToSchema.omit({
 });
 
 export type UpdateShipToInput = z.infer<typeof updateShipToSchema>;
+
+// Imported ship-to addresses can have blank or legacy-format address values.
+// As with customers, an unchanged stored value is accepted as-is; a changed
+// value must pass the normal rules.
+const LEGACY_SHIP_TO_FIELDS = [
+    'address1',
+    'city',
+    'stateCode',
+    'postalCode',
+    'mainPhone',
+] as const;
+
+export type LegacyShipToField = (typeof LEGACY_SHIP_TO_FIELDS)[number];
+
+export function updateShipToSchemaFor(
+    stored: Record<LegacyShipToField, string | null>,
+) {
+    const shape = Object.fromEntries(
+        LEGACY_SHIP_TO_FIELDS.map((field) => [
+            field,
+            z.union([
+                z.literal(stored[field] ?? ''),
+                updateShipToSchema.shape[field],
+            ]),
+        ]),
+    ) as {
+        [F in LegacyShipToField]: z.ZodUnion<
+            [z.ZodLiteral<string>, (typeof updateShipToSchema.shape)[F]]
+        >;
+    };
+    return updateShipToSchema.extend(shape);
+}

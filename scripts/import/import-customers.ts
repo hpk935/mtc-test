@@ -143,23 +143,29 @@ const US_POSTAL_STATE_CODES = new Set([
 
 function normalizePostalCode(
     postalCode: string,
+    plus4: string,
     stateCode: string,
     customerNumber: string,
     warnings: string[],
 ): string {
     if (!postalCode) return '00000';
+    let zip = postalCode;
     if (
         /^\d+$/.test(postalCode) &&
         postalCode.length < 5 &&
         US_POSTAL_STATE_CODES.has(stateCode.toUpperCase())
     ) {
-        const padded = postalCode.padStart(5, '0');
+        zip = postalCode.padStart(5, '0');
         warnings.push(
-            `  [${customerNumber}] billingPostalCode padded: "${postalCode}" → "${padded}"`,
+            `  [${customerNumber}] billingPostalCode padded: "${postalCode}" → "${zip}"`,
         );
-        return padded;
     }
-    return postalCode;
+    // Append the +4 to 5-digit US zips. Like the zip, it may have lost its
+    // leading zeros in the legacy export ("999" → "0999").
+    if (/^\d{5}$/.test(zip) && /^\d{1,4}$/.test(plus4)) {
+        return `${zip}-${plus4.padStart(4, '0')}`;
+    }
+    return zip;
 }
 
 function readCsv(): Record<string, string>[] {
@@ -289,6 +295,7 @@ function transformRows(rows: Record<string, string>[]) {
         const billingStateCode = r['State/Province']?.trim() || 'N/A';
         const billingPostalCode = normalizePostalCode(
             r['Postal Code']?.trim() ?? '',
+            r['ZipCode4']?.trim() ?? '',
             billingStateCode,
             customerNumber,
             warnings,
