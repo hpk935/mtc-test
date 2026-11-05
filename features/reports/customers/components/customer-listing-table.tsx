@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatPhone } from '@/lib/utils';
 import {
   isColumnVisible,
   type ReportColumn,
@@ -39,14 +39,6 @@ const STATUS_LABEL: Record<string, string> = {
   inactive: 'Inactive',
   on_hold: 'On Hold',
 };
-
-function formatPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  return phone;
-}
 
 export function CustomerListingTable({
   rows,

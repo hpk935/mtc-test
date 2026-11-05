@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { CustomerListItem } from '@/features/customers/queries';
+import { formatPhone } from '@/lib/utils';
 
 const STATUS_VARIANT: Record<string, 'success' | 'secondary' | 'warning'> = {
   active: 'success',
@@ -22,14 +23,6 @@ const STATUS_LABEL: Record<string, string> = {
   inactive: 'Inactive',
   on_hold: 'On Hold',
 };
-
-function formatPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  return phone;
-}
 
 interface CustomerTableProps {
   customers: CustomerListItem[];

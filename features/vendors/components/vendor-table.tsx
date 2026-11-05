@@ -11,15 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { VENDOR_TYPE_LABEL } from '../constants';
 import type { VendorListItem } from '../queries';
-
-function formatPhone(phone: string | null): string {
-  if (!phone) return '';
-  const digits = phone.replace(/\D/g, '');
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  return phone;
-}
+import { formatPhone } from '@/lib/utils';
 
 export function VendorTable({ vendors }: { vendors: VendorListItem[] }) {
   if (vendors.length === 0) {

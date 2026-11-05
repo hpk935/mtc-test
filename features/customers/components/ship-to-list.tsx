@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, formatPhone } from '@/lib/utils';
 import {
   ChevronLeft,
   ChevronRight,
@@ -168,7 +168,9 @@ export function ShipToList({ addresses, customerNumber }: ShipToListProps) {
                   {addr.contactName && (
                     <p className="text-muted-foreground mt-0.5 text-xs">
                       {addr.contactName}
-                      {addr.mainPhone ? ` · ${addr.mainPhone}` : ''}
+                      {addr.mainPhone
+                        ? ` · ${formatPhone(addr.mainPhone)}`
+                        : ''}
                     </p>
                   )}
                 </div>

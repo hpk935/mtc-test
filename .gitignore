@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -46,6 +47,13 @@ todo.md
 
 # local-only tests (vitest is installed with --no-save)
 /vitest.config.ts
-/tests/**/*.test.ts
-/tests/**/*.test.tsx
-/tests/helpers/
+/tests/
+
+# local-only dev script (seeds the DEV user for the AUTH_DISABLED stub session)
+/scripts/seed-dev-user.ts
+
+# local-only: one-time legacy data migration scripts and their notes
+/scripts/import/
+
+# local-only: issue tracker / migration audit notes (see docs/agents/issue-tracker.md)
+/.scratch/
