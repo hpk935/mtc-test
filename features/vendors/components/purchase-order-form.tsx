@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import { createPurchaseOrder, updatePurchaseOrderDraft } from '../actions';
 import type { ActionResult } from '@/types';
+import { navigationProgress } from '@/lib/navigation-progress';
 
 type VendorOption = { id: number; vendorCode: string; name: string };
 
@@ -231,6 +232,7 @@ export function PurchaseOrderForm({
         isEdit && purchaseOrder
           ? purchaseOrder.id
           : (result as { data: { id: number } }).data.id;
+      navigationProgress.start('page');
       window.location.href = `/purchase-orders/${id}`;
     } else {
       toast.error(result.error);

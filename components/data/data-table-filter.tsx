@@ -1,6 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { useAppRouter } from '@/hooks/use-app-router';
 import {
   Select,
   SelectContent,
@@ -27,7 +28,7 @@ export function DataTableFilter({
   defaultValue,
   allLabel = 'All',
 }: DataTableFilterProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentValue = searchParams.get(paramName) ?? defaultValue ?? 'all';

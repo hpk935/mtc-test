@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/hooks/use-app-router';
 import type { ComponentProps, MouseEvent } from 'react';
 import { TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -26,7 +26,7 @@ export function ClickableRow({
   onAuxClick,
   ...props
 }: ClickableRowProps) {
-  const router = useRouter();
+  const router = useAppRouter();
 
   function shouldIgnore(e: MouseEvent<HTMLTableRowElement>) {
     if (e.defaultPrevented) return true;

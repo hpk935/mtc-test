@@ -1,6 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { useAppRouter } from '@/hooks/use-app-router';
 import { useCallback, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,7 @@ export function DataTableSearch({
   placeholder = 'Search...',
   paramName = 'search',
 }: DataTableSearchProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get(paramName) ?? '');

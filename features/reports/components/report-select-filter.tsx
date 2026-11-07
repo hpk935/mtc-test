@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useAppRouter } from '@/hooks/use-app-router';
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ export function ReportSelectFilter({
   includeAll = true,
   className,
 }: ReportSelectFilterProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const current =

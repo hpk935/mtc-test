@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useAppRouter } from '@/hooks/use-app-router';
 import { DatePicker } from '@/components/ui/date-picker';
 
 interface ReportDateInputProps {
@@ -16,7 +17,7 @@ export function ReportDateInput({
   defaultValue,
   className,
 }: ReportDateInputProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const current = searchParams.get(paramName) ?? defaultValue ?? '';

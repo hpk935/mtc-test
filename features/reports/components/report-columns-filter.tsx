@@ -1,7 +1,8 @@
 'use client';
 
 import { Columns3 } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useAppRouter } from '@/hooks/use-app-router';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -30,7 +31,7 @@ export function ReportColumnsFilter({
   paramName = 'cols',
   label = 'Columns',
 }: ReportColumnsFilterProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 

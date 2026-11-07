@@ -28,6 +28,7 @@ import type { LegacyVendorField } from '../validation';
 import { VENDOR_TYPES, VENDOR_TYPE_LABEL } from '../constants';
 import type { Vendor } from '../types';
 import type { ActionResult } from '@/types';
+import { navigationProgress } from '@/lib/navigation-progress';
 
 function FormSection({
   title,
@@ -168,6 +169,7 @@ export function VendorForm({ vendor, mode = 'create', readOnly }: Props) {
     if (result.success) {
       toast.success(isEdit ? 'Vendor updated.' : 'Vendor created.');
       if (!isEdit && 'data' in result) {
+        navigationProgress.start('page');
         window.location.href = `/vendors/${(result.data as { id: number }).id}`;
       }
     } else {

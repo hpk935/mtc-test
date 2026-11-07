@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { getSession } from '@/lib/auth';
+import { NavigationProgress } from '@/components/navigation-progress';
 import { findUserById } from '@/features/users/queries';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -43,8 +45,11 @@ export default async function DashboardLayout({
               <ThemeToggle />
             </div>
           </header>
-          <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0">
+          <main className="relative flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0">
             {children}
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
           </main>
         </SidebarInset>
       </SidebarProvider>
