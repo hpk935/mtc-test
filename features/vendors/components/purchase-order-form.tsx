@@ -2,7 +2,6 @@
 
 import {
   useActionState,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -22,6 +21,7 @@ import { formatCurrency } from '@/lib/utils';
 import { createPurchaseOrder, updatePurchaseOrderDraft } from '../actions';
 import type { ActionResult } from '@/types';
 import { navigationProgress } from '@/lib/navigation-progress';
+import { bestProductMatchIndex } from '@/lib/product-search';
 
 type VendorOption = { id: number; vendorCode: string; name: string };
 
@@ -39,6 +39,21 @@ type ProductResult = {
   description: string;
   landedCost: string;
 };
+
+async function fetchProducts(query: string): Promise<ProductResult[] | null> {
+  const res = await fetch(
+    `/api/products?search=${encodeURIComponent(query)}&pageSize=10`,
+  );
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.success) return null;
+  return (json.data.products as Array<Record<string, unknown>>).map((p) => ({
+    productId: Number(p.productId),
+    itemNumber: String(p.itemNumber),
+    description: String(p.description),
+    landedCost: String((p as { landedCost?: string }).landedCost ?? '0'),
+  }));
+}
 
 type Line = {
   key: string;
@@ -113,61 +128,138 @@ export function PurchaseOrderForm({
   // Product search
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<ProductResult[]>([]);
+  // The query `results` were fetched for, so a Tab pressed before the
+  // debounced search lands doesn't add a product from an older query.
+  const [resultsQuery, setResultsQuery] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [searching, setSearching] = useState(false);
-  const searchRef = useRef<number | null>(null);
+  // Bumped on every search and every pick; a response whose number is no
+  // longer current is dropped.
+  const requestSeq = useRef(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const qtyRefs = useRef(new Map<string, HTMLInputElement>());
 
   useEffect(() => {
-    if (search.trim().length < 2) {
+    const q = search.trim();
+    if (q.length < 2) {
       setResults([]);
+      setResultsQuery('');
+      setHighlightedIndex(-1);
       return;
     }
-    if (searchRef.current) window.clearTimeout(searchRef.current);
-    searchRef.current = window.setTimeout(async () => {
+    const seq = ++requestSeq.current;
+    const timer = window.setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(
-          `/api/products?search=${encodeURIComponent(search.trim())}&pageSize=10`,
-        );
-        const json = await res.json();
-        if (json.success) {
-          setResults(
-            (json.data.products as Array<Record<string, unknown>>).map((p) => ({
-              productId: Number(p.productId),
-              itemNumber: String(p.itemNumber),
-              description: String(p.description),
-              landedCost: String(
-                (p as { landedCost?: string }).landedCost ?? '0',
-              ),
-            })),
-          );
-        }
+        const products = await fetchProducts(q);
+        if (seq !== requestSeq.current || !products) return;
+        setResults(products);
+        setResultsQuery(q);
+        setHighlightedIndex(bestProductMatchIndex(products, q));
       } finally {
-        setSearching(false);
+        if (seq === requestSeq.current) setSearching(false);
       }
     }, 250);
-    return () => {
-      if (searchRef.current) window.clearTimeout(searchRef.current);
-    };
+    return () => window.clearTimeout(timer);
   }, [search]);
 
-  const addLine = useCallback((p: ProductResult) => {
-    setLines((prev) => {
-      if (prev.some((l) => l.productId === p.productId)) return prev;
-      return [
-        ...prev,
-        {
-          key: `new-${Date.now()}-${p.productId}`,
-          productId: p.productId,
-          itemNumber: p.itemNumber,
-          description: p.description,
-          qtyOrdered: 0,
-          unitCost: Number(p.landedCost) > 0 ? p.landedCost : '',
-        },
-      ];
-    });
+  function addLine(p: ProductResult) {
+    const existing = lines.find((l) => l.productId === p.productId);
+    const key = existing?.key ?? `new-${Date.now()}-${p.productId}`;
+    if (!existing) {
+      setLines((prev) =>
+        prev.some((l) => l.productId === p.productId)
+          ? prev
+          : [
+              ...prev,
+              {
+                key,
+                productId: p.productId,
+                itemNumber: p.itemNumber,
+                description: p.description,
+                qtyOrdered: 0,
+                unitCost: Number(p.landedCost) > 0 ? p.landedCost : '',
+              },
+            ],
+      );
+    }
+    requestSeq.current++;
     setSearch('');
     setResults([]);
-  }, []);
+    setResultsQuery('');
+    setHighlightedIndex(-1);
+    setSearching(false);
+    // Jump to the line's Qty (the existing line's, if it was already added).
+    setTimeout(() => qtyRefs.current.get(key)?.focus(), 0);
+  }
+
+  // Tab / Enter in the search box: add the highlighted product, or — if the
+  // results for what's typed haven't arrived yet — search now and add the
+  // best match.
+  async function acceptSearch() {
+    const q = search.trim();
+    if (q.length < 2) return;
+    if (resultsQuery === q) {
+      if (results.length === 0) {
+        toast.error(`No product matches "${q}".`);
+        return;
+      }
+      addLine(results[highlightedIndex >= 0 ? highlightedIndex : 0]);
+      return;
+    }
+    const seq = ++requestSeq.current;
+    setSearching(true);
+    const products = await fetchProducts(q);
+    if (seq !== requestSeq.current) return;
+    setSearching(false);
+    if (!products || products.length === 0) {
+      toast.error(`No product matches "${q}".`);
+      return;
+    }
+    addLine(products[bestProductMatchIndex(products, q)]);
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    switch (e.key) {
+      case 'ArrowDown':
+        if (results.length === 0) return;
+        e.preventDefault();
+        setHighlightedIndex((i) => (i < results.length - 1 ? i + 1 : 0));
+        break;
+      case 'ArrowUp':
+        if (results.length === 0) return;
+        e.preventDefault();
+        setHighlightedIndex((i) => (i > 0 ? i - 1 : results.length - 1));
+        break;
+      case 'Enter':
+        // Never submit the whole form from the search box.
+        e.preventDefault();
+        void acceptSearch();
+        break;
+      case 'Tab':
+        if (e.shiftKey || search.trim().length < 2) return;
+        e.preventDefault();
+        void acceptSearch();
+        break;
+      case 'Escape':
+        if (!search) return;
+        e.preventDefault();
+        setSearch('');
+        break;
+    }
+  }
+
+  function handleUnitCostKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    isLastLine: boolean,
+  ) {
+    // Tabbing forward out of the last line goes back to the search box so
+    // the next product can be added without the mouse.
+    if (e.key === 'Tab' && !e.shiftKey && isLastLine) {
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    }
+  }
 
   const removeLine = (key: string) =>
     setLines((prev) => prev.filter((l) => l.key !== key));
@@ -291,14 +383,21 @@ export function PurchaseOrderForm({
           <div className="relative">
             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
+              ref={searchInputRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search products by item # or description…"
               className="pl-9"
+              role="combobox"
+              aria-expanded={results.length > 0}
+              aria-haspopup="listbox"
+              aria-autocomplete="list"
             />
             {search && (
               <button
                 type="button"
+                tabIndex={-1}
                 onClick={() => setSearch('')}
                 className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2">
                 <X className="size-4" />
@@ -306,13 +405,26 @@ export function PurchaseOrderForm({
             )}
           </div>
           {results.length > 0 && (
-            <div className="bg-popover absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border shadow-md">
-              {results.map((p) => (
+            <div
+              role="listbox"
+              className="bg-popover absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-md border shadow-md">
+              {results.map((p, index) => (
                 <button
                   type="button"
                   key={p.productId}
+                  role="option"
+                  aria-selected={index === highlightedIndex}
+                  tabIndex={-1}
+                  ref={(el) => {
+                    if (el && index === highlightedIndex) {
+                      el.scrollIntoView({ block: 'nearest' });
+                    }
+                  }}
                   onClick={() => addLine(p)}
-                  className="hover:bg-accent flex w-full items-center justify-between gap-4 px-3 py-2 text-left text-sm">
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  className={`flex w-full items-center justify-between gap-4 px-3 py-2 text-left text-sm ${
+                    index === highlightedIndex ? 'bg-accent' : 'hover:bg-accent'
+                  }`}>
                   <div>
                     <div className="font-medium">{p.itemNumber}</div>
                     <div className="text-muted-foreground text-xs">
@@ -335,7 +447,7 @@ export function PurchaseOrderForm({
           </div>
         ) : (
           <div className="space-y-2">
-            {lines.map((l) => (
+            {lines.map((l, lineIndex) => (
               <div
                 key={l.key}
                 className="grid grid-cols-1 items-start gap-3 rounded-md border p-3 sm:grid-cols-[1fr_100px_120px_120px_auto]">
@@ -348,6 +460,10 @@ export function PurchaseOrderForm({
                 <div className="space-y-1">
                   <Label className="text-xs">Qty</Label>
                   <Input
+                    ref={(el) => {
+                      if (el) qtyRefs.current.set(l.key, el);
+                      else qtyRefs.current.delete(l.key);
+                    }}
                     type="number"
                     min={1}
                     step={1}
@@ -370,6 +486,10 @@ export function PurchaseOrderForm({
                     placeholder="0.00"
                     required
                     value={Number(l.unitCost) === 0 ? '' : l.unitCost}
+                    onFocus={(e) => e.target.select()}
+                    onKeyDown={(e) =>
+                      handleUnitCostKeyDown(e, lineIndex === lines.length - 1)
+                    }
                     onChange={(e) => {
                       // Allow digits and a single decimal point.
                       let v = e.target.value.replace(/[^\d.]/g, '');

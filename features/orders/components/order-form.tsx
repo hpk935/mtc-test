@@ -38,6 +38,7 @@ import { formatDate } from '@/lib/utils';
 import { createOrder, updateOrder } from '../actions';
 import type { LastPricePaid } from '../queries';
 import type { ActionResult } from '@/types';
+import { bestProductMatchIndex } from '@/lib/product-search';
 
 // --- Types ---
 
@@ -73,6 +74,17 @@ interface ProductResult {
   caseWeight: string;
   maxQty: number;
   qtyAvailable: number;
+}
+
+async function fetchOrderProducts(
+  query: string,
+): Promise<ProductResult[] | null> {
+  const res = await fetch(
+    `/api/products?search=${encodeURIComponent(query)}&pageSize=8`,
+  );
+  if (!res.ok) return null;
+  const json = await res.json();
+  return (json.data?.products ?? []) as ProductResult[];
 }
 
 interface LineItem {
@@ -1245,9 +1257,15 @@ function LineItemRow({
 }) {
   const [productQuery, setProductQuery] = useState(item.itemNumber);
   const [results, setResults] = useState<ProductResult[]>([]);
+  // The query `results` were fetched for, so a Tab pressed before the
+  // debounced search lands doesn't pick a product from an older query.
+  const [resultsQuery, setResultsQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  // Bumped on every search and every pick; a response whose number is no
+  // longer current is dropped.
+  const requestSeq = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
@@ -1291,27 +1309,52 @@ function LineItemRow({
     setHighlightedIndex(-1);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (value.trim().length < 2) {
+    const seq = ++requestSeq.current;
+    const q = value.trim();
+    if (q.length < 2) {
       setResults([]);
+      setResultsQuery('');
       setIsOpen(false);
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
-      const res = await fetch(
-        `/api/products?search=${encodeURIComponent(value.trim())}&pageSize=8`,
-      );
-      if (res.ok) {
-        const json = await res.json();
-        const products = json.data?.products ?? [];
-        setResults(products);
-        setIsOpen(true);
-        setHighlightedIndex(products.length > 0 ? 0 : -1);
-      }
+      const products = await fetchOrderProducts(q);
+      if (seq !== requestSeq.current || !products) return;
+      setResults(products);
+      setResultsQuery(q);
+      setIsOpen(true);
+      setHighlightedIndex(bestProductMatchIndex(products, q));
     }, 300);
   }
 
+  // Tab / Enter in the product box: take the highlighted product, or — if the
+  // results for what's typed haven't arrived yet — search now and take the
+  // best match.
+  async function acceptSearch() {
+    const q = productQuery.trim();
+    if (resultsQuery === q && results.length > 0) {
+      selectProduct(results[highlightedIndex >= 0 ? highlightedIndex : 0]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const seq = ++requestSeq.current;
+    const products =
+      resultsQuery === q ? results : await fetchOrderProducts(q);
+    if (seq !== requestSeq.current) return;
+    if (!products || products.length === 0) {
+      setResults([]);
+      setResultsQuery(q);
+      setIsOpen(false);
+      toast.error(`No product matches "${q}".`);
+      return;
+    }
+    selectProduct(products[bestProductMatchIndex(products, q)]);
+  }
+
   function selectProduct(product: ProductResult) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    requestSeq.current++;
     setProductQuery(product.itemNumber);
     setIsOpen(false);
     setHighlightedIndex(-1);
@@ -1328,6 +1371,19 @@ function LineItemRow({
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Tab / Enter with a typed-but-unpicked product: pick it, so items can
+    // be added without touching the dropdown.
+    const awaitingPick =
+      !item.itemNumber && productQuery.trim().length >= 2;
+    if (
+      awaitingPick &&
+      ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter')
+    ) {
+      e.preventDefault();
+      void acceptSearch();
+      return;
+    }
+
     if (!isOpen || results.length === 0) {
       // If Enter is pressed with no dropdown, move to qty
       if (e.key === 'Enter') {
