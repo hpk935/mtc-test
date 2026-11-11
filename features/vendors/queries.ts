@@ -306,3 +306,56 @@ export async function getOpenPurchaseOrdersForProduct(productId: number) {
         )
         .orderBy(asc(purchaseOrders.expectedDate));
 }
+
+// --- Print ---
+
+/**
+ * Everything the printed Purchase Order Record needs: vendor header and every
+ * line with its case packing.
+ */
+export async function getPurchaseOrderPrintData(id: number) {
+    const [po] = await db
+        .select({
+            id: purchaseOrders.id,
+            poNumber: purchaseOrders.poNumber,
+            status: purchaseOrders.status,
+            orderDate: purchaseOrders.orderDate,
+            expectedDate: purchaseOrders.expectedDate,
+            notes: purchaseOrders.notes,
+            vendorCode: vendors.vendorCode,
+            vendorName: vendors.name,
+        })
+        .from(purchaseOrders)
+        .innerJoin(vendors, eq(purchaseOrders.vendorId, vendors.id))
+        .where(eq(purchaseOrders.id, id))
+        .limit(1);
+
+    if (!po) return null;
+
+    const items = await db
+        .select({
+            id: purchaseOrderItems.id,
+            itemNumber: purchaseOrderItems.itemNumber,
+            description: purchaseOrderItems.description,
+            qtyOrdered: purchaseOrderItems.qtyOrdered,
+            unitSoldBy: products.unitSoldBy,
+            casePack: products.maxQty,
+            cubicFeet: products.cubicFeet,
+        })
+        .from(purchaseOrderItems)
+        .leftJoin(
+            products,
+            eq(purchaseOrderItems.productId, products.productId),
+        )
+        .where(eq(purchaseOrderItems.purchaseOrderId, id))
+        .orderBy(
+            asc(purchaseOrderItems.itemNumber),
+            asc(purchaseOrderItems.id),
+        );
+
+    return { po, items };
+}
+
+export type PurchaseOrderPrintData = NonNullable<
+    Awaited<ReturnType<typeof getPurchaseOrderPrintData>>
+>;

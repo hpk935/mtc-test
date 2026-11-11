@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { parseIdParam } from '@/lib/params';
+import { Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -57,7 +59,18 @@ export default async function PurchaseOrderDetailPage({
             ({po.vendorCode})
           </p>
         </div>
-        {session.role === 'admin' && <PurchaseOrderActions po={po} />}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary/5 hover:text-primary/80 dark:border-primary-accent/60 dark:text-primary-accent dark:hover:bg-primary-accent/10 dark:hover:text-primary-accent"
+            asChild>
+            <Link href={`/purchase-orders/${po.id}/print`} target="_blank">
+              <Printer className="mr-2 size-4" />
+              Print
+            </Link>
+          </Button>
+          {session.role === 'admin' && <PurchaseOrderActions po={po} />}
+        </div>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
