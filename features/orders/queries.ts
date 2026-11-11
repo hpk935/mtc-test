@@ -1,8 +1,20 @@
-import { ilike, or, and, count, desc, eq, asc, sql } from 'drizzle-orm';
+import {
+    ilike,
+    or,
+    and,
+    count,
+    desc,
+    eq,
+    asc,
+    sql,
+    inArray,
+    ne,
+    gt,
+} from 'drizzle-orm';
 import db from '@/lib/db';
 import { orders, orderItems } from './schema';
 import { customers } from '@/features/customers/schema';
-import { invoices } from '@/features/invoices/schema';
+import { invoices, invoiceItems } from '@/features/invoices/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
 import type { OrderStatus } from './constants';
@@ -329,3 +341,47 @@ export async function getOrderPrintData(orderNumber: string) {
 export type OrderPrintData = NonNullable<
     Awaited<ReturnType<typeof getOrderPrintData>>
 >;
+
+// --- Last price paid ---
+
+/**
+ * For each item, the price this customer paid on their most recent invoice
+ * for it.
+ */
+export async function getLastPricesPaid(
+    customerNumber: string,
+    itemNumbers: string[],
+) {
+    return db
+        .selectDistinctOn([invoiceItems.itemNumber], {
+            itemNumber: invoiceItems.itemNumber,
+            invoiceNumber: invoices.invoiceNumber,
+            invoiceDate: invoices.invoiceDate,
+            // Discount is the net price that replaces the unit price when set.
+            price: sql<string>`case when ${invoiceItems.discount} > 0 then ${invoiceItems.discount} else ${invoiceItems.unitPrice} end`,
+        })
+        .from(invoiceItems)
+        .innerJoin(
+            invoices,
+            eq(invoiceItems.invoiceNumber, invoices.invoiceNumber),
+        )
+        .where(
+            and(
+                eq(invoices.customerNumber, customerNumber),
+                inArray(invoiceItems.itemNumber, itemNumbers),
+                ne(invoices.invoiceStatus, 'voided'),
+                // Only what shipped was paid for: skips $0 shadow rows,
+                // unshipped backorders, and returns.
+                gt(invoiceItems.qtyShipped, 0),
+            ),
+        )
+        .orderBy(
+            invoiceItems.itemNumber,
+            desc(invoices.invoiceDate),
+            desc(invoiceItems.id),
+        );
+}
+
+export type LastPricePaid = Awaited<
+    ReturnType<typeof getLastPricesPaid>
+>[number];

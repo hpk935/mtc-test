@@ -34,7 +34,9 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { ReferenceCodeSelect } from '@/features/reference-codes/components/reference-code-select';
 import type { ReferenceCodeOption } from '@/features/reference-codes/types';
+import { formatDate } from '@/lib/utils';
 import { createOrder, updateOrder } from '../actions';
+import type { LastPricePaid } from '../queries';
 import type { ActionResult } from '@/types';
 
 // --- Types ---
@@ -92,6 +94,13 @@ interface CustomerInfo {
   territoryCode: string;
   salespersonCode: string;
   defaultFreightTerm: string;
+}
+
+// Last price paid per item for one customer. null = the customer has never
+// bought the item; a missing key = not looked up yet.
+interface LastPrices {
+  customerNumber: string | null;
+  byItem: Record<string, LastPricePaid | null>;
 }
 
 // --- Helpers ---
@@ -342,6 +351,60 @@ export function OrderForm({
       },
     ];
   });
+
+  // --- Last price paid (reference for pricing each line) ---
+  const lastPriceCustomer = customer?.customerNumber ?? null;
+  const selectedItemsKey = [
+    ...new Set(lineItems.map((li) => li.itemNumber).filter(Boolean)),
+  ]
+    .sort()
+    .join('\n');
+  const [lastPrices, setLastPrices] = useState<LastPrices>({
+    customerNumber: null,
+    byItem: {},
+  });
+
+  useEffect(() => {
+    if (!lastPriceCustomer || !selectedItemsKey) return;
+    const known =
+      lastPrices.customerNumber === lastPriceCustomer ? lastPrices.byItem : {};
+    const missing = selectedItemsKey
+      .split('\n')
+      .filter((itemNumber) => !(itemNumber in known));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    const params = new URLSearchParams();
+    for (const itemNumber of missing) params.append('items', itemNumber);
+    fetch(
+      `/api/customers/${encodeURIComponent(lastPriceCustomer)}/last-prices?${params}`,
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (cancelled || !json?.data) return;
+        const found = new Map(
+          (json.data as LastPricePaid[]).map((r) => [r.itemNumber, r]),
+        );
+        setLastPrices((prev) => {
+          const byItem =
+            prev.customerNumber === lastPriceCustomer ? { ...prev.byItem } : {};
+          for (const itemNumber of missing) {
+            byItem[itemNumber] = found.get(itemNumber) ?? null;
+          }
+          return { customerNumber: lastPriceCustomer, byItem };
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastPriceCustomer, selectedItemsKey, lastPrices]);
+
+  function lastPriceFor(itemNumber: string) {
+    if (!itemNumber || lastPrices.customerNumber !== lastPriceCustomer) {
+      return undefined;
+    }
+    return lastPrices.byItem[itemNumber];
+  }
 
   // Load selected ship-to address for edit mode on mount
   useEffect(() => {
@@ -1050,6 +1113,7 @@ export function OrderForm({
                 <LineItemRow
                   key={item.key}
                   item={item}
+                  lastPrice={lastPriceFor(item.itemNumber)}
                   onUpdate={(field, value) =>
                     updateLineItem(item.key, field, value)
                   }
@@ -1164,6 +1228,7 @@ export function OrderForm({
 
 function LineItemRow({
   item,
+  lastPrice,
   onUpdate,
   onRemove,
   canRemove,
@@ -1171,6 +1236,7 @@ function LineItemRow({
   onAddRow,
 }: {
   item: LineItem;
+  lastPrice: LastPricePaid | null | undefined;
   onUpdate: (field: keyof LineItem, value: string | number) => void;
   onRemove: () => void;
   canRemove: boolean;
@@ -1452,6 +1518,29 @@ function LineItemRow({
           </Button>
         )}
       </div>
+      {item.itemNumber && lastPrice !== undefined && (
+        <LastPriceNote lastPrice={lastPrice} />
+      )}
     </div>
+  );
+}
+
+// What this customer paid for the item last time, as a pricing reference.
+function LastPriceNote({ lastPrice }: { lastPrice: LastPricePaid | null }) {
+  return (
+    <p className="text-muted-foreground col-span-full -mt-2 text-xs">
+      {lastPrice ? (
+        <>
+          Last paid{' '}
+          <span className="text-foreground font-medium">
+            {formatCurrency(Number(lastPrice.price))}
+          </span>{' '}
+          on {formatDate(lastPrice.invoiceDate)} · Invoice #
+          {lastPrice.invoiceNumber}
+        </>
+      ) : (
+        'No previous purchase by this customer'
+      )}
+    </p>
   );
 }
