@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   findInvoiceByNumber,
@@ -51,6 +51,16 @@ export default async function InvoiceDetailPage({
             {invoice.customerName} &middot; {invoice.invoiceDate}
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-primary text-primary hover:bg-primary/5 hover:text-primary/80 dark:border-primary-accent/60 dark:text-primary-accent dark:hover:bg-primary-accent/10 dark:hover:text-primary-accent"
+          asChild>
+          <Link href={`/invoices/${invoiceNumber}/print`} target="_blank">
+            <Printer className="mr-2 size-4" />
+            Print Invoice
+          </Link>
+        </Button>
       </div>
       <InvoiceDetailView
         invoice={invoice}

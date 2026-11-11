@@ -1,10 +1,11 @@
-import { ilike, or, and, count, desc, eq, asc } from 'drizzle-orm';
+import { ilike, or, and, count, desc, eq, asc, ne } from 'drizzle-orm';
 import db from '@/lib/db';
 import { invoices, invoiceItems, payments } from './schema';
 import { customers } from '@/features/customers/schema';
 import { orders } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
+import { terms } from '@/features/reference-codes/schema';
 import type { InvoiceStatus } from './constants';
 
 const PAGE_SIZE_DEFAULT = 20;
@@ -242,3 +243,96 @@ export async function getPaymentsByInvoice(invoiceNumber: string) {
 export type PaymentRecord = Awaited<
     ReturnType<typeof getPaymentsByInvoice>
 >[number];
+
+// --- Print ---
+
+/** Everything the printed invoice needs: header, bill-to, and every line. */
+export async function getInvoicePrintData(invoiceNumber: string) {
+    const [invoice] = await db
+        .select({
+            invoiceNumber: invoices.invoiceNumber,
+            invoiceDate: invoices.invoiceDate,
+            invoiceStatus: invoices.invoiceStatus,
+            orderNumber: invoices.orderNumber,
+            orderDate: orders.orderDate,
+            customerNumber: invoices.customerNumber,
+            customerName: customers.customerName,
+            billingAddress1: customers.billingAddress1,
+            billingAddress2: customers.billingAddress2,
+            billingCity: customers.billingCity,
+            billingStateCode: customers.billingStateCode,
+            billingPostalCode: customers.billingPostalCode,
+            mainPhone: customers.mainPhone,
+            salespersonCode: invoices.salespersonCode,
+            salespersonFirstName: users.firstName,
+            salespersonLastName: users.lastName,
+            customerPoReference: invoices.customerPoReference,
+            freightTerm: invoices.freightTerm,
+            termCode: invoices.termCode,
+            termDescription: terms.description,
+            shipToName: invoices.shipToName,
+            shipToAddress1: invoices.shipToAddress1,
+            shipToAddress2: invoices.shipToAddress2,
+            shipToCity: invoices.shipToCity,
+            shipToStateCode: invoices.shipToStateCode,
+            shipToPostalCode: invoices.shipToPostalCode,
+            shippingNote: invoices.shippingNote,
+            trackingNumber: orders.trackingNumber,
+            subtotalAmount: invoices.subtotalAmount,
+            salesTaxAmount: invoices.salesTaxAmount,
+            freightAmount: invoices.freightAmount,
+            totalAmount: invoices.totalAmount,
+            amountPaid: invoices.amountPaid,
+            balanceDue: invoices.balanceDue,
+            dueDate: invoices.dueDate,
+        })
+        .from(invoices)
+        .leftJoin(
+            customers,
+            eq(invoices.customerNumber, customers.customerNumber),
+        )
+        .leftJoin(users, eq(invoices.salespersonCode, users.employeeId))
+        .leftJoin(orders, eq(invoices.orderNumber, orders.orderNumber))
+        .leftJoin(terms, eq(invoices.termCode, terms.code))
+        .where(eq(invoices.invoiceNumber, invoiceNumber))
+        .limit(1);
+
+    if (!invoice) return null;
+
+    const items = await db
+        .select({
+            id: invoiceItems.id,
+            itemNumber: invoiceItems.itemNumber,
+            description: products.description,
+            upcNumber: products.upcNumber,
+            unitSoldBy: products.unitSoldBy,
+            minQty: products.minQty,
+            maxQty: products.maxQty,
+            qtyOrdered: invoiceItems.qtyOrdered,
+            qtyShipped: invoiceItems.qtyShipped,
+            unitPrice: invoiceItems.unitPrice,
+            discount: invoiceItems.discount,
+            lineTotal: invoiceItems.lineTotal,
+        })
+        .from(invoiceItems)
+        .leftJoin(products, eq(invoiceItems.itemNumber, products.itemNumber))
+        .where(
+            and(
+                eq(invoiceItems.invoiceNumber, invoiceNumber),
+                // Legacy data carries empty placeholder rows (nothing
+                // ordered, shipped, or billed); they don't belong on paper.
+                or(
+                    ne(invoiceItems.qtyOrdered, 0),
+                    ne(invoiceItems.qtyShipped, 0),
+                    ne(invoiceItems.lineTotal, '0'),
+                ),
+            ),
+        )
+        .orderBy(asc(invoiceItems.itemNumber), asc(invoiceItems.id));
+
+    return { invoice, items };
+}
+
+export type InvoicePrintData = NonNullable<
+    Awaited<ReturnType<typeof getInvoicePrintData>>
+>;

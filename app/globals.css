@@ -139,7 +139,7 @@
     }
 }
 
-/* Print styles for pick sheet */
+/* Print styles for printable documents (pick sheet, invoice) */
 @media print {
     /* Hide dashboard shell: sidebar, header, nav */
     [data-sidebar],
@@ -170,7 +170,7 @@
         print-color-adjust: exact;
     }
 
-    .pick-sheet {
+    .print-sheet {
         font-size: 14px;
         padding: 12mm !important;
     }

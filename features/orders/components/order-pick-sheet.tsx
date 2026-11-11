@@ -32,7 +32,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
           the real paper proportions and scrolls horizontally if needed.
           Print overrides remove the width/border. */}
       <div className="overflow-x-auto bg-gray-100 px-4 py-6 print:overflow-visible print:bg-white print:p-0">
-        <div className="pick-sheet mx-auto min-h-264 w-204 bg-white p-12 shadow-sm ring-1 ring-gray-200 print:min-h-0 print:w-full print:p-0 print:shadow-none print:ring-0">
+        <div className="print-sheet mx-auto min-h-264 w-204 bg-white p-12 shadow-sm ring-1 ring-gray-200 print:min-h-0 print:w-full print:p-0 print:shadow-none print:ring-0">
           {/* Header */}
           <header className="mb-4 flex items-start justify-between border-b border-gray-300 pb-4">
             <div className="flex items-center gap-3">
