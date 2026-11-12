@@ -17,6 +17,7 @@ import { customers } from '@/features/customers/schema';
 import { invoices, invoiceItems } from '@/features/invoices/schema';
 import { products } from '@/features/products/schema';
 import { users } from '@/features/users/schema';
+import { terms } from '@/features/reference-codes/schema';
 import type { OrderStatus } from './constants';
 
 const PAGE_SIZE_DEFAULT = 20;
@@ -295,8 +296,19 @@ export async function getOrderPrintData(orderNumber: string) {
             orderNumber: orders.orderNumber,
             customerNumber: orders.customerNumber,
             customerName: customers.customerName,
+            billingAddress1: customers.billingAddress1,
+            billingAddress2: customers.billingAddress2,
+            billingCity: customers.billingCity,
+            billingStateCode: customers.billingStateCode,
+            billingPostalCode: customers.billingPostalCode,
+            mainPhone: customers.mainPhone,
             orderDate: orders.orderDate,
             customerPoReference: orders.customerPoReference,
+            termCode: orders.termCode,
+            termDescription: terms.description,
+            salespersonCode: orders.salespersonCode,
+            salespersonFirstName: users.firstName,
+            salespersonLastName: users.lastName,
             freightTerm: orders.freightTerm,
             shipToName: orders.shipToName,
             shipToAddress1: orders.shipToAddress1,
@@ -314,6 +326,8 @@ export async function getOrderPrintData(orderNumber: string) {
             customers,
             eq(orders.customerNumber, customers.customerNumber),
         )
+        .leftJoin(users, eq(orders.salespersonCode, users.employeeId))
+        .leftJoin(terms, eq(orders.termCode, terms.code))
         .where(eq(orders.orderNumber, orderNumber))
         .limit(1);
 
@@ -326,8 +340,12 @@ export async function getOrderPrintData(orderNumber: string) {
             description: products.description,
             unitSoldBy: products.unitSoldBy,
             qtyOrdered: orderItems.qtyOrdered,
-            qtyShipped: orderItems.qtyShipped,
+            unitPrice: orderItems.unitPrice,
+            discount: orderItems.discount,
+            lineTotal: orderItems.lineTotal,
             caseWeight: products.caseWeight,
+            cubicFeet: products.cubicFeet,
+            minQty: products.minQty,
             maxQty: products.maxQty,
         })
         .from(orderItems)
