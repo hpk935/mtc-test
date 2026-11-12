@@ -42,7 +42,7 @@ export async function getAgingBySalesperson(
 
     const ref = sql`coalesce(${invoices.dueDate}, ${invoices.invoiceDate})`;
 
-    // Aging aggregation per salesperson (only rows with balance due > 0).
+    // Aging aggregation per salesperson (rows with a balance, credits net in).
     const agingAgg = db
         .select({
             salespersonCode: invoices.salespersonCode,
@@ -79,7 +79,8 @@ export async function getAgingBySalesperson(
         .from(invoices)
         .where(
             and(
-                sql`${invoices.balanceDue} > 0`,
+                // Non-zero: a negative balance is a customer credit and nets in.
+                sql`${invoices.balanceDue} <> 0`,
                 territoryFilter,
                 salespersonFilter,
             ),
@@ -275,7 +276,8 @@ export async function getSalespersonAgingDetail(
         ? eq(invoices.territoryCode, filters.territory)
         : undefined;
 
-    // Open invoices for this rep (balance > 0), with aging bucket flags.
+    // Open invoices and credits for this rep (balance ≠ 0), with aging
+    // bucket flags.
     const openInvoices = await db
         .select({
             invoiceNumber: invoices.invoiceNumber,
@@ -302,7 +304,7 @@ export async function getSalespersonAgingDetail(
         .where(
             and(
                 eq(invoices.salespersonCode, filters.employeeId),
-                sql`${invoices.balanceDue} > 0`,
+                sql`${invoices.balanceDue} <> 0`,
                 territoryFilter,
             ),
         )

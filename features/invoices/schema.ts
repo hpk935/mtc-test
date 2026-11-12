@@ -58,6 +58,10 @@ export const invoices = pgTable('invoices', {
     freightAmount: numeric('freight_amount', { precision: 10, scale: 2 })
         .notNull()
         .default('0'),
+    // Customer credit applied as a discount; already netted out of total.
+    creditAmount: numeric('credit_amount', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
     totalAmount: numeric('total_amount', { precision: 10, scale: 2 }).notNull(),
     costAmount: numeric('cost_amount', { precision: 10, scale: 2 })
         .notNull()
@@ -110,6 +114,11 @@ export const payments = pgTable('payments', {
     amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
     paymentDate: date('payment_date').notNull(),
     paymentRef: varchar('payment_ref', { length: 50 }),
+    // Set on a credit-use row: a negative payment on the overpaid invoice,
+    // recording which invoice used that credit as a discount.
+    appliedToInvoiceNumber: varchar('applied_to_invoice_number', {
+        length: 20,
+    }).references(() => invoices.invoiceNumber),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

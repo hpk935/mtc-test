@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { calculateDueDate, todayIso } from '@/lib/dates';
+import { formatCurrency } from '@/lib/utils';
 import { orders, orderItems } from './schema';
 import { getMaxOrderNumber } from './queries';
 import { findCustomerByNumber } from '@/features/customers/queries';
@@ -9,6 +10,8 @@ import { findProductByItemNumber } from '@/features/products/queries';
 import { products } from '@/features/products/schema';
 import { invoices } from '@/features/invoices/schema';
 import { invoiceItems } from '@/features/invoices/schema';
+import { getCustomerAvailableCredit } from '@/features/invoices/queries';
+import { useCustomerCredit } from '@/features/invoices/credit';
 import { findTerm } from '@/features/reference-codes/queries';
 import { validateReferenceCodes } from '@/features/reference-codes/service';
 import type { CreateOrderInput, UpdateOrderInput } from './validation';
@@ -101,6 +104,30 @@ export async function generateOrderNumber(): Promise<string> {
     return next.toString();
 }
 
+/**
+ * Applied credit can't exceed the order total or what the customer has
+ * available (not counting this order's own reservation when editing).
+ */
+async function checkCredit(
+    customerNumber: string,
+    creditAmount: number,
+    totalBeforeCredit: number,
+    excludeOrderNumber?: string,
+): Promise<string | null> {
+    if (creditAmount <= 0) return null;
+    if (creditAmount > Math.round(totalBeforeCredit * 100) / 100) {
+        return 'Credit applied cannot be more than the order total.';
+    }
+    const available = await getCustomerAvailableCredit(
+        customerNumber,
+        excludeOrderNumber,
+    );
+    if (creditAmount > available) {
+        return `Credit applied cannot be more than the available credit of ${formatCurrency(available)}.`;
+    }
+    return null;
+}
+
 export async function createOrderRecord(input: CreateOrderInput) {
     // Validate customer exists
     const customer = await findCustomerByNumber(input.customerNumber);
@@ -157,7 +184,17 @@ export async function createOrderRecord(input: CreateOrderInput) {
         (sum, i) => sum + Number(i.lineTotal),
         0,
     );
-    const total = subtotal + input.freightAmount + input.salesTaxAmount;
+    const totalBeforeCredit =
+        subtotal + input.freightAmount + input.salesTaxAmount;
+    const creditError = await checkCredit(
+        input.customerNumber,
+        input.creditAmount,
+        totalBeforeCredit,
+    );
+    if (creditError) {
+        return { success: false as const, error: creditError };
+    }
+    const total = totalBeforeCredit - input.creditAmount;
 
     const orderNumber = await generateOrderNumber();
 
@@ -181,6 +218,7 @@ export async function createOrderRecord(input: CreateOrderInput) {
             salesTaxAmount: String(input.salesTaxAmount),
             subtotalAmount: String(Math.round(subtotal * 100) / 100),
             freightAmount: String(input.freightAmount),
+            creditAmount: input.creditAmount.toFixed(2),
             totalAmount: String(Math.round(total * 100) / 100),
             costAmount: String(
                 Math.round(
@@ -290,7 +328,18 @@ export async function updateOrderRecord(
         (sum, i) => sum + Number(i.lineTotal),
         0,
     );
-    const total = subtotal + input.freightAmount + input.salesTaxAmount;
+    const totalBeforeCredit =
+        subtotal + input.freightAmount + input.salesTaxAmount;
+    const creditError = await checkCredit(
+        input.customerNumber,
+        input.creditAmount,
+        totalBeforeCredit,
+        orderNumber,
+    );
+    if (creditError) {
+        return { success: false as const, error: creditError };
+    }
+    const total = totalBeforeCredit - input.creditAmount;
 
     await db.transaction(async (tx) => {
         await tx
@@ -313,6 +362,7 @@ export async function updateOrderRecord(
                 salesTaxAmount: String(input.salesTaxAmount),
                 subtotalAmount: String(Math.round(subtotal * 100) / 100),
                 freightAmount: String(input.freightAmount),
+                creditAmount: input.creditAmount.toFixed(2),
                 totalAmount: String(Math.round(total * 100) / 100),
                 costAmount: String(
                     Math.round(
@@ -483,95 +533,116 @@ export async function postOrderToInvoice(orderNumber: string) {
     const term = await findTerm(order.termCode);
     const dueDate = calculateDueDate(today, term?.netDays ?? null);
 
-    await db.transaction(async (tx) => {
-        // Create the invoice record
-        await tx.insert(invoices).values({
-            invoiceNumber,
-            orderNumber,
-            customerNumber: order.customerNumber,
-            salespersonCode: order.salespersonCode,
-            invoiceDate: today,
-            dueDate,
-            customerPoReference: order.customerPoReference,
-            freightTerm: order.freightTerm,
-            shipToId: order.shipToId,
-            shipToName: order.shipToName,
-            shipToAddress1: order.shipToAddress1,
-            shipToAddress2: order.shipToAddress2,
-            shipToCity: order.shipToCity,
-            shipToStateCode: order.shipToStateCode,
-            shipToPostalCode: order.shipToPostalCode,
-            termCode: order.termCode,
-            territoryCode: order.territoryCode,
-            salesTaxAmount: order.salesTaxAmount,
-            subtotalAmount: order.subtotalAmount,
-            freightAmount: order.freightAmount,
-            totalAmount: order.totalAmount,
-            costAmount: order.costAmount,
-            balanceDue: order.totalAmount,
-            shippingNote: order.shippingNote,
-        });
-
-        // Fetch order items for inventory fulfillment
-        const items = await getOrderItemQuantities(tx, orderNumber);
-
-        // Link order items to this invoice and set qtyShipped = qtyOrdered
-        await tx
-            .update(orderItems)
-            .set({
+    try {
+        await db.transaction(async (tx) => {
+            // Create the invoice record
+            await tx.insert(invoices).values({
                 invoiceNumber,
-                qtyShipped: sql`${orderItems.qtyOrdered}`,
-                updatedAt: new Date(),
-            })
-            .where(eq(orderItems.orderNumber, orderNumber));
+                orderNumber,
+                customerNumber: order.customerNumber,
+                salespersonCode: order.salespersonCode,
+                invoiceDate: today,
+                dueDate,
+                customerPoReference: order.customerPoReference,
+                freightTerm: order.freightTerm,
+                shipToId: order.shipToId,
+                shipToName: order.shipToName,
+                shipToAddress1: order.shipToAddress1,
+                shipToAddress2: order.shipToAddress2,
+                shipToCity: order.shipToCity,
+                shipToStateCode: order.shipToStateCode,
+                shipToPostalCode: order.shipToPostalCode,
+                termCode: order.termCode,
+                territoryCode: order.territoryCode,
+                salesTaxAmount: order.salesTaxAmount,
+                subtotalAmount: order.subtotalAmount,
+                freightAmount: order.freightAmount,
+                creditAmount: order.creditAmount,
+                totalAmount: order.totalAmount,
+                costAmount: order.costAmount,
+                balanceDue: order.totalAmount,
+                shippingNote: order.shippingNote,
+            });
 
-        // Mirror order items into invoice_items (the authoritative billed
-        // line items table the invoice detail page reads from).
-        const orderItemRows = await tx
-            .select({
-                itemNumber: orderItems.itemNumber,
-                unitPrice: orderItems.unitPrice,
-                qtyOrdered: orderItems.qtyOrdered,
-                discount: orderItems.discount,
-                unitCost: orderItems.unitCost,
-                lineTotal: orderItems.lineTotal,
-            })
-            .from(orderItems)
-            .where(eq(orderItems.orderNumber, orderNumber));
-
-        if (orderItemRows.length > 0) {
-            await tx.insert(invoiceItems).values(
-                orderItemRows.map((row) => ({
-                    invoiceNumber,
-                    orderNumber,
-                    itemNumber: row.itemNumber,
-                    unitPrice: row.unitPrice,
-                    qtyOrdered: row.qtyOrdered,
-                    qtyShipped: row.qtyOrdered,
-                    discount: row.discount,
-                    unitCost: row.unitCost,
-                    lineTotal: row.lineTotal,
-                })),
-            );
-        }
-
-        // Fulfill inventory: decrement qtyInStock, zero out qtyCommitted for these items
-        if (items.length > 0) {
-            await fulfillInventory(
+            // Draw the credit this order applied from the customer's
+            // overpaid invoices (throws, rolling back, if it's gone).
+            await useCustomerCredit(
                 tx,
-                items.map((i) => ({
-                    itemNumber: i.itemNumber,
-                    qty: i.qtyOrdered,
-                })),
+                order.customerNumber,
+                Number(order.creditAmount),
+                invoiceNumber,
+                today,
             );
-        }
 
-        // Mark order as invoiced
-        await tx
-            .update(orders)
-            .set({ orderStatus: 'invoiced', updatedAt: new Date() })
-            .where(eq(orders.orderNumber, orderNumber));
-    });
+            // Fetch order items for inventory fulfillment
+            const items = await getOrderItemQuantities(tx, orderNumber);
+
+            // Link order items to this invoice and set qtyShipped = qtyOrdered
+            await tx
+                .update(orderItems)
+                .set({
+                    invoiceNumber,
+                    qtyShipped: sql`${orderItems.qtyOrdered}`,
+                    updatedAt: new Date(),
+                })
+                .where(eq(orderItems.orderNumber, orderNumber));
+
+            // Mirror order items into invoice_items (the authoritative billed
+            // line items table the invoice detail page reads from).
+            const orderItemRows = await tx
+                .select({
+                    itemNumber: orderItems.itemNumber,
+                    unitPrice: orderItems.unitPrice,
+                    qtyOrdered: orderItems.qtyOrdered,
+                    discount: orderItems.discount,
+                    unitCost: orderItems.unitCost,
+                    lineTotal: orderItems.lineTotal,
+                })
+                .from(orderItems)
+                .where(eq(orderItems.orderNumber, orderNumber));
+
+            if (orderItemRows.length > 0) {
+                await tx.insert(invoiceItems).values(
+                    orderItemRows.map((row) => ({
+                        invoiceNumber,
+                        orderNumber,
+                        itemNumber: row.itemNumber,
+                        unitPrice: row.unitPrice,
+                        qtyOrdered: row.qtyOrdered,
+                        qtyShipped: row.qtyOrdered,
+                        discount: row.discount,
+                        unitCost: row.unitCost,
+                        lineTotal: row.lineTotal,
+                    })),
+                );
+            }
+
+            // Fulfill inventory: decrement qtyInStock, zero out qtyCommitted for these items
+            if (items.length > 0) {
+                await fulfillInventory(
+                    tx,
+                    items.map((i) => ({
+                        itemNumber: i.itemNumber,
+                        qty: i.qtyOrdered,
+                    })),
+                );
+            }
+
+            // Mark order as invoiced
+            await tx
+                .update(orders)
+                .set({ orderStatus: 'invoiced', updatedAt: new Date() })
+                .where(eq(orders.orderNumber, orderNumber));
+        });
+    } catch (err) {
+        return {
+            success: false as const,
+            error:
+                err instanceof Error
+                    ? err.message
+                    : 'Failed to post order to invoice.',
+        };
+    }
 
     return { success: true as const, data: invoiceNumber };
 }

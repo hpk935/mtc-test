@@ -282,6 +282,14 @@ export function InvoicePrintSheet({ data }: InvoicePrintSheetProps) {
                     {formatCurrency(invoice.freightAmount)}
                   </span>
                 </div>
+                {Number(invoice.creditAmount) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Customer Credit</span>
+                    <span className="font-medium">
+                      −{formatCurrency(invoice.creditAmount)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-baseline justify-between border-t-2 border-gray-800 pt-2">
                   <span className="font-semibold uppercase">
                     {hasPayments ? 'Total' : 'Please Pay Total'}
@@ -300,10 +308,12 @@ export function InvoicePrintSheet({ data }: InvoicePrintSheetProps) {
                     </div>
                     <div className="flex items-baseline justify-between border-t pt-2">
                       <span className="font-semibold uppercase">
-                        Please Pay
+                        {Number(invoice.balanceDue) < 0
+                          ? 'Credit Balance'
+                          : 'Please Pay'}
                       </span>
                       <span className="text-lg font-bold">
-                        {formatCurrency(invoice.balanceDue)}
+                        {formatCurrency(Math.abs(Number(invoice.balanceDue)))}
                       </span>
                     </div>
                   </>

@@ -43,6 +43,7 @@ export default async function EditOrderPage({
     territoryCode: data.order.territoryCode,
     freightAmount: data.order.freightAmount,
     salesTaxAmount: data.order.salesTaxAmount,
+    creditAmount: data.order.creditAmount,
     shippingNote: data.order.shippingNote,
     lineItems: data.items,
   };
