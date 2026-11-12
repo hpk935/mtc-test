@@ -70,9 +70,6 @@ export type WebCartListItem = {
 };
 
 export type WebCart = WebCartListItem & {
-    /** The cart's id in Shopify, for looking it up there. */
-    shopifyCartId: string;
-    phone?: string;
     lineItems: WebCartItem[];
     /** ISO timestamps. */
     createdAt: string;

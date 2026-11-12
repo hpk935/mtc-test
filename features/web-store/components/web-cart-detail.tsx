@@ -38,9 +38,6 @@ export function WebCartDetailView({ cart }: { cart: WebCart }) {
                 {formatDateTime(cart.expiresAt)}
               </DetailRow>
             )}
-            <DetailRow label="Shopify Cart">
-              <span className="font-mono text-xs">{cart.shopifyCartId}</span>
-            </DetailRow>
             <DetailRow label="Items">{cart.totalQuantity}</DetailRow>
             <DetailRow label="Total">{money(cart.totalAmount)}</DetailRow>
           </CardContent>
@@ -62,7 +59,6 @@ export function WebCartDetailView({ cart }: { cart: WebCart }) {
                 '—'
               )}
             </DetailRow>
-            <DetailRow label="Phone">{cart.phone || '—'}</DetailRow>
           </CardContent>
         </Card>
       </div>

@@ -179,10 +179,6 @@ export async function findWebCart(id: string): Promise<WebCart | null> {
 
     return {
         ...toCartListItem(doc, new Date()),
-        shopifyCartId: text(doc.shopifyCartId),
-        phone: doc.buyerIdentity?.phone
-            ? String(doc.buyerIdentity.phone)
-            : undefined,
         createdAt: iso(doc.createdAt),
         expiresAt: iso(doc.expiresAt),
         lineItems: ((doc.lineItems ?? []) as Document[]).map((item) => ({
