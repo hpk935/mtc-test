@@ -14,55 +14,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import {
-  LayoutDashboard,
-  ShoppingCart,
-  FileText,
-  Package,
-  Users,
-  Truck,
-  ClipboardList,
-  BarChart3,
-  UserCog,
-  CalendarClock,
-  MapPinned,
-  Container,
-} from 'lucide-react';
 import type { Session } from '@/features/auth/types';
-import type { Permission } from '@/features/users/constants';
-
-const NAV_PERMISSION_MAP: Record<string, Permission> = {
-  '/orders': 'orders:view',
-  '/invoices': 'invoices:view',
-  '/products': 'products:view',
-  '/customers': 'customers:view',
-  '/vendors': 'vendors:view',
-  '/purchase-orders': 'vendors:view',
-  '/reports': 'reports:view',
-  '/users': 'users:view',
-};
-
-const navItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Orders', url: '/orders', icon: ShoppingCart },
-  { title: 'Invoices', url: '/invoices', icon: FileText },
-  { title: 'Products', url: '/products', icon: Package },
-  { title: 'Customers', url: '/customers', icon: Users },
-  { title: 'Vendors', url: '/vendors', icon: Truck },
-  { title: 'Purchase Orders', url: '/purchase-orders', icon: ClipboardList },
-  { title: 'Reports', url: '/reports', icon: BarChart3 },
-  { title: 'Users', url: '/users', icon: UserCog },
-  { title: 'Payment Terms', url: '/payment-terms', icon: CalendarClock },
-  { title: 'Territories', url: '/territories', icon: MapPinned },
-  { title: 'Freight Terms', url: '/freight-terms', icon: Container },
-];
-
-// Pages only admins can open, whatever their permissions.
-const ADMIN_ONLY_URLS = new Set([
-  '/payment-terms',
-  '/territories',
-  '/freight-terms',
-]);
+import { visibleNavSections } from '@/lib/nav';
 
 export function AppSidebar({
   session,
@@ -72,23 +25,30 @@ export function AppSidebar({
   session: Session | null;
   permissions?: string[];
 }) {
-  const isAdmin = session?.role === 'admin';
-  const visibleItems = navItems.filter((item) => {
-    if (ADMIN_ONLY_URLS.has(item.url)) return isAdmin;
-    const requiredPerm = NAV_PERMISSION_MAP[item.url];
-    if (!requiredPerm) return true; // Dashboard — always visible
-    if (isAdmin) return true;
-    return permissions.includes(requiredPerm);
-  });
+  const sections = visibleNavSections(
+    session?.role === 'admin',
+    permissions,
+  );
+
+  // Settings sits at the bottom, just above the user card.
+  const mainSections = sections.filter((s) => !s.collapsible);
+  const pinnedSections = sections.filter((s) => s.collapsible);
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+    <Sidebar
+      variant="floating"
+      collapsible="icon"
+      className="*:data-[slot=sidebar-inner]:rounded-2xl *:data-[slot=sidebar-inner]:shadow-md"
+      {...props}>
+      <SidebarHeader className="p-3 group-data-[collapsible=icon]:p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              className="h-14 gap-3 hover:bg-transparent active:bg-transparent">
               <Link href="/">
-                <div className="flex aspect-square size-8 shrink-0 items-center justify-center">
+                <div className="bg-background ring-sidebar-border flex aspect-square size-11 shrink-0 items-center justify-center rounded-xl p-1.5 ring-1 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:rounded-lg group-data-[collapsible=icon]:p-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/mtc-logo.webp"
@@ -96,8 +56,8 @@ export function AppSidebar({
                     className="h-auto w-full"
                   />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="font-heading truncate font-semibold">
+                <div className="grid flex-1 text-left leading-tight">
+                  <span className="font-heading truncate text-base font-semibold">
                     MTC Trading Co.
                   </span>
                 </div>
@@ -106,10 +66,15 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={visibleItems} />
+      <SidebarContent className="gap-0">
+        <NavMain sections={mainSections} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="gap-1 p-2">
+        {pinnedSections.length > 0 && (
+          <div className="-mx-2">
+            <NavMain sections={pinnedSections} />
+          </div>
+        )}
         <NavUser session={session} />
       </SidebarFooter>
       <SidebarRail />

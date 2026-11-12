@@ -36,9 +36,9 @@ export function NavUser({ session }: { session: Session | null }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarFallback className="rounded-lg text-xs">
+              className="border-sidebar-border bg-background data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-14 gap-3 rounded-xl border px-2.5 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
+              <Avatar className="size-9 rounded-full group-data-[collapsible=icon]:size-8">
+                <AvatarFallback className="bg-muted rounded-full text-xs">
                   {getInitials(session.email)}
                 </AvatarFallback>
               </Avatar>
