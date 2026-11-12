@@ -150,7 +150,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
             <thead>
               <tr className="text-left align-top">
                 <th className="w-12" />
-                <th className="w-24 font-normal">QTY</th>
+                <th className="w-32 font-normal">QTY</th>
                 <th className="font-normal">
                   ITEM NO
                   <br />
@@ -168,8 +168,12 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
                 <tbody key={line.id} className="break-inside-avoid">
                   <tr>
                     <td className="pt-5"># {index + 1}</td>
-                    <td className="pt-5">
-                      {line.qtyOrdered} {unit}
+                    {/* Pick-off blank beside the qty for the warehouse */}
+                    <td className="pt-5 whitespace-nowrap">
+                      <span className="inline-block w-16">
+                        {line.qtyOrdered} {unit}
+                      </span>
+                      <Blank className="mr-4 w-12" />
                     </td>
                     <td className="pt-5">{line.itemNumber}</td>
                     <td className="pt-5 text-right">
@@ -184,10 +188,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
                     </td>
                   </tr>
                   <tr>
-                    <td />
-                    <td>
-                      <Blank className="w-16" />
-                    </td>
+                    <td colSpan={2} />
                     <td colSpan={3}>{line.description}</td>
                     <td colSpan={2} className="pl-3 text-right">
                       {line.minQty && line.maxQty
