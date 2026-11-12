@@ -32,7 +32,6 @@ export async function createProductRecord(
         productId: input.productId,
         itemNumber: input.itemNumber,
         description: input.description,
-        cartonNumber: normalizeOptional(input.cartonNumber),
         unitSoldBy: input.unitSoldBy,
         minQty: input.minQty,
         maxQty: input.maxQty,
@@ -84,7 +83,6 @@ export async function updateProductRecord(
         .set({
             itemNumber: input.itemNumber,
             description: input.description,
-            cartonNumber: normalizeOptional(input.cartonNumber),
             unitSoldBy: input.unitSoldBy,
             minQty: input.minQty,
             maxQty: input.maxQty,

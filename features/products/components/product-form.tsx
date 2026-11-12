@@ -85,7 +85,6 @@ export function ProductForm({
   const buildInitialValues = () => ({
     itemNumber: product?.itemNumber ?? '',
     description: product?.description ?? '',
-    cartonNumber: product?.cartonNumber ?? '',
     unitSoldBy: product?.unitSoldBy ?? '',
     minQty: product?.minQty != null ? String(product.minQty) : '',
     maxQty: product?.maxQty != null ? String(product.maxQty) : '',
@@ -191,19 +190,6 @@ export function ProductForm({
             onChange={handleChange}
             required
             maxLength={500}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="cartonNumber">
-            Carton Number <OptionalTag />
-          </Label>
-          <Input
-            id="cartonNumber"
-            name="cartonNumber"
-            placeholder="e.g. CTN-100"
-            value={formValues.cartonNumber}
-            onChange={handleChange}
-            maxLength={50}
           />
         </div>
         <div className="space-y-2">

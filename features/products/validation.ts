@@ -30,7 +30,6 @@ const optionalString = z.string().max(500).optional().default('');
 export const createProductSchema = z.object({
     itemNumber: z.string().min(1, 'Item number is required').max(50),
     description: z.string().min(1, 'Description is required').max(500),
-    cartonNumber: optionalString,
     unitSoldBy: z.enum(UNITS_SOLD_BY, {
         message: 'Unit sold by is required',
     }),
