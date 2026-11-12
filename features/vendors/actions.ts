@@ -9,6 +9,7 @@ import { purchaseOrderItems, purchaseOrders, vendors } from './schema';
 import {
     createPurchaseOrderSchema,
     createVendorSchema,
+    purchaseOrderShippingSchema,
     receivePurchaseOrderSchema,
     updatePurchaseOrderDraftSchema,
     updateVendorSchemaFor,
@@ -260,6 +261,9 @@ export async function createPurchaseOrder(
                     freightAmount: totals.freightAmount,
                     totalAmount: totals.totalAmount,
                     notes: parsed.data.notes ?? null,
+                    vessel: parsed.data.vessel ?? null,
+                    vendorInvoiceNumber:
+                        parsed.data.vendorInvoiceNumber ?? null,
                     createdBy: session.employeeId,
                 })
                 .returning({
@@ -362,6 +366,9 @@ export async function updatePurchaseOrderDraft(
                     freightAmount: totals.freightAmount,
                     totalAmount: totals.totalAmount,
                     notes: parsed.data.notes ?? null,
+                    vessel: parsed.data.vessel ?? null,
+                    vendorInvoiceNumber:
+                        parsed.data.vendorInvoiceNumber ?? null,
                     updatedAt: new Date(),
                 })
                 .where(eq(purchaseOrders.id, purchaseOrderId));
@@ -402,6 +409,39 @@ export async function updatePurchaseOrderDraft(
                     : 'Failed to update purchase order.',
         };
     }
+}
+
+// ---- PO shipping details (any status) ----
+
+export async function updatePurchaseOrderShipping(
+    purchaseOrderId: number,
+    input: unknown,
+): Promise<ActionResult> {
+    await requireAdmin();
+
+    const parsed = purchaseOrderShippingSchema.safeParse(input);
+    if (!parsed.success) {
+        return {
+            success: false,
+            error: firstIssue(parsed.error.issues, 'Invalid shipping details.'),
+        };
+    }
+
+    const updated = await db
+        .update(purchaseOrders)
+        .set({
+            vessel: parsed.data.vessel ?? null,
+            vendorInvoiceNumber: parsed.data.vendorInvoiceNumber ?? null,
+            updatedAt: new Date(),
+        })
+        .where(eq(purchaseOrders.id, purchaseOrderId))
+        .returning({ id: purchaseOrders.id });
+    if (updated.length === 0) {
+        return { success: false, error: 'Purchase order not found.' };
+    }
+
+    revalidatePath(`/purchase-orders/${purchaseOrderId}`);
+    return { success: true, data: undefined };
 }
 
 // ---- PO submit (draft → ordered) ----

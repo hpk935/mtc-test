@@ -145,6 +145,8 @@ export const createPurchaseOrderSchema = z.object({
         .transform((v) => (v && v.length > 0 ? v : undefined)),
     freightAmount: numericString,
     notes: optional(2000),
+    vessel: optional(100),
+    vendorInvoiceNumber: optional(50),
     items: z
         .array(purchaseOrderItemSchema)
         .min(1, 'At least one line is required'),
@@ -157,6 +159,15 @@ export type CreatePurchaseOrderInput = z.infer<
 export const updatePurchaseOrderDraftSchema = createPurchaseOrderSchema;
 export type UpdatePurchaseOrderDraftInput = z.infer<
     typeof updatePurchaseOrderDraftSchema
+>;
+
+// Shipping details — editable in any status. Blank clears the field.
+export const purchaseOrderShippingSchema = z.object({
+    vessel: optional(100),
+    vendorInvoiceNumber: optional(50),
+});
+export type PurchaseOrderShippingInput = z.infer<
+    typeof purchaseOrderShippingSchema
 >;
 
 export const receiveLineSchema = z.object({
