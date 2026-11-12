@@ -39,3 +39,13 @@ export const territories = pgTable('territories', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// Orders, invoices and customers store the freight term code as plain text with
+// no foreign key, because a blank freight term is allowed there.
+export const freightTerms = pgTable('freight_terms', {
+    code: varchar('code', { length: 50 }).primaryKey(),
+    description: varchar('description', { length: 255 }).notNull(),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

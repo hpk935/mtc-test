@@ -1,7 +1,7 @@
 import { getSalespersons } from '@/features/customers/queries';
-import { FREIGHT_TERMS } from '@/features/customers/constants';
 import { OrderForm } from '@/features/orders/components/order-form';
 import {
+  getFreightTermOptions,
   getTermOptions,
   getTerritoryOptions,
 } from '@/features/reference-codes/queries';
@@ -9,11 +9,13 @@ import { requireAdmin } from '@/lib/auth';
 
 export default async function NewOrderPage() {
   await requireAdmin();
-  const [salespersons, termOptions, territoryOptions] = await Promise.all([
-    getSalespersons(),
-    getTermOptions(),
-    getTerritoryOptions(),
-  ]);
+  const [salespersons, termOptions, territoryOptions, freightTermOptions] =
+    await Promise.all([
+      getSalespersons(),
+      getTermOptions(),
+      getTerritoryOptions(),
+      getFreightTermOptions(),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -27,7 +29,7 @@ export default async function NewOrderPage() {
         salespersons={salespersons}
         termOptions={termOptions}
         territoryOptions={territoryOptions}
-        freightTerms={FREIGHT_TERMS}
+        freightTermOptions={freightTermOptions}
       />
     </div>
   );

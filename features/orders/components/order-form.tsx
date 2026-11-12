@@ -254,7 +254,7 @@ interface OrderFormProps {
   salespersons: Salesperson[];
   termOptions: ReferenceCodeOption[];
   territoryOptions: ReferenceCodeOption[];
-  freightTerms: readonly string[];
+  freightTermOptions: ReferenceCodeOption[];
   orderNumber?: string;
   initialData?: OrderFormInitialData;
 }
@@ -267,7 +267,7 @@ export function OrderForm({
   salespersons,
   termOptions,
   territoryOptions,
-  freightTerms,
+  freightTermOptions,
   orderNumber,
   initialData,
 }: OrderFormProps) {
@@ -546,7 +546,11 @@ export function OrderForm({
             ? info.territoryCode
             : '',
         );
-        if (info.defaultFreightTerm) setFreightTerm(info.defaultFreightTerm);
+        setFreightTerm(
+          freightTermOptions.some((o) => o.code === info.defaultFreightTerm)
+            ? info.defaultFreightTerm
+            : '',
+        );
       }
     }
 
@@ -1101,23 +1105,19 @@ export function OrderForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="freightTerm">
-            Freight Term <OptionalTag />
-          </Label>
-          <Select value={freightTerm} onValueChange={setFreightTerm}>
-            <SelectTrigger id="freightTerm">
-              <SelectValue placeholder="Select freight term" />
-            </SelectTrigger>
-            <SelectContent>
-              {freightTerms.map((ft) => (
-                <SelectItem key={ft} value={ft}>
-                  {ft}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ReferenceCodeSelect
+          id="freightTerm"
+          label={
+            <>
+              Freight Term <OptionalTag />
+            </>
+          }
+          placeholder="Select freight term"
+          noneLabel="None"
+          options={freightTermOptions}
+          value={freightTerm}
+          onValueChange={setFreightTerm}
+        />
         <ReferenceCodeSelect
           id="termCode"
           label="Payment Terms"

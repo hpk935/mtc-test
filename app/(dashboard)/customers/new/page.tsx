@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { getSalespersons } from '@/features/customers/queries';
 import { CustomerForm } from '@/features/customers/components/customer-form';
 import {
+  getFreightTermOptions,
   getTermOptions,
   getTerritoryOptions,
 } from '@/features/reference-codes/queries';
@@ -11,11 +12,13 @@ import { requireAdmin } from '@/lib/auth';
 
 export default async function NewCustomerPage() {
   await requireAdmin();
-  const [salespersons, termOptions, territoryOptions] = await Promise.all([
-    getSalespersons(),
-    getTermOptions(),
-    getTerritoryOptions(),
-  ]);
+  const [salespersons, termOptions, territoryOptions, freightTermOptions] =
+    await Promise.all([
+      getSalespersons(),
+      getTermOptions(),
+      getTerritoryOptions(),
+      getFreightTermOptions(),
+    ]);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -35,6 +38,7 @@ export default async function NewCustomerPage() {
         salespersons={salespersons}
         termOptions={termOptions}
         territoryOptions={territoryOptions}
+        freightTermOptions={freightTermOptions}
       />
     </div>
   );

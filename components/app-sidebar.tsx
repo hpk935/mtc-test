@@ -24,6 +24,9 @@ import {
   ClipboardList,
   BarChart3,
   UserCog,
+  CalendarClock,
+  MapPinned,
+  Container,
 } from 'lucide-react';
 import type { Session } from '@/features/auth/types';
 import type { Permission } from '@/features/users/constants';
@@ -49,7 +52,17 @@ const navItems = [
   { title: 'Purchase Orders', url: '/purchase-orders', icon: ClipboardList },
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Users', url: '/users', icon: UserCog },
+  { title: 'Payment Terms', url: '/payment-terms', icon: CalendarClock },
+  { title: 'Territories', url: '/territories', icon: MapPinned },
+  { title: 'Freight Terms', url: '/freight-terms', icon: Container },
 ];
+
+// Pages only admins can open, whatever their permissions.
+const ADMIN_ONLY_URLS = new Set([
+  '/payment-terms',
+  '/territories',
+  '/freight-terms',
+]);
 
 export function AppSidebar({
   session,
@@ -61,6 +74,7 @@ export function AppSidebar({
 }) {
   const isAdmin = session?.role === 'admin';
   const visibleItems = navItems.filter((item) => {
+    if (ADMIN_ONLY_URLS.has(item.url)) return isAdmin;
     const requiredPerm = NAV_PERMISSION_MAP[item.url];
     if (!requiredPerm) return true; // Dashboard — always visible
     if (isAdmin) return true;
