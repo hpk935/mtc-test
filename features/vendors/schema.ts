@@ -72,6 +72,7 @@ export const purchaseOrders = pgTable('purchase_orders', {
     // Shipping details, known after the order is placed; editable in any
     // status and printed on the PO.
     vessel: varchar('vessel', { length: 100 }),
+    departedDate: date('departed_date'),
     vendorInvoiceNumber: varchar('vendor_invoice_number', { length: 50 }),
     createdBy: varchar('created_by', { length: 10 }).references(
         () => users.employeeId,

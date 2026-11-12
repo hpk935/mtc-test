@@ -73,7 +73,7 @@ export default async function PurchaseOrderDetailPage({
         </div>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <InfoCard label="Order Date" value={formatDate(po.orderDate)} />
         <InfoCard
           label="Expected"
@@ -88,6 +88,10 @@ export default async function PurchaseOrderDetailPage({
           value={po.creatorName ?? po.createdBy ?? '—'}
         />
         <InfoCard label="Vessel" value={po.vessel ?? '—'} />
+        <InfoCard
+          label="Departed"
+          value={po.departedDate ? formatDate(po.departedDate) : '—'}
+        />
         <InfoCard
           label="Vendor Inv. No."
           value={po.vendorInvoiceNumber ?? '—'}

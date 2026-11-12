@@ -91,12 +91,12 @@ export function PurchaseOrderPrintSheet({
             )}
           </h1>
 
-          {/* Header — departure isn't tracked yet, and vessel / vendor
-              invoice are optional; anything empty prints as a write-in rule. */}
+          {/* Header — vessel, departed and vendor invoice are optional;
+              anything empty prints as a write-in rule. */}
           <div className="mb-3 grid grid-cols-[2fr_1fr_1fr] gap-x-6 gap-y-1.5 text-sm">
             <HeaderField label="Vendor Name" value={po.vendorName} />
             <HeaderField label="Vessel" value={po.vessel} />
-            <HeaderField label="Departed" />
+            <HeaderField label="Departed" value={formatDate(po.departedDate)} />
             <HeaderField
               label="Vendor Inv. No."
               value={po.vendorInvoiceNumber}

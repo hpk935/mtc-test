@@ -262,6 +262,7 @@ export async function createPurchaseOrder(
                     totalAmount: totals.totalAmount,
                     notes: parsed.data.notes ?? null,
                     vessel: parsed.data.vessel ?? null,
+                    departedDate: parsed.data.departedDate ?? null,
                     vendorInvoiceNumber:
                         parsed.data.vendorInvoiceNumber ?? null,
                     createdBy: session.employeeId,
@@ -367,6 +368,7 @@ export async function updatePurchaseOrderDraft(
                     totalAmount: totals.totalAmount,
                     notes: parsed.data.notes ?? null,
                     vessel: parsed.data.vessel ?? null,
+                    departedDate: parsed.data.departedDate ?? null,
                     vendorInvoiceNumber:
                         parsed.data.vendorInvoiceNumber ?? null,
                     updatedAt: new Date(),
@@ -431,6 +433,7 @@ export async function updatePurchaseOrderShipping(
         .update(purchaseOrders)
         .set({
             vessel: parsed.data.vessel ?? null,
+            departedDate: parsed.data.departedDate ?? null,
             vendorInvoiceNumber: parsed.data.vendorInvoiceNumber ?? null,
             updatedAt: new Date(),
         })

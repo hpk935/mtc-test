@@ -67,11 +67,13 @@ export function PurchaseOrderActions({ po }: { po: PurchaseOrderDetail }) {
   );
 }
 
-/** Vessel and vendor invoice no. are known after the order is placed, so
+/** Vessel, departed date and vendor invoice no. are known after the order
+ *  is placed, so
  *  they stay editable in every status. */
 function ShippingDialog({ po }: { po: PurchaseOrderDetail }) {
   const [open, setOpen] = useState(false);
   const [vessel, setVessel] = useState('');
+  const [departedDate, setDepartedDate] = useState('');
   const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState('');
   const [pending, setPending] = useState(false);
 
@@ -79,6 +81,7 @@ function ShippingDialog({ po }: { po: PurchaseOrderDetail }) {
   function onOpenChange(nextOpen: boolean) {
     if (nextOpen) {
       setVessel(po.vessel ?? '');
+      setDepartedDate(po.departedDate ?? '');
       setVendorInvoiceNumber(po.vendorInvoiceNumber ?? '');
     }
     setOpen(nextOpen);
@@ -88,6 +91,7 @@ function ShippingDialog({ po }: { po: PurchaseOrderDetail }) {
     setPending(true);
     const r = await updatePurchaseOrderShipping(po.id, {
       vessel,
+      departedDate,
       vendorInvoiceNumber,
     });
     setPending(false);
@@ -116,6 +120,15 @@ function ShippingDialog({ po }: { po: PurchaseOrderDetail }) {
               value={vessel}
               maxLength={100}
               onChange={(e) => setVessel(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="departedDate">Departed</Label>
+            <Input
+              id="departedDate"
+              type="date"
+              value={departedDate}
+              onChange={(e) => setDepartedDate(e.target.value)}
             />
           </div>
           <div className="space-y-2">
