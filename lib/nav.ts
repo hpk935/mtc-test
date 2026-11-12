@@ -4,10 +4,12 @@ import {
     ClipboardList,
     Container,
     FileText,
+    Globe,
     LayoutDashboard,
     MapPinned,
     Package,
     Settings,
+    ShoppingBag,
     ShoppingCart,
     Truck,
     UserCog,
@@ -69,6 +71,24 @@ export const NAV_SECTIONS: NavSection[] = [
                 url: '/customers',
                 icon: Users,
                 perm: 'customers:view',
+            },
+        ],
+    },
+    {
+        // Read-only views of the storefront's orders and carts.
+        label: 'Web Store',
+        items: [
+            {
+                title: 'Web Orders',
+                url: '/web-orders',
+                icon: Globe,
+                adminOnly: true,
+            },
+            {
+                title: 'Web Carts',
+                url: '/web-carts',
+                icon: ShoppingBag,
+                adminOnly: true,
             },
         ],
     },
