@@ -26,6 +26,9 @@ interface OrderPickSheetProps {
   data: OrderPrintData;
 }
 
+/** Printed lines per page, as on the legacy form. */
+const LINES_PER_PAGE = 10;
+
 /** Laid out after the legacy ORDER / PICKING LIST form. */
 export function OrderPickSheet({ data }: OrderPickSheetProps) {
   const { order } = data;
@@ -51,13 +54,13 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
           the real paper proportions and scrolls horizontally if needed.
           Print overrides remove the width/border. */}
       <div className="overflow-x-auto bg-gray-100 px-4 py-6 print:overflow-visible print:bg-white print:p-0">
-        <div className="print-sheet mx-auto min-h-264 w-204 bg-white p-12 font-mono text-sm text-gray-900 shadow-sm ring-1 ring-gray-200 print:min-h-0 print:w-full print:p-0 print:shadow-none print:ring-0">
-          <h1 className="mb-4 text-center text-lg tracking-widest">
+        <div className="print-sheet mx-auto min-h-264 w-204 bg-white p-12 font-mono text-xs! text-gray-900 shadow-sm ring-1 ring-gray-200 print:min-h-0 print:w-full print:p-0 print:shadow-none print:ring-0">
+          <h1 className="mb-2 text-center text-base tracking-widest">
             ORDER / PICKING LIST
           </h1>
 
           {/* Letterhead left, order identity right */}
-          <div className="mb-3 flex items-start justify-between">
+          <div className="mb-2 flex items-start justify-between">
             <div className="flex items-center gap-3 font-sans">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -66,7 +69,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
                 className="h-auto w-10"
               />
               <div>
-                <p className="text-base leading-tight font-bold uppercase">
+                <p className="text-sm leading-tight font-bold uppercase">
                   {COMPANY.legalName}
                 </p>
                 <p>
@@ -83,7 +86,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
           {/* Customer (bill-to) left, Ship To right — DATE shares the
               Cust No. row and Ship To lines up with the customer name, as
               on the legacy form. */}
-          <div className="mb-4 grid grid-cols-[5.5rem_1fr_5.5rem_1fr] gap-x-2">
+          <div className="mb-2 grid grid-cols-[5.5rem_1fr_5.5rem_1fr] gap-x-2">
             <span>Cust No.</span>
             <span>{order.customerNumber}</span>
             <span className="text-right">DATE:</span>
@@ -94,19 +97,19 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
               {order.billingAddress1 && <p>{order.billingAddress1}</p>}
               {order.billingAddress2 && <p>{order.billingAddress2}</p>}
               {order.billingCity && (
-                <p className="mt-3">
+                <p className="mt-1">
                   {order.billingCity}, {order.billingStateCode}
                 </p>
               )}
               {order.billingPostalCode && <p>{order.billingPostalCode}</p>}
-              {order.mainPhone && <p className="mt-3">{order.mainPhone}</p>}
+              {order.mainPhone && <p className="mt-1">{order.mainPhone}</p>}
             </div>
             <span>Ship To:</span>
             <div>
               <p>{order.shipToName}</p>
               <p>{order.shipToAddress1}</p>
               {order.shipToAddress2 && <p>{order.shipToAddress2}</p>}
-              <p className="mt-3">
+              <p className="mt-1">
                 {order.shipToCity}, {order.shipToStateCode}
               </p>
               <p>{order.shipToPostalCode}</p>
@@ -115,7 +118,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
 
           {/* Order terms strip — required date isn't tracked yet, so it
               prints as a write-in rule. */}
-          <table className="mb-4 w-full">
+          <table className="mb-2 w-full">
             <thead>
               <tr className="text-left">
                 <th className="pb-1 font-normal">CUST P.O.#:</th>
@@ -139,13 +142,13 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
           </table>
 
           {order.shippingNote && (
-            <p className="mb-4 whitespace-pre-wrap">
+            <p className="mb-2 whitespace-pre-wrap">
               NOTE: {order.shippingNote}
             </p>
           )}
 
-          {/* Line items — two printed rows per line; thead repeats on each
-              printed page. */}
+          {/* Line items — two printed rows per line, a fixed number of lines
+              per printed page; thead repeats on each page. */}
           <table className="w-full border-collapse">
             <thead>
               <tr className="text-left align-top">
@@ -165,25 +168,27 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
             {lines.map((line, index) => {
               const unit = line.unitSoldBy ?? '';
               return (
-                <tbody key={line.id} className="break-inside-avoid">
+                <tbody
+                  key={line.id}
+                  className={`break-inside-avoid ${index > 0 && index % LINES_PER_PAGE === 0 ? 'break-before-page' : ''}`}>
                   <tr>
-                    <td className="pt-5"># {index + 1}</td>
+                    <td className="pt-3"># {index + 1}</td>
                     {/* Pick-off blank beside the qty for the warehouse */}
-                    <td className="pt-5 whitespace-nowrap">
+                    <td className="pt-3 whitespace-nowrap">
                       <span className="inline-block w-16">
                         {line.qtyOrdered} {unit}
                       </span>
                       <Blank className="mr-4 w-12" />
                     </td>
-                    <td className="pt-5">{line.itemNumber}</td>
-                    <td className="pt-5 text-right">
+                    <td className="pt-3">{line.itemNumber}</td>
+                    <td className="pt-3 text-right">
                       {line.weight.toFixed(2)}
                     </td>
-                    <td className="pt-5 text-right">{line.cube.toFixed(3)}</td>
-                    <td className="pt-5 text-right">
+                    <td className="pt-3 text-right">{line.cube.toFixed(3)}</td>
+                    <td className="pt-3 text-right">
                       {formatCurrency(Number(line.netPrice))}
                     </td>
-                    <td className="pt-5 pl-3">
+                    <td className="pt-3 pl-3">
                       <Blank />
                     </td>
                   </tr>
@@ -201,7 +206,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
             })}
             <tbody className="break-inside-avoid">
               <tr>
-                <td colSpan={7} className="pt-8">
+                <td colSpan={7} className="pt-4">
                   TOTAL:
                 </td>
               </tr>
