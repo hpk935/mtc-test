@@ -25,7 +25,12 @@ export default async function SalespersonAgingDetailPrintPage({
   const salesperson = await findSalespersonByEmployeeId(employeeId);
   if (!salesperson) notFound();
 
-  const data = await getSalespersonAgingDetail({ employeeId, ...filters });
+  const data = await getSalespersonAgingDetail({
+    employeeId,
+    ...filters,
+    page: 1,
+    pageSize: 10_000,
+  });
   const repName = `${salesperson.firstName} ${salesperson.lastName}`;
 
   return (
