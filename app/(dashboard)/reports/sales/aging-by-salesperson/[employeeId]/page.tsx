@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import { DataTablePagination } from '@/components/data/data-table-pagination';
 import { ReportPageShell } from '@/features/reports/components/report-page-shell';
 import { ReportStats } from '@/features/reports/components/report-stats';
 import { ReportPrintButton } from '@/features/reports/components/report-print-button';
@@ -91,6 +92,13 @@ export default async function SalespersonAgingDetailPage({
       </div>
 
       <div className="rounded-lg border">
+        <DataTablePagination
+          currentPage={data.page}
+          totalPages={data.totalPages}
+          totalCount={data.totalCount}
+          pageSize={data.pageSize}
+          label="customers"
+        />
         <SalespersonAgingDetailTable groups={data.groups} />
       </div>
     </ReportPageShell>

@@ -244,7 +244,12 @@ export async function getSalespersonOptions(): Promise<
 export type SalespersonAgingDetailFilters = {
     employeeId: string;
     territory?: string;
+    page?: number;
+    pageSize?: number;
 };
+
+/** Customers (not invoices) per page — a customer's invoices never split. */
+const AGING_DETAIL_PAGE_SIZE = 25;
 
 export async function findSalespersonByEmployeeId(employeeId: string) {
     const [row] = await db
@@ -264,6 +269,9 @@ export async function findSalespersonByEmployeeId(employeeId: string) {
 export async function getSalespersonAgingDetail(
     filters: SalespersonAgingDetailFilters,
 ) {
+    const page = Math.max(1, filters.page ?? 1);
+    const pageSize = filters.pageSize ?? AGING_DETAIL_PAGE_SIZE;
+
     const asOfIso = todayIso();
     const now = new Date(`${asOfIso}T00:00:00Z`);
     const { startDate: mtdStart } = getMtdRange(now);
@@ -417,9 +425,15 @@ export async function getSalespersonAgingDetail(
         },
     );
 
+    const offset = (page - 1) * pageSize;
+
     return {
         asOfDate: asOfIso,
-        groups,
+        groups: groups.slice(offset, offset + pageSize),
+        page,
+        pageSize,
+        totalCount: groups.length,
+        totalPages: Math.max(1, Math.ceil(groups.length / pageSize)),
         totals: {
             ...totals,
             pastDue:
