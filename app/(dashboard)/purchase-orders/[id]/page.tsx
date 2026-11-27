@@ -87,6 +87,15 @@ export default async function PurchaseOrderDetailPage({
           label="Created By"
           value={po.creatorName ?? po.createdBy ?? '—'}
         />
+        <InfoCard label="Vessel" value={po.vessel ?? '—'} />
+        <InfoCard
+          label="Departed"
+          value={po.departedDate ? formatDate(po.departedDate) : '—'}
+        />
+        <InfoCard
+          label="Vendor Inv. No."
+          value={po.vendorInvoiceNumber ?? '—'}
+        />
       </section>
 
       <section className="space-y-4">

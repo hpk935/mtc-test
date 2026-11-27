@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  useActionState,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Plus, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -79,6 +73,9 @@ type ExistingPO = {
   expectedDate: string | null;
   freightAmount: string;
   notes: string | null;
+  vessel: string | null;
+  departedDate: string | null;
+  vendorInvoiceNumber: string | null;
   items: ExistingItem[];
 };
 
@@ -111,6 +108,13 @@ export function PurchaseOrderForm({
     purchaseOrder?.freightAmount ?? '',
   );
   const [notes, setNotes] = useState(purchaseOrder?.notes ?? '');
+  const [vessel, setVessel] = useState(purchaseOrder?.vessel ?? '');
+  const [departedDate, setDepartedDate] = useState(
+    purchaseOrder?.departedDate ?? '',
+  );
+  const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState(
+    purchaseOrder?.vendorInvoiceNumber ?? '',
+  );
 
   const [lines, setLines] = useState<Line[]>(
     purchaseOrder
@@ -304,6 +308,9 @@ export function PurchaseOrderForm({
       expectedDate: expectedDate || undefined,
       freightAmount,
       notes: notes || undefined,
+      vessel,
+      departedDate,
+      vendorInvoiceNumber,
       items: lines.map((l) => ({
         productId: l.productId,
         qtyOrdered: l.qtyOrdered,
@@ -367,6 +374,41 @@ export function PurchaseOrderForm({
               value={expectedDate}
               onChange={setExpectedDate}
               aria-label="Expected Date"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="vessel">
+            Vessel <OptionalTag />
+          </Label>
+          <Input
+            id="vessel"
+            value={vessel}
+            maxLength={100}
+            onChange={(e) => setVessel(e.target.value)}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="departedDate">
+              Departed <OptionalTag />
+            </Label>
+            <DatePicker
+              id="departedDate"
+              value={departedDate}
+              onChange={setDepartedDate}
+              aria-label="Departed"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vendorInvoiceNumber">
+              Vendor Inv. No. <OptionalTag />
+            </Label>
+            <Input
+              id="vendorInvoiceNumber"
+              value={vendorInvoiceNumber}
+              maxLength={50}
+              onChange={(e) => setVendorInvoiceNumber(e.target.value)}
             />
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
   cancelPurchaseOrder,
   receivePurchaseOrderItems,
   submitPurchaseOrder,
+  updatePurchaseOrderShipping,
 } from '../actions';
 import type { PurchaseOrderDetail } from '../queries';
 
@@ -43,6 +44,7 @@ export function PurchaseOrderActions({ po }: { po: PurchaseOrderDetail }) {
 
   return (
     <div className="flex flex-wrap gap-2">
+      <ShippingDialog po={po} />
       {po.status === 'draft' && (
         <>
           <Button variant="outline" asChild disabled={pending}>
@@ -62,6 +64,96 @@ export function PurchaseOrderActions({ po }: { po: PurchaseOrderDetail }) {
         </Button>
       )}
     </div>
+  );
+}
+
+/** Vessel, departed date and vendor invoice no. are known after the order
+ *  is placed, so
+ *  they stay editable in every status. */
+function ShippingDialog({ po }: { po: PurchaseOrderDetail }) {
+  const [open, setOpen] = useState(false);
+  const [vessel, setVessel] = useState('');
+  const [departedDate, setDepartedDate] = useState('');
+  const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState('');
+  const [pending, setPending] = useState(false);
+
+  // Prefill from the PO as it is now.
+  function onOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setVessel(po.vessel ?? '');
+      setDepartedDate(po.departedDate ?? '');
+      setVendorInvoiceNumber(po.vendorInvoiceNumber ?? '');
+    }
+    setOpen(nextOpen);
+  }
+
+  async function onSave() {
+    setPending(true);
+    const r = await updatePurchaseOrderShipping(po.id, {
+      vessel,
+      departedDate,
+      vendorInvoiceNumber,
+    });
+    setPending(false);
+    if (r.success) {
+      toast.success('Shipping details saved.');
+      setOpen(false);
+    } else {
+      toast.error(r.error);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Shipping Details</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Shipping details — {po.poNumber}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="vessel">Vessel</Label>
+            <Input
+              id="vessel"
+              value={vessel}
+              maxLength={100}
+              onChange={(e) => setVessel(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="departedDate">Departed</Label>
+            <Input
+              id="departedDate"
+              type="date"
+              value={departedDate}
+              onChange={(e) => setDepartedDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vendorInvoiceNumber">Vendor Inv. No.</Label>
+            <Input
+              id="vendorInvoiceNumber"
+              value={vendorInvoiceNumber}
+              maxLength={50}
+              onChange={(e) => setVendorInvoiceNumber(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={pending}>
+            Cancel
+          </Button>
+          <Button onClick={onSave} disabled={pending}>
+            {pending ? 'Saving…' : 'Save'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

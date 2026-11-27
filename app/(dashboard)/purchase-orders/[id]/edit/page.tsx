@@ -52,6 +52,9 @@ export default async function EditPurchaseOrderPage({
           expectedDate: po.expectedDate,
           freightAmount: po.freightAmount,
           notes: po.notes,
+          vessel: po.vessel,
+          departedDate: po.departedDate,
+          vendorInvoiceNumber: po.vendorInvoiceNumber,
           items: po.items.map((i) => ({
             productId: i.productId,
             itemNumber: i.itemNumber,

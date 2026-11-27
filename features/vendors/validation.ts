@@ -46,18 +46,19 @@ const requiredPostalSchema = z
             .refine(isValidPostalCode, POSTAL_CODE_MESSAGE),
     );
 
-const optionalIsoDateSchema = z
-    .string()
-    .optional()
-    .default('')
-    .refine(
-        (v) =>
-            v === '' ||
-            (/^\d{4}-\d{2}-\d{2}$/.test(v) &&
-                !Number.isNaN(new Date(v).getTime())),
-        { message: 'Date added must be a valid date' },
-    )
-    .transform((v) => (v && v.length > 0 ? v : undefined));
+const optionalIsoDate = (label: string) =>
+    z
+        .string()
+        .optional()
+        .default('')
+        .refine(
+            (v) =>
+                v === '' ||
+                (/^\d{4}-\d{2}-\d{2}$/.test(v) &&
+                    !Number.isNaN(new Date(v).getTime())),
+            { message: `${label} must be a valid date` },
+        )
+        .transform((v) => (v && v.length > 0 ? v : undefined));
 
 export const createVendorSchema = z.object({
     vendorCode: trimmed(10).min(1, 'Vendor code is required'),
@@ -79,7 +80,7 @@ export const createVendorSchema = z.object({
     vendorType: z.enum(VENDOR_TYPES, { message: 'Vendor type is required' }),
     paymentTerms: optional(10),
     glAccountCode: optional(10),
-    dateAdded: optionalIsoDateSchema,
+    dateAdded: optionalIsoDate('Date added'),
     isActive: z
         .string()
         .optional()
@@ -145,6 +146,9 @@ export const createPurchaseOrderSchema = z.object({
         .transform((v) => (v && v.length > 0 ? v : undefined)),
     freightAmount: numericString,
     notes: optional(2000),
+    vessel: optional(100),
+    departedDate: optionalIsoDate('Departed'),
+    vendorInvoiceNumber: optional(50),
     items: z
         .array(purchaseOrderItemSchema)
         .min(1, 'At least one line is required'),
@@ -157,6 +161,16 @@ export type CreatePurchaseOrderInput = z.infer<
 export const updatePurchaseOrderDraftSchema = createPurchaseOrderSchema;
 export type UpdatePurchaseOrderDraftInput = z.infer<
     typeof updatePurchaseOrderDraftSchema
+>;
+
+// Shipping details — editable in any status. Blank clears the field.
+export const purchaseOrderShippingSchema = z.object({
+    vessel: optional(100),
+    departedDate: optionalIsoDate('Departed'),
+    vendorInvoiceNumber: optional(50),
+});
+export type PurchaseOrderShippingInput = z.infer<
+    typeof purchaseOrderShippingSchema
 >;
 
 export const receiveLineSchema = z.object({
