@@ -16,6 +16,7 @@ import { CustomerForm } from '@/features/customers/components/customer-form';
 import {
   getTermOptions,
   getTerritoryOptions,
+  getFreightTermOptions,
 } from '@/features/reference-codes/queries';
 import { PurchaseHistory } from '@/features/customers/components/customer-orders';
 import { requirePermission } from '@/lib/auth';
@@ -48,10 +49,13 @@ export default async function CustomerDetailPage({
 
   const shipToAddresses = shipToResult.rows;
 
-  const [termOptions, territoryOptions] = await Promise.all([
-    getTermOptions(customer.termCode),
-    getTerritoryOptions(customer.territoryCode),
-  ]);
+  const [termOptions, territoryOptions, freightTermOptions] = await Promise.all(
+    [
+      getTermOptions(customer.termCode),
+      getTerritoryOptions(customer.territoryCode),
+      getFreightTermOptions(customer.defaultFreightTerm),
+    ],
+  );
 
   const customerData = {
     customerNumber: customer.customerNumber,
@@ -111,6 +115,7 @@ export default async function CustomerDetailPage({
             salespersons={salespersons}
             termOptions={termOptions}
             territoryOptions={territoryOptions}
+            freightTermOptions={freightTermOptions}
             customer={customerData}
             mode="edit"
             shipToAddresses={shipToAddresses}

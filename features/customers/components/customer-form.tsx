@@ -71,6 +71,7 @@ interface CustomerFormProps {
   salespersons: Salesperson[];
   termOptions: ReferenceCodeOption[];
   territoryOptions: ReferenceCodeOption[];
+  freightTermOptions: ReferenceCodeOption[];
   customer?: CustomerData;
   mode?: 'create' | 'edit';
   shipToAddresses?: ShipToAddress[];
@@ -111,6 +112,7 @@ export function CustomerForm({
   salespersons,
   termOptions,
   territoryOptions,
+  freightTermOptions,
   customer,
   mode = 'create',
   shipToAddresses,
@@ -660,19 +662,20 @@ export function CustomerForm({
           value={formValues.territoryCode}
           onValueChange={(v) => handleSelectChange('territoryCode', v)}
         />
-        <div className="space-y-2">
-          <Label htmlFor="defaultFreightTerm">
-            Freight Term <OptionalTag />
-          </Label>
-          <Input
-            id="defaultFreightTerm"
-            name="defaultFreightTerm"
-            placeholder="e.g. 10% Freight"
-            value={formValues.defaultFreightTerm}
-            onChange={handleChange}
-            maxLength={50}
-          />
-        </div>
+        <ReferenceCodeSelect
+          id="defaultFreightTerm"
+          name="defaultFreightTerm"
+          label={
+            <>
+              Freight Term <OptionalTag />
+            </>
+          }
+          placeholder="Select a freight term"
+          noneLabel="None"
+          options={freightTermOptions}
+          value={formValues.defaultFreightTerm}
+          onValueChange={(v) => handleSelectChange('defaultFreightTerm', v)}
+        />
         <div className="space-y-2">
           <Label htmlFor="taxId">
             Tax ID <OptionalTag />

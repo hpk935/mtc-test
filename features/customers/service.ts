@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import db from '@/lib/db';
 import { validateReferenceCodes } from '@/features/reference-codes/service';
+import type { ReferenceCodes } from '@/features/reference-codes/types';
 import { customers, shipToAddresses } from './schema';
 import {
     findCustomerByNumber,
@@ -20,6 +21,19 @@ function normalizeOptional(value: string | undefined): string | null {
 }
 
 const NEW_CUSTOMER_NUMBER_START = 10001;
+
+/** A customer's freight term is the default copied onto its orders. */
+function customerCodes(customer: {
+    termCode: string;
+    territoryCode: string;
+    defaultFreightTerm: string;
+}): ReferenceCodes {
+    return {
+        termCode: customer.termCode,
+        territoryCode: customer.territoryCode,
+        freightTerm: customer.defaultFreightTerm,
+    };
+}
 
 export async function generateCustomerNumber(): Promise<string> {
     const maxExisting = await getMaxNumericCustomerNumber();
@@ -44,7 +58,7 @@ export async function createCustomerRecord(
         };
     }
 
-    const codeError = await validateReferenceCodes(input);
+    const codeError = await validateReferenceCodes(customerCodes(input));
     if (codeError) {
         return {
             success: false as const,
@@ -89,7 +103,10 @@ export async function updateCustomerRecord(
         return { success: false as const, error: 'Customer not found.' };
     }
 
-    const codeError = await validateReferenceCodes(input, existing);
+    const codeError = await validateReferenceCodes(
+        customerCodes(input),
+        customerCodes(existing),
+    );
     if (codeError) {
         return {
             success: false as const,
