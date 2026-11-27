@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { roundCents } from '@/lib/utils';
 
 const lineItemSchema = z.object({
     itemNumber: z.string().min(1, 'Item number is required'),
@@ -42,7 +43,7 @@ export const createOrderSchema = z.object({
         .number({ message: 'Credit must be a number' })
         .min(0, 'Credit must be 0 or greater')
         .default(0)
-        .transform((n) => Math.round(n * 100) / 100),
+        .transform(roundCents),
     lineItems: z
         .array(lineItemSchema)
         .min(1, 'At least one line item is required')

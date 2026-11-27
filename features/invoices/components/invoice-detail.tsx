@@ -200,7 +200,7 @@ export function InvoiceDetailView({
             </DetailRow>
             {Number(invoice.balanceDue) < 0 ? (
               // Overpaid: the excess is credit for the customer's next order.
-              <DetailRow label="Customer Credit">
+              <DetailRow label="Credit Balance">
                 <span className="text-green-700 dark:text-green-400">
                   {formatCurrency(String(-Number(invoice.balanceDue)))}
                 </span>
@@ -413,7 +413,7 @@ export function InvoiceDetailView({
               {formatCurrency(invoice.freightAmount)}
             </DetailRow>
             {Number(invoice.creditAmount) > 0 && (
-              <DetailRow label="Customer Credit">
+              <DetailRow label="Credit Applied">
                 −{formatCurrency(invoice.creditAmount)}
               </DetailRow>
             )}

@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { calculateDueDate, todayIso } from '@/lib/dates';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, roundCents } from '@/lib/utils';
 import { orders, orderItems } from './schema';
 import { getMaxOrderNumber } from './queries';
 import { findCustomerByNumber } from '@/features/customers/queries';
@@ -10,8 +10,10 @@ import { findProductByItemNumber } from '@/features/products/queries';
 import { products } from '@/features/products/schema';
 import { invoices } from '@/features/invoices/schema';
 import { invoiceItems } from '@/features/invoices/schema';
-import { getCustomerAvailableCredit } from '@/features/invoices/queries';
-import { useCustomerCredit } from '@/features/invoices/credit';
+import {
+    drawCustomerCredit,
+    getCustomerAvailableCredit,
+} from '@/features/invoices/credit';
 import { findTerm } from '@/features/reference-codes/queries';
 import { validateReferenceCodes } from '@/features/reference-codes/service';
 import type { CreateOrderInput, UpdateOrderInput } from './validation';
@@ -105,27 +107,34 @@ export async function generateOrderNumber(): Promise<string> {
 }
 
 /**
- * Applied credit can't exceed the order total or what the customer has
- * available (not counting this order's own reservation when editing).
+ * The order total after its applied credit, or why that credit isn't
+ * allowed: it can't exceed the order total or what the customer has
+ * available (not counting this order's own credit when editing).
  */
-async function checkCredit(
-    customerNumber: string,
-    creditAmount: number,
-    totalBeforeCredit: number,
-    excludeOrderNumber?: string,
-): Promise<string | null> {
-    if (creditAmount <= 0) return null;
-    if (creditAmount > Math.round(totalBeforeCredit * 100) / 100) {
-        return 'Credit applied cannot be more than the order total.';
-    }
-    const available = await getCustomerAvailableCredit(
-        customerNumber,
-        excludeOrderNumber,
+async function totalAfterCredit(
+    input: CreateOrderInput,
+    subtotal: number,
+    editingOrderNumber?: string,
+): Promise<{ total: number } | { error: string }> {
+    const totalBeforeCredit = roundCents(
+        subtotal + input.freightAmount + input.salesTaxAmount,
     );
-    if (creditAmount > available) {
-        return `Credit applied cannot be more than the available credit of ${formatCurrency(available)}.`;
+    const credit = input.creditAmount;
+    if (credit > totalBeforeCredit) {
+        return { error: 'Credit applied cannot be more than the order total.' };
     }
-    return null;
+    if (credit > 0) {
+        const available = await getCustomerAvailableCredit(
+            input.customerNumber,
+            editingOrderNumber,
+        );
+        if (credit > available) {
+            return {
+                error: `Credit applied cannot be more than the available credit of ${formatCurrency(available)}.`,
+            };
+        }
+    }
+    return { total: totalBeforeCredit - credit };
 }
 
 export async function createOrderRecord(input: CreateOrderInput) {
@@ -184,17 +193,11 @@ export async function createOrderRecord(input: CreateOrderInput) {
         (sum, i) => sum + Number(i.lineTotal),
         0,
     );
-    const totalBeforeCredit =
-        subtotal + input.freightAmount + input.salesTaxAmount;
-    const creditError = await checkCredit(
-        input.customerNumber,
-        input.creditAmount,
-        totalBeforeCredit,
-    );
-    if (creditError) {
-        return { success: false as const, error: creditError };
+    const priced = await totalAfterCredit(input, subtotal);
+    if ('error' in priced) {
+        return { success: false as const, error: priced.error };
     }
-    const total = totalBeforeCredit - input.creditAmount;
+    const { total } = priced;
 
     const orderNumber = await generateOrderNumber();
 
@@ -328,18 +331,11 @@ export async function updateOrderRecord(
         (sum, i) => sum + Number(i.lineTotal),
         0,
     );
-    const totalBeforeCredit =
-        subtotal + input.freightAmount + input.salesTaxAmount;
-    const creditError = await checkCredit(
-        input.customerNumber,
-        input.creditAmount,
-        totalBeforeCredit,
-        orderNumber,
-    );
-    if (creditError) {
-        return { success: false as const, error: creditError };
+    const priced = await totalAfterCredit(input, subtotal, orderNumber);
+    if ('error' in priced) {
+        return { success: false as const, error: priced.error };
     }
-    const total = totalBeforeCredit - input.creditAmount;
+    const { total } = priced;
 
     await db.transaction(async (tx) => {
         await tx
@@ -571,13 +567,12 @@ export async function postOrderToInvoice(orderNumber: string) {
 
             // Draw the credit this order applied from the customer's
             // overpaid invoices (throws, rolling back, if it's gone).
-            await useCustomerCredit(
-                tx,
-                order.customerNumber,
-                Number(order.creditAmount),
-                invoiceNumber,
-                today,
-            );
+            await drawCustomerCredit(tx, {
+                customerNumber: order.customerNumber,
+                amount: Number(order.creditAmount),
+                usedBy: invoiceNumber,
+                date: today,
+            });
 
             // Fetch order items for inventory fulfillment
             const items = await getOrderItemQuantities(tx, orderNumber);

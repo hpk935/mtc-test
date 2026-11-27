@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { getCustomerAvailableCredit } from '@/features/invoices/queries';
+import { getCustomerAvailableCredit } from '@/features/invoices/credit';
 
 // GET ?excludeOrder=160581 → credit the customer can still apply to an
 // order. Pass the order being edited so its own applied credit counts.

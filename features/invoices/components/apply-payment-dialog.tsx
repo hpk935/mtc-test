@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { todayIso } from '@/lib/dates';
+import { roundCents } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
@@ -43,8 +44,7 @@ export function ApplyPaymentDialog({
   const [ref, setRef] = useState('');
 
   // Paying more than the balance is allowed; the excess becomes credit.
-  const excess =
-    Math.round(((Number(amount) || 0) - Number(balanceDue)) * 100) / 100;
+  const excess = roundCents((Number(amount) || 0) - Number(balanceDue));
 
   function resetForm() {
     setAmount('');
