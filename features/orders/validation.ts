@@ -35,11 +35,14 @@ export const createOrderSchema = z.object({
         .min(0, 'Sales tax must be 0 or greater')
         .default(0),
     shippingNote: z.string().max(2000).optional().default(''),
-    // Customer credit applied as a discount on this order.
+    // Customer credit applied as a discount on this order. Rounded to cents
+    // here, once, so the stored credit, the order total and the amount
+    // drawn at invoicing are all the same number.
     creditAmount: z.coerce
         .number({ message: 'Credit must be a number' })
         .min(0, 'Credit must be 0 or greater')
-        .default(0),
+        .default(0)
+        .transform((n) => Math.round(n * 100) / 100),
     lineItems: z
         .array(lineItemSchema)
         .min(1, 'At least one line item is required')
