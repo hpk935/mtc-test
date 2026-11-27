@@ -284,7 +284,7 @@ export function InvoicePrintSheet({ data }: InvoicePrintSheetProps) {
                 </div>
                 {Number(invoice.creditAmount) > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Customer Credit</span>
+                    <span className="text-gray-500">Credit Applied</span>
                     <span className="font-medium">
                       −{formatCurrency(invoice.creditAmount)}
                     </span>

@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { todayIso } from '@/lib/dates';
+import { roundCents } from '@/lib/utils';
 import { invoices, invoiceItems, payments } from './schema';
 import { restoreCustomerCredit } from './credit';
 import { orders } from '@/features/orders/schema';
@@ -196,7 +197,7 @@ export async function applyPaymentRecord(
         // An overpayment is kept: the balance goes negative and that
         // negative balance is the customer's credit.
         const newAmountPaid = parseFloat(totalPaid);
-        const newBalanceDue = Math.round((total - newAmountPaid) * 100) / 100;
+        const newBalanceDue = roundCents(total - newAmountPaid);
         const fullyPaid = newBalanceDue <= 0;
 
         await tx

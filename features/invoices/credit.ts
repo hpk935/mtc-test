@@ -1,25 +1,92 @@
+// Customer credit: the negative balance left on an invoice by an overpayment.
+// Everything that decides what counts as credit, how much is available, and
+// how it's drawn and given back lives here.
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import db from '@/lib/db';
+import { roundCents } from '@/lib/utils';
+import { orders } from '@/features/orders/schema';
 import { invoices, payments } from './schema';
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-const toCents = (n: number) => Math.round(n * 100) / 100;
+/** A customer's invoices that hold credit: overpaid and not voided. */
+function creditInvoicesOf(customerNumber: string) {
+    return and(
+        eq(invoices.customerNumber, customerNumber),
+        ne(invoices.invoiceStatus, 'voided'),
+        sql`${invoices.balanceDue} < 0`,
+    );
+}
 
 /**
- * Draws `amount` of customer credit (negative-balance invoices, oldest
- * first) for the invoice `usedBy`. Each draw is a negative payment row on the
- * credit invoice, so its balance moves back toward $0 and the as-of-date
- * aging still lines up. Throws if the customer no longer has enough credit.
+ * Credit a customer can still spend: their overpaid invoices, less credit
+ * already applied to open orders that aren't invoiced yet. Pass the order
+ * being edited so its own credit counts as available.
  */
-export async function useCustomerCredit(
-    tx: Tx,
+export async function getCustomerAvailableCredit(
     customerNumber: string,
-    amount: number,
-    usedBy: string,
-    date: string,
+    excludeOrderNumber?: string,
+): Promise<number> {
+    const [[credit], [reserved]] = await Promise.all([
+        db
+            .select({
+                total: sql<string>`coalesce(sum(-${invoices.balanceDue}), 0)`,
+            })
+            .from(invoices)
+            .where(creditInvoicesOf(customerNumber)),
+        db
+            .select({
+                total: sql<string>`coalesce(sum(${orders.creditAmount}), 0)`,
+            })
+            .from(orders)
+            .where(
+                and(
+                    eq(orders.customerNumber, customerNumber),
+                    eq(orders.orderStatus, 'open'),
+                    excludeOrderNumber
+                        ? ne(orders.orderNumber, excludeOrderNumber)
+                        : undefined,
+                ),
+            ),
+    ]);
+    return Math.max(
+        0,
+        roundCents(Number(credit.total) - Number(reserved.total)),
+    );
+}
+
+/**
+ * Moves `change` dollars into an invoice's amount paid (or out of it, when
+ * negative), with the balance due moving the opposite way.
+ */
+async function changeAmountPaid(tx: Tx, invoiceNumber: string, change: number) {
+    const amount = change.toFixed(2);
+    await tx
+        .update(invoices)
+        .set({
+            amountPaid: sql`${invoices.amountPaid} + ${amount}`,
+            balanceDue: sql`${invoices.balanceDue} - ${amount}`,
+            updatedAt: new Date(),
+        })
+        .where(eq(invoices.invoiceNumber, invoiceNumber));
+}
+
+/**
+ * Draws `amount` of a customer's credit (oldest overpaid invoice first) for
+ * the invoice `usedBy`. Each draw is a negative payment row on the credit
+ * invoice, so its balance moves back toward $0 and the as-of-date aging still
+ * lines up. Throws if the customer no longer has enough credit.
+ */
+export async function drawCustomerCredit(
+    tx: Tx,
+    draw: {
+        customerNumber: string;
+        amount: number;
+        usedBy: string;
+        date: string;
+    },
 ) {
-    let remaining = toCents(amount);
+    let remaining = roundCents(draw.amount);
     if (remaining <= 0) return;
 
     const credits = await tx
@@ -28,13 +95,7 @@ export async function useCustomerCredit(
             balanceDue: invoices.balanceDue,
         })
         .from(invoices)
-        .where(
-            and(
-                eq(invoices.customerNumber, customerNumber),
-                ne(invoices.invoiceStatus, 'voided'),
-                sql`${invoices.balanceDue} < 0`,
-            ),
-        )
+        .where(creditInvoicesOf(draw.customerNumber))
         .orderBy(asc(invoices.invoiceDate), asc(invoices.invoiceNumber))
         .for('update');
 
@@ -44,19 +105,12 @@ export async function useCustomerCredit(
         await tx.insert(payments).values({
             invoiceNumber: credit.invoiceNumber,
             amount: (-take).toFixed(2),
-            paymentDate: date,
-            paymentRef: `Credit used on invoice ${usedBy}`,
-            appliedToInvoiceNumber: usedBy,
+            paymentDate: draw.date,
+            paymentRef: `Credit used on invoice ${draw.usedBy}`,
+            appliedToInvoiceNumber: draw.usedBy,
         });
-        await tx
-            .update(invoices)
-            .set({
-                amountPaid: sql`${invoices.amountPaid} - ${take.toFixed(2)}`,
-                balanceDue: sql`${invoices.balanceDue} + ${take.toFixed(2)}`,
-                updatedAt: new Date(),
-            })
-            .where(eq(invoices.invoiceNumber, credit.invoiceNumber));
-        remaining = toCents(remaining - take);
+        await changeAmountPaid(tx, credit.invoiceNumber, -take);
+        remaining = roundCents(remaining - take);
     }
 
     if (remaining > 0) {
@@ -78,13 +132,7 @@ export async function restoreCustomerCredit(tx: Tx, usedBy: string) {
         });
 
     for (const draw of draws) {
-        await tx
-            .update(invoices)
-            .set({
-                amountPaid: sql`${invoices.amountPaid} - ${draw.amount}`,
-                balanceDue: sql`${invoices.balanceDue} + ${draw.amount}`,
-                updatedAt: new Date(),
-            })
-            .where(eq(invoices.invoiceNumber, draw.invoiceNumber));
+        // A draw is a negative payment; deleting it puts the money back.
+        await changeAmountPaid(tx, draw.invoiceNumber, -Number(draw.amount));
     }
 }
