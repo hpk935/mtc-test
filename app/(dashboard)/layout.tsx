@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { NavigationProgress } from '@/components/navigation-progress';
 import { findUserById } from '@/features/users/queries';
 import { AppSidebar } from '@/components/app-sidebar';
+import { NavBreadcrumb } from '@/components/nav-breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { DateDisplay } from '@/features/dashboard/components/date-display';
@@ -33,14 +34,15 @@ export default async function DashboardLayout({
         <AppSidebar session={session} permissions={permissions} />
         <SidebarInset className="min-w-0">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <Separator
                 orientation="vertical"
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
+              <NavBreadcrumb />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-3">
               <DateDisplay />
               <ThemeToggle />
             </div>
