@@ -532,6 +532,9 @@ export async function postOrderToInvoice(orderNumber: string) {
     const today = todayIso();
     const term = await findTerm(order.termCode);
     const dueDate = calculateDueDate(today, term?.netDays ?? null);
+    // Credit covered the whole order, so nothing is owed: the invoice is Paid
+    // from the start and won't take a payment that would become new credit.
+    const nothingOwed = Number(order.totalAmount) <= 0;
 
     try {
         await db.transaction(async (tx) => {
@@ -561,6 +564,8 @@ export async function postOrderToInvoice(orderNumber: string) {
                 totalAmount: order.totalAmount,
                 costAmount: order.costAmount,
                 balanceDue: order.totalAmount,
+                invoiceStatus: nothingOwed ? 'paid' : 'open',
+                paidDate: nothingOwed ? today : null,
                 shippingNote: order.shippingNote,
             });
 
