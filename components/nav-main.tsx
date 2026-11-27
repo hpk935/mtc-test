@@ -12,12 +12,8 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar';
@@ -99,64 +95,17 @@ function NavMenuItem({
   const closeOnMobile = () => {
     if (isMobile) setOpenMobile(false);
   };
-  const isActive = active?.item.url === item.url;
-
-  const button = (
-    <SidebarMenuButton
-      asChild
-      isActive={isActive && !active?.child}
-      tooltip={item.title}>
-      <Link href={item.url} onClick={closeOnMobile}>
-        <item.icon />
-        <span>{item.title}</span>
-      </Link>
-    </SidebarMenuButton>
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={active?.item.url === item.url}
+        tooltip={item.title}>
+        <Link href={item.url} onClick={closeOnMobile}>
+          <item.icon />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
-
-  if (item.children) {
-    const groups = [...new Set(item.children.map((c) => c.group))];
-    // The row itself links to the item's index page (so it still works when
-    // the sidebar is collapsed to icons); only the chevron folds the list.
-    return (
-      <Collapsible asChild defaultOpen={isActive} className="group/item">
-        <SidebarMenuItem>
-          {button}
-          <CollapsibleTrigger asChild>
-            <SidebarMenuAction className="data-[state=open]:rotate-90">
-              <ChevronRight />
-              <span className="sr-only">Toggle {item.title}</span>
-            </SidebarMenuAction>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {groups.map((group) => (
-                <li key={group}>
-                  <div className="text-muted-foreground px-2 pt-2 pb-1 text-[10px] font-semibold tracking-wider uppercase">
-                    {group}
-                  </div>
-                  <ul className="flex flex-col gap-1">
-                    {item.children!
-                      .filter((child) => child.group === group)
-                      .map((child) => (
-                        <SidebarMenuSubItem key={child.url}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={active?.child?.url === child.url}>
-                            <Link href={child.url} onClick={closeOnMobile}>
-                              {child.title}
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                  </ul>
-                </li>
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
-    );
-  }
-
-  return <SidebarMenuItem>{button}</SidebarMenuItem>;
 }
