@@ -1,21 +1,66 @@
 'use client';
 
-import Image from 'next/image';
-import { BUSINESS_TIME_ZONE } from '@/lib/dates';
-import { useIsClient } from '@/hooks/use-is-client';
+import { COMPANY } from '@/lib/constants';
+import { formatCurrency } from '@/lib/utils';
+import { buildPickList } from '../pick-list';
 import type { OrderPrintData } from '../queries';
+
+/** YYYY-MM-DD → MM/DD/YYYY without a time-zone round-trip. */
+function formatDate(iso: string | null): string {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+
+/** A write-in rule for the warehouse to fill by hand. */
+function Blank({ className = 'w-20' }: { className?: string }) {
+  return (
+    <span
+      className={`inline-block border-b border-gray-900 align-bottom ${className}`}>
+      &nbsp;
+    </span>
+  );
+}
 
 interface OrderPickSheetProps {
   data: OrderPrintData;
 }
 
+/** Laid out after the legacy ORDER / PICKING LIST form. */
 export function OrderPickSheet({ data }: OrderPickSheetProps) {
-  const { order, items } = data;
-  // Browser-only so it matches on hydration; shown in Pacific time.
-  const isClient = useIsClient();
-  const printedOn = isClient
-    ? new Date().toLocaleDateString('en-US', { timeZone: BUSINESS_TIME_ZONE })
-    : null;
+  const { order } = data;
+  const { lines, totals } = buildPickList(data.items);
+
+  const salesperson =
+    order.salespersonFirstName && order.salespersonLastName
+      ? `${order.salespersonFirstName} ${order.salespersonLastName}`
+      : order.salespersonCode;
+
+  // Rendered inside the last line's tbody so TOTAL never lands on a page
+  // by itself.
+  const totalRows = (
+    <>
+      <tr>
+        <td colSpan={7} className="pt-4">
+          TOTAL:
+        </td>
+      </tr>
+      <tr>
+        <td />
+        <td>{totals.qty}</td>
+        <td />
+        <td className="text-right whitespace-nowrap">
+          {totals.weight.toFixed(2)} LB
+        </td>
+        <td className="text-right whitespace-nowrap">
+          {totals.cube.toFixed(3)} CU FT
+        </td>
+        <td colSpan={2} className="pl-6 whitespace-nowrap">
+          Total {formatCurrency(totals.amount)}
+        </td>
+      </tr>
+    </>
+  );
 
   return (
     <>
@@ -24,7 +69,7 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
         <button
           onClick={() => window.print()}
           className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">
-          Print Pick Sheet
+          Print Pick List
         </button>
       </div>
 
@@ -32,10 +77,14 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
           the real paper proportions and scrolls horizontally if needed.
           Print overrides remove the width/border. */}
       <div className="overflow-x-auto bg-gray-100 px-4 py-6 print:overflow-visible print:bg-white print:p-0">
-        <div className="print-sheet mx-auto min-h-264 w-204 bg-white p-12 shadow-sm ring-1 ring-gray-200 print:min-h-0 print:w-full print:p-0 print:shadow-none print:ring-0">
-          {/* Header */}
-          <header className="mb-4 flex items-start justify-between border-b border-gray-300 pb-4">
-            <div className="flex items-center gap-3">
+        <div className="print-sheet mx-auto min-h-264 w-204 bg-white p-12 font-mono text-xs! text-gray-900 shadow-sm ring-1 ring-gray-200 print:min-h-0 print:w-full print:p-0 print:pb-0! print:shadow-none print:ring-0">
+          <h1 className="mb-2 text-center text-base tracking-widest">
+            ORDER / PICKING LIST
+          </h1>
+
+          {/* Letterhead left, order identity right */}
+          <div className="mb-2 flex items-start justify-between">
+            <div className="flex items-center gap-3 font-sans">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/mtc-logo.webp"
@@ -43,210 +92,144 @@ export function OrderPickSheet({ data }: OrderPickSheetProps) {
                 className="h-auto w-10"
               />
               <div>
-                <h1 className="text-xl leading-tight font-bold">
-                  Warehouse Pick Sheet
-                </h1>
-                <p className="text-sm text-gray-500">
-                  Order #{order.orderNumber}
+                <p className="text-sm leading-tight font-bold uppercase">
+                  {COMPANY.legalName}
+                </p>
+                <p>
+                  {COMPANY.address1}, {COMPANY.cityStateZip}
+                </p>
+                <p>
+                  Tel: {COMPANY.phone} &middot; Fax: {COMPANY.fax}
                 </p>
               </div>
             </div>
-            <div className="text-right text-sm text-gray-600">
-              <p>
-                <span className="font-medium">Date:</span> {order.orderDate}
-              </p>
-              <p>
-                <span className="font-medium">Status:</span>{' '}
-                <span className="uppercase">{order.orderStatus}</span>
-              </p>
-              {order.customerPoReference && (
-                <p>
-                  <span className="font-medium">PO#:</span>{' '}
-                  {order.customerPoReference}
+            <p>Order No: &nbsp;{order.orderNumber}</p>
+          </div>
+
+          {/* Customer (bill-to) left, Ship To right — DATE shares the
+              Cust No. row and Ship To lines up with the customer name, as
+              on the legacy form. */}
+          <div className="mb-2 grid grid-cols-[5.5rem_1fr_5.5rem_1fr] gap-x-2">
+            <span>Cust No.</span>
+            <span>{order.customerNumber}</span>
+            <span className="text-right">DATE:</span>
+            <span>{formatDate(order.orderDate)}</span>
+            <span />
+            <div>
+              <p>{order.customerName}</p>
+              {order.billingAddress1 && <p>{order.billingAddress1}</p>}
+              {order.billingAddress2 && <p>{order.billingAddress2}</p>}
+              {order.billingCity && (
+                <p className="mt-1">
+                  {order.billingCity}, {order.billingStateCode}
                 </p>
               )}
+              {order.billingPostalCode && <p>{order.billingPostalCode}</p>}
+              {order.mainPhone && <p className="mt-1">{order.mainPhone}</p>}
             </div>
-          </header>
-
-          {/* Customer & Ship To */}
-          <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
-            <div className="rounded border border-gray-200 p-3">
-              <h2 className="mb-1 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                Customer
-              </h2>
-              <p className="font-medium">{order.customerName}</p>
-              <p className="text-gray-500">#{order.customerNumber}</p>
-            </div>
-            <div className="rounded border border-gray-200 p-3">
-              <h2 className="mb-1 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                Ship To
-              </h2>
-              <p className="font-medium">{order.shipToName}</p>
+            <span>Ship To:</span>
+            <div>
+              <p>{order.shipToName}</p>
               <p>{order.shipToAddress1}</p>
               {order.shipToAddress2 && <p>{order.shipToAddress2}</p>}
-              <p>
-                {order.shipToCity}, {order.shipToStateCode}{' '}
-                {order.shipToPostalCode}
+              <p className="mt-1">
+                {order.shipToCity}, {order.shipToStateCode}
               </p>
+              <p>{order.shipToPostalCode}</p>
             </div>
           </div>
 
-          {order.shippingNote && (
-            <div className="mb-4 rounded border border-yellow-300 bg-yellow-50 p-2 text-sm">
-              <span className="font-semibold">Shipping Note:</span>{' '}
-              {order.shippingNote}
-            </div>
-          )}
-
-          {/* Summary bar */}
-          <div className="mb-3 flex items-center justify-between text-sm text-gray-500">
-            <span>
-              {items.length} line item{items.length !== 1 ? 's' : ''}
-            </span>
-            <span>
-              Freight: <span className="font-medium">{order.freightTerm}</span>
-            </span>
-          </div>
-
-          {/* Line Items Table */}
-          <table className="mb-4 w-full border-collapse text-sm">
+          {/* Order terms strip — required date isn't tracked yet, so it
+              prints as a write-in rule. */}
+          <table className="mb-2 w-full">
             <thead>
-              <tr className="border-b-2 border-gray-800 text-left">
-                <th className="w-8 py-1.5 text-center font-semibold">#</th>
-                <th className="py-1.5 font-semibold">Item / Description</th>
-                <th className="py-1.5 text-center font-semibold">Unit</th>
-                <th className="w-14 py-1.5 text-center font-semibold">Qty</th>
-                <th className="w-25 py-1.5 text-center font-semibold">
-                  Picked
-                </th>
-                <th className="w-25 py-1.5 text-center font-semibold">
-                  Short / N/A
-                </th>
-                <th className="w-8 py-1.5 text-center font-semibold">
-                  <span className="sr-only">Check</span>
-                  &#10003;
-                </th>
+              <tr className="text-left">
+                <th className="pb-1 font-normal">CUST P.O.#:</th>
+                <th className="pb-1 font-normal">TERMS:</th>
+                <th className="pb-1 font-normal">SALESPERSON:</th>
+                <th className="pb-1 font-normal">SHIP VIA:</th>
+                <th className="pb-1 font-normal">REQUIRED DATE:</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((item, index) => {
-                const weight =
-                  item.caseWeight && item.maxQty
-                    ? (
-                        (item.qtyOrdered * Number(item.caseWeight)) /
-                        item.maxQty
-                      ).toFixed(1)
-                    : null;
-
-                return (
-                  <tr
-                    key={item.id}
-                    className={`border-b border-gray-200 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} print:bg-transparent print:even:bg-gray-50`}>
-                    {/* Row number */}
-                    <td className="py-2 text-center text-gray-400">
-                      {index + 1}
-                    </td>
-
-                    {/* Item info */}
-                    <td className="py-2">
-                      <span className="font-mono text-sm font-medium">
-                        {item.itemNumber}
-                      </span>
-                      <br />
-                      <span className="text-gray-600">
-                        {item.description ?? '—'}
-                      </span>
-                      {weight && (
-                        <span className="ml-2 text-xs text-gray-400">
-                          ({weight} lbs)
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Unit */}
-                    <td className="py-2 text-center text-gray-500">
-                      {item.unitSoldBy ?? '—'}
-                    </td>
-
-                    {/* Qty Ordered */}
-                    <td className="py-2 text-center text-lg font-bold">
-                      {item.qtyOrdered}
-                    </td>
-
-                    {/* Picked — writable box for warehouse worker */}
-                    <td className="py-2 text-center">
-                      <div className="mx-auto h-7 w-16 rounded border-2 border-gray-400 bg-white" />
-                    </td>
-
-                    {/* Short / N/A — writable box for noting shortages */}
-                    <td className="py-2 text-center">
-                      <div className="mx-auto h-7 w-16 rounded border-2 border-dashed border-red-300 bg-white" />
-                    </td>
-
-                    {/* Checkmark box */}
-                    <td className="py-2 text-center">
-                      <div className="mx-auto flex size-6 items-center justify-center rounded border-2 border-gray-400 bg-white" />
-                    </td>
-                  </tr>
-                );
-              })}
+              <tr>
+                <td>{order.customerPoReference}</td>
+                <td>{order.termDescription ?? order.termCode}</td>
+                <td>{salesperson}</td>
+                <td>{order.freightTerm}</td>
+                <td>
+                  <Blank className="w-28" />
+                </td>
+              </tr>
             </tbody>
           </table>
 
-          {/* Footer: Totals & Sign-off */}
-          <div className="grid break-inside-avoid grid-cols-2 gap-4">
-            {/* Pick Summary */}
-            <div className="rounded border border-gray-200 p-3 text-sm">
-              <h3 className="mb-2 font-semibold">Pick Summary</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Total Items:</span>
-                  <span className="font-medium">{items.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Total Qty Ordered:</span>
-                  <span className="font-medium">
-                    {items.reduce((sum, i) => sum + i.qtyOrdered, 0)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-t pt-2">
-                  <span className="text-gray-500">All Items Confirmed:</span>
-                  <div className="flex size-5 items-center justify-center rounded border-2 border-gray-400 bg-white" />
-                </div>
-              </div>
-            </div>
-
-            {/* Sign-off */}
-            <div className="rounded border border-gray-200 p-3 text-sm">
-              <h3 className="mb-2 font-semibold">Picked By</h3>
-              <div className="mt-6 mb-3 border-b border-gray-400" />
-              <p className="text-gray-400">Name / Initials</p>
-              <div className="mt-8 mb-3 border-b border-gray-400" />
-              <p className="text-gray-400">Date &amp; Time</p>
-            </div>
-          </div>
-
-          {/* Shortage Notes */}
-          <div className="mt-4 break-inside-avoid rounded border border-red-200 p-3 text-sm">
-            <h3 className="mb-1 font-semibold text-red-700">
-              Shortage / Unavailable Notes
-            </h3>
-            <p className="mb-2 text-xs text-gray-400">
-              List any items not available or with partial quantities. Note
-              reason if known.
+          {order.shippingNote && (
+            <p className="mb-2 whitespace-pre-wrap">
+              NOTE: {order.shippingNote}
             </p>
-            <div className="space-y-3">
-              <div className="border-b border-gray-300 pb-3" />
-              <div className="border-b border-gray-300 pb-3" />
-              <div className="border-b border-gray-300 pb-3" />
-            </div>
-          </div>
+          )}
 
-          {/* Print footer */}
-          <p className="mt-4 text-center text-xs text-gray-400 print:mt-2">
-            {printedOn && <>Printed {printedOn} &middot; </>}Order #
-            {order.orderNumber} &middot; {items.length} items
-          </p>
+          {/* Line items — two printed rows per line, spaced so a full page
+              holds about 15 lines; thead repeats on each printed page. */}
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left align-top">
+                <th className="w-12" />
+                <th className="w-32 font-normal">QTY</th>
+                <th className="font-normal">
+                  ITEM NO
+                  <br />
+                  DESCRIPTION
+                </th>
+                <th className="w-24 text-right font-normal">WT.</th>
+                <th className="w-28 text-right font-normal">C.F.</th>
+                <th className="w-24 text-right font-normal">PRICE</th>
+                <th className="w-28 pl-3 font-normal">CARTON</th>
+              </tr>
+            </thead>
+            {lines.map((line, index) => {
+              const unit = line.unitSoldBy ?? '';
+              return (
+                <tbody key={line.id} className="break-inside-avoid">
+                  <tr>
+                    <td className="pt-6"># {index + 1}</td>
+                    {/* Pick-off blank beside the qty for the warehouse */}
+                    <td className="pt-6 whitespace-nowrap">
+                      <span className="inline-block w-16">
+                        {line.qtyOrdered} {unit}
+                      </span>
+                      <Blank className="mr-4 w-12" />
+                    </td>
+                    <td className="pt-6">{line.itemNumber}</td>
+                    <td className="pt-6 text-right">
+                      {line.weight.toFixed(2)}
+                    </td>
+                    <td className="pt-6 text-right">{line.cube.toFixed(3)}</td>
+                    <td className="pt-6 text-right">
+                      {formatCurrency(Number(line.netPrice))}
+                    </td>
+                    <td className="pt-6 pl-3">
+                      <Blank />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2} />
+                    <td colSpan={3}>{line.description}</td>
+                    <td colSpan={2} className="pl-3 text-right">
+                      {line.minQty && line.maxQty
+                        ? `( ${line.minQty} ${unit} / ${line.maxQty} ${unit} )`
+                        : null}
+                    </td>
+                  </tr>
+                  {index === lines.length - 1 && totalRows}
+                </tbody>
+              );
+            })}
+            {lines.length === 0 && (
+              <tbody className="break-inside-avoid">{totalRows}</tbody>
+            )}
+          </table>
         </div>
       </div>
     </>

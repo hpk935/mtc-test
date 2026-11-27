@@ -179,6 +179,18 @@
         size: letter;
         margin: 8mm;
     }
+
+    /* Sheets that print sideways (purchase order) use a named page. Set on
+       body, not the sheet, so nothing around the sheet forces a break onto
+       a blank portrait page. */
+    body:has(.print-landscape) {
+        page: landscape;
+    }
+
+    @page landscape {
+        size: letter landscape;
+        margin: 8mm;
+    }
 }
 
 /* Navigation loading indicator (components/navigation-progress.tsx). It fades
