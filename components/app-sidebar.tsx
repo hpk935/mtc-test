@@ -30,10 +30,6 @@ export function AppSidebar({
     permissions,
   );
 
-  // Settings sits at the bottom, just above the user card.
-  const mainSections = sections.filter((s) => !s.collapsible);
-  const pinnedSections = sections.filter((s) => s.collapsible);
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -60,14 +56,9 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        <NavMain sections={mainSections} />
+        <NavMain sections={sections} />
       </SidebarContent>
       <SidebarFooter>
-        {pinnedSections.length > 0 && (
-          <div className="-mx-2">
-            <NavMain sections={pinnedSections} />
-          </div>
-        )}
         <NavUser session={session} />
       </SidebarFooter>
       <SidebarRail />

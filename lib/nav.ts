@@ -16,12 +16,13 @@ import {
 } from 'lucide-react';
 import type { Permission } from '@/features/users/constants';
 
-/** A nested link under a nav item, e.g. one report under Reports. */
+/**
+ * A page under a nav item, e.g. one report under Reports. The sidebar
+ * doesn't list these; they name the page in the header breadcrumb.
+ */
 export type NavChild = {
     title: string;
     url: string;
-    /** Sub-heading the child is listed under. */
-    group: string;
 };
 
 export type NavItem = {
@@ -112,37 +113,30 @@ export const NAV_SECTIONS: NavSection[] = [
                     {
                         title: 'Customer Listing',
                         url: '/reports/customers/customer-listing',
-                        group: 'Customers',
                     },
                     {
                         title: 'Invoice Summary',
                         url: '/reports/customers/customer-invoices',
-                        group: 'Customers',
                     },
                     {
                         title: 'Purchase History',
                         url: '/reports/customers/customer-purchases',
-                        group: 'Customers',
                     },
                     {
                         title: 'Sales & Aging',
                         url: '/reports/customers/aging-summary',
-                        group: 'Customers',
                     },
                     {
                         title: 'Aging by Salesperson',
                         url: '/reports/sales/aging-by-salesperson',
-                        group: 'Sales',
                     },
                     {
                         title: 'Inventory Status',
                         url: '/reports/products/inventory-status',
-                        group: 'Products',
                     },
                     {
                         title: 'Item Invoice History',
                         url: '/reports/products/item-invoice-history',
-                        group: 'Products',
                     },
                 ],
             },
