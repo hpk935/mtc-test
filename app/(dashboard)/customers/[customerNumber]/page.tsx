@@ -7,7 +7,11 @@ import {
   getSalespersons,
   getShipToAddresses,
 } from '@/features/customers/queries';
-import { getInvoicesByCustomer } from '@/features/invoices/queries';
+import {
+  getCustomerAvailableCredit,
+  getInvoicesByCustomer,
+} from '@/features/invoices/queries';
+import { formatCurrency } from '@/lib/utils';
 import { CustomerForm } from '@/features/customers/components/customer-form';
 import {
   getTermOptions,
@@ -28,12 +32,14 @@ export default async function CustomerDetailPage({
   const { invoicesPage } = await searchParams;
   const invoicesCurrentPage = Math.max(1, Number(invoicesPage) || 1);
 
-  const [customer, salespersons, shipToResult, invoicesResult] =
+  const [customer, salespersons, shipToResult, invoicesResult, credit] =
     await Promise.all([
       findCustomerByNumber(customerNumber),
       getSalespersons(),
       getShipToAddresses(customerNumber),
       getInvoicesByCustomer(customerNumber, { page: invoicesCurrentPage }),
+      // Overpayment credit not yet applied to an order.
+      getCustomerAvailableCredit(customerNumber),
     ]);
 
   if (!customer) {
@@ -85,6 +91,17 @@ export default async function CustomerDetailPage({
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Customer {customerNumber}
+        </p>
+        <p className="mt-1 text-sm">
+          <span className="text-muted-foreground">Credit available:</span>{' '}
+          <span
+            className={
+              credit > 0
+                ? 'font-semibold text-green-700 dark:text-green-400'
+                : 'text-muted-foreground'
+            }>
+            {formatCurrency(credit)}
+          </span>
         </p>
       </div>
       <div className="grid gap-6 xl:grid-cols-5">

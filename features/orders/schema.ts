@@ -55,6 +55,10 @@ export const orders = pgTable('orders', {
     freightAmount: numeric('freight_amount', { precision: 10, scale: 2 })
         .notNull()
         .default('0'),
+    // Customer credit applied as a discount; already netted out of total.
+    creditAmount: numeric('credit_amount', { precision: 10, scale: 2 })
+        .notNull()
+        .default('0'),
     totalAmount: numeric('total_amount', { precision: 10, scale: 2 }).notNull(),
     costAmount: numeric('cost_amount', { precision: 10, scale: 2 })
         .notNull()

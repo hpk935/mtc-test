@@ -122,6 +122,7 @@ export async function findOrderByNumber(orderNumber: string) {
             salesTaxAmount: orders.salesTaxAmount,
             subtotalAmount: orders.subtotalAmount,
             freightAmount: orders.freightAmount,
+            creditAmount: orders.creditAmount,
             totalAmount: orders.totalAmount,
             costAmount: orders.costAmount,
             orderStatus: orders.orderStatus,

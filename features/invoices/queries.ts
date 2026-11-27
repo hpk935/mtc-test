@@ -1,4 +1,4 @@
-import { ilike, or, and, count, desc, eq, asc, ne } from 'drizzle-orm';
+import { ilike, or, and, count, desc, eq, asc, ne, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { invoices, invoiceItems, payments } from './schema';
 import { customers } from '@/features/customers/schema';
@@ -145,6 +145,7 @@ export async function findInvoiceByNumber(invoiceNumber: string) {
             salesTaxAmount: invoices.salesTaxAmount,
             subtotalAmount: invoices.subtotalAmount,
             freightAmount: invoices.freightAmount,
+            creditAmount: invoices.creditAmount,
             totalAmount: invoices.totalAmount,
             costAmount: invoices.costAmount,
             invoiceStatus: invoices.invoiceStatus,
@@ -281,6 +282,7 @@ export async function getInvoicePrintData(invoiceNumber: string) {
             subtotalAmount: invoices.subtotalAmount,
             salesTaxAmount: invoices.salesTaxAmount,
             freightAmount: invoices.freightAmount,
+            creditAmount: invoices.creditAmount,
             totalAmount: invoices.totalAmount,
             amountPaid: invoices.amountPaid,
             balanceDue: invoices.balanceDue,
@@ -336,3 +338,46 @@ export async function getInvoicePrintData(invoiceNumber: string) {
 export type InvoicePrintData = NonNullable<
     Awaited<ReturnType<typeof getInvoicePrintData>>
 >;
+
+// --- Customer credit ---
+
+/**
+ * Credit a customer can still spend: overpaid (negative-balance) invoices,
+ * less credit already applied to open orders that aren't invoiced yet.
+ * Pass the order being edited so its own credit counts as available.
+ */
+export async function getCustomerAvailableCredit(
+    customerNumber: string,
+    excludeOrderNumber?: string,
+): Promise<number> {
+    const [[credit], [reserved]] = await Promise.all([
+        db
+            .select({
+                total: sql<string>`coalesce(sum(-${invoices.balanceDue}), 0)`,
+            })
+            .from(invoices)
+            .where(
+                and(
+                    eq(invoices.customerNumber, customerNumber),
+                    ne(invoices.invoiceStatus, 'voided'),
+                    sql`${invoices.balanceDue} < 0`,
+                ),
+            ),
+        db
+            .select({
+                total: sql<string>`coalesce(sum(${orders.creditAmount}), 0)`,
+            })
+            .from(orders)
+            .where(
+                and(
+                    eq(orders.customerNumber, customerNumber),
+                    eq(orders.orderStatus, 'open'),
+                    excludeOrderNumber
+                        ? ne(orders.orderNumber, excludeOrderNumber)
+                        : undefined,
+                ),
+            ),
+    ]);
+    const available = Number(credit.total) - Number(reserved.total);
+    return Math.max(0, Math.round(available * 100) / 100);
+}

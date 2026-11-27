@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import db from '@/lib/db';
 import { todayIso } from '@/lib/dates';
 import { invoices, invoiceItems, payments } from './schema';
+import { restoreCustomerCredit } from './credit';
 import { orders } from '@/features/orders/schema';
 import { products } from '@/features/products/schema';
 import type { InvoiceStatus } from './constants';
@@ -99,6 +100,10 @@ export async function updateInvoiceStatusRecord(
 
         // When voiding, restore inventory and void the linked order
         if (newStatus === 'voided') {
+            // Any customer credit this invoice used goes back to the
+            // overpaid invoices it was drawn from.
+            await restoreCustomerCredit(tx, invoiceNumber);
+
             // Read authoritative billed line items (dedupe-safe) to
             // determine how much stock to return.
             const items = await tx
@@ -188,9 +193,11 @@ export async function applyPaymentRecord(
             .from(payments)
             .where(eq(payments.invoiceNumber, invoiceNumber));
 
-        const newAmountPaid = Math.min(parseFloat(totalPaid), total);
-        const newBalanceDue = Math.max(0, total - newAmountPaid);
-        const fullyPaid = newBalanceDue === 0;
+        // An overpayment is kept: the balance goes negative and that
+        // negative balance is the customer's credit.
+        const newAmountPaid = parseFloat(totalPaid);
+        const newBalanceDue = Math.round((total - newAmountPaid) * 100) / 100;
+        const fullyPaid = newBalanceDue <= 0;
 
         await tx
             .update(invoices)

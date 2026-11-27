@@ -42,6 +42,10 @@ export function ApplyPaymentDialog({
   const [date, setDate] = useState(() => todayIso());
   const [ref, setRef] = useState('');
 
+  // Paying more than the balance is allowed; the excess becomes credit.
+  const excess =
+    Math.round(((Number(amount) || 0) - Number(balanceDue)) * 100) / 100;
+
   function resetForm() {
     setAmount('');
     setDate(todayIso());
@@ -100,12 +104,20 @@ export function ApplyPaymentDialog({
                 type="number"
                 step="0.01"
                 min="0.01"
-                max={balanceDue}
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
               />
+              {excess > 0 && (
+                <p
+                  role="alert"
+                  className="rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+                  {formatCurrency(String(excess))} over the balance will be
+                  recorded as customer credit, which can be applied to their
+                  next order.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

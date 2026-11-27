@@ -316,6 +316,11 @@ export function OrderDetailView({
             <DetailRow label="Freight">
               {formatCurrency(order.freightAmount)}
             </DetailRow>
+            {Number(order.creditAmount) > 0 && (
+              <DetailRow label="Customer Credit">
+                −{formatCurrency(order.creditAmount)}
+              </DetailRow>
+            )}
             <Separator />
             <DetailRow label="Total">
               <span className="text-base">

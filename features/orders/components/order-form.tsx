@@ -237,6 +237,7 @@ interface OrderFormInitialData {
   territoryCode: string;
   freightAmount: string;
   salesTaxAmount: string;
+  creditAmount: string;
   shippingNote: string | null;
   lineItems: {
     itemNumber: string;
@@ -327,6 +328,14 @@ export function OrderForm({
   const [salesTaxAmount, setSalesTaxAmount] = useState(
     initialData?.salesTaxAmount ?? '',
   );
+  // Customer credit (from overpayments) applied as a discount.
+  const [creditApplied, setCreditApplied] = useState(
+    Number(initialData?.creditAmount) > 0 ? initialData!.creditAmount : '',
+  );
+  const [creditInfo, setCreditInfo] = useState<{
+    customerNumber: string | null;
+    available: number;
+  }>({ customerNumber: null, available: 0 });
   const [shippingNote, setShippingNote] = useState(
     initialData?.shippingNote ?? '',
   );
@@ -418,6 +427,32 @@ export function OrderForm({
     return lastPrices.byItem[itemNumber];
   }
 
+  // Credit the selected customer can apply (this order's own counts).
+  useEffect(() => {
+    if (!lastPriceCustomer) return;
+    let cancelled = false;
+    const params = orderNumber
+      ? `?excludeOrder=${encodeURIComponent(orderNumber)}`
+      : '';
+    fetch(
+      `/api/customers/${encodeURIComponent(lastPriceCustomer)}/credit${params}`,
+    )
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled || !json.success) return;
+        setCreditInfo({
+          customerNumber: lastPriceCustomer,
+          available: Number(json.data.available) || 0,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [lastPriceCustomer, orderNumber]);
+  const availableCredit =
+    creditInfo.customerNumber === lastPriceCustomer ? creditInfo.available : 0;
+
   // Load selected ship-to address for edit mode on mount
   useEffect(() => {
     if (!initialData?.shipToId || !initialData?.customerNumber) return;
@@ -474,6 +509,8 @@ export function OrderForm({
 
   async function selectCustomer(customerNumber: string) {
     customerSearch.close();
+    // Credit belongs to a customer; don't carry it to another one.
+    setCreditApplied('');
     // Fetch full customer details + ship-to addresses
     const [custRes, shipRes] = await Promise.all([
       fetch(`/api/customers/${encodeURIComponent(customerNumber)}`),
@@ -686,7 +723,11 @@ export function OrderForm({
   );
   const freight = Number(freightAmount) || 0;
   const tax = Number(salesTaxAmount) || 0;
-  const total = subtotal + freight + tax;
+  const totalBeforeCredit = subtotal + freight + tax;
+  const credit = Number(creditApplied) || 0;
+  const maxCredit =
+    Math.round(Math.min(availableCredit, totalBeforeCredit) * 100) / 100;
+  const total = totalBeforeCredit - credit;
 
   // --- Toast for action results ---
   useEffect(() => {
@@ -784,6 +825,13 @@ export function OrderForm({
       return;
     }
 
+    if (credit < 0 || credit > maxCredit) {
+      toast.error(
+        `Credit applied must be between $0 and ${formatCurrency(maxCredit)}.`,
+      );
+      return;
+    }
+
     const orderData = {
       customerNumber: customer.customerNumber,
       salespersonCode,
@@ -795,6 +843,7 @@ export function OrderForm({
       territoryCode,
       freightAmount: freight,
       salesTaxAmount: tax,
+      creditAmount: credit,
       shippingNote,
       lineItems: cleanedLineItems,
     };
@@ -1193,10 +1242,49 @@ export function OrderForm({
             onChange={(e) => setSalesTaxAmount(e.target.value)}
           />
         </div>
+        {(availableCredit > 0 || credit > 0) && (
+          <div className="bg-muted/40 space-y-3 rounded-lg border p-4 sm:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">
+                Customer credit available: {formatCurrency(availableCredit)}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={maxCredit <= 0}
+                onClick={() => setCreditApplied(maxCredit.toFixed(2))}>
+                Apply credit
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="creditApplied">
+                Credit Applied <OptionalTag />
+              </Label>
+              <Input
+                id="creditApplied"
+                type="number"
+                min={0}
+                max={maxCredit}
+                step="0.01"
+                value={creditApplied}
+                onChange={(e) => setCreditApplied(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
         <div className="space-y-2 sm:col-span-2">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <span className="text-lg font-semibold">Order Total</span>
-            <span className="text-lg font-bold">{formatCurrency(total)}</span>
+          <div className="space-y-1 rounded-lg border p-4">
+            {credit > 0 && (
+              <div className="text-muted-foreground flex justify-between text-sm">
+                <span>Credit</span>
+                <span>−{formatCurrency(credit)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-semibold">Order Total</span>
+              <span className="text-lg font-bold">{formatCurrency(total)}</span>
+            </div>
           </div>
         </div>
         <div className="space-y-2 sm:col-span-2">
@@ -1339,8 +1427,7 @@ function LineItemRow({
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const seq = ++requestSeq.current;
-    const products =
-      resultsQuery === q ? results : await fetchOrderProducts(q);
+    const products = resultsQuery === q ? results : await fetchOrderProducts(q);
     if (seq !== requestSeq.current) return;
     if (!products || products.length === 0) {
       setResults([]);
@@ -1373,8 +1460,7 @@ function LineItemRow({
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     // Tab / Enter with a typed-but-unpicked product: pick it, so items can
     // be added without touching the dropdown.
-    const awaitingPick =
-      !item.itemNumber && productQuery.trim().length >= 2;
+    const awaitingPick = !item.itemNumber && productQuery.trim().length >= 2;
     if (
       awaitingPick &&
       ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter')

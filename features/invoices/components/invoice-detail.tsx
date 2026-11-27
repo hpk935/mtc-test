@@ -198,9 +198,18 @@ export function InvoiceDetailView({
             <DetailRow label="Amount Paid">
               {formatCurrency(invoice.amountPaid)}
             </DetailRow>
-            <DetailRow label="Balance Due">
-              {formatCurrency(invoice.balanceDue)}
-            </DetailRow>
+            {Number(invoice.balanceDue) < 0 ? (
+              // Overpaid: the excess is credit for the customer's next order.
+              <DetailRow label="Customer Credit">
+                <span className="text-green-700 dark:text-green-400">
+                  {formatCurrency(String(-Number(invoice.balanceDue)))}
+                </span>
+              </DetailRow>
+            ) : (
+              <DetailRow label="Balance Due">
+                {formatCurrency(invoice.balanceDue)}
+              </DetailRow>
+            )}
             {invoice.dueDate && (
               <DetailRow label="Due Date">
                 {formatDate(invoice.dueDate)}
@@ -263,7 +272,11 @@ export function InvoiceDetailView({
                           <TableRow key={p.id}>
                             <TableCell>{formatDate(p.paymentDate)}</TableCell>
                             <TableCell className="text-right">
-                              {formatCurrency(p.amount)}
+                              {/* Negative rows are credit used on a later
+                                  invoice. */}
+                              {Number(p.amount) < 0
+                                ? `−${formatCurrency(String(-Number(p.amount)))}`
+                                : formatCurrency(p.amount)}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {p.paymentRef || '—'}
@@ -399,6 +412,11 @@ export function InvoiceDetailView({
             <DetailRow label="Freight">
               {formatCurrency(invoice.freightAmount)}
             </DetailRow>
+            {Number(invoice.creditAmount) > 0 && (
+              <DetailRow label="Customer Credit">
+                −{formatCurrency(invoice.creditAmount)}
+              </DetailRow>
+            )}
             <Separator />
             <DetailRow label="Total">
               <span className="text-base">

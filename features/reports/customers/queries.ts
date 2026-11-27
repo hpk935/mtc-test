@@ -719,7 +719,10 @@ export async function getAgingSummary(filters: AgingSummaryFilters) {
     const paidAfterAsOf = sql`(coalesce(${paymentTotals.afterAsOf}, 0)
         + case when ${invoices.paidDate} > ${asOfIso}::date
             then ${unrecordedPaid} else 0 end)`;
-    const balanceAsOf = sql`least(${invoices.totalAmount}, ${invoices.balanceDue} + ${paidAfterAsOf})`;
+    // Capped at the invoice total (never above what was billed). A negative
+    // balance is an overpayment credit and nets into its bucket; legacy
+    // negative-total invoices with a $0 balance stay at $0.
+    const balanceAsOf = sql`least(greatest(${invoices.totalAmount}, 0), ${invoices.balanceDue} + ${paidAfterAsOf})`;
 
     // Aging calc done in SQL using days-past-due on coalesce(due_date, invoice_date).
     const ref = sql`coalesce(${invoices.dueDate}, ${invoices.invoiceDate})`;
@@ -758,7 +761,7 @@ export async function getAgingSummary(filters: AgingSummaryFilters) {
             and(
                 lte(invoices.invoiceDate, asOfIso),
                 ne(invoices.invoiceStatus, 'voided'),
-                sql`${balanceAsOf} > 0`,
+                sql`${balanceAsOf} <> 0`,
             ),
         )
         .groupBy(invoices.customerNumber)
