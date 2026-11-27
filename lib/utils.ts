@@ -20,6 +20,11 @@ export function formatDate(date: Date | string): string {
     }).format(isCalendarDate ? new Date(`${date}T00:00:00Z`) : new Date(date));
 }
 
+/** Rounds a dollar amount to whole cents (2 decimal places). */
+export function roundCents(dollars: number): number {
+    return Math.round(dollars * 100) / 100;
+}
+
 export function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',

@@ -7,10 +7,8 @@ import {
   getSalespersons,
   getShipToAddresses,
 } from '@/features/customers/queries';
-import {
-  getCustomerAvailableCredit,
-  getInvoicesByCustomer,
-} from '@/features/invoices/queries';
+import { getInvoicesByCustomer } from '@/features/invoices/queries';
+import { getCustomerAvailableCredit } from '@/features/invoices/credit';
 import { formatCurrency } from '@/lib/utils';
 import { CustomerForm } from '@/features/customers/components/customer-form';
 import {

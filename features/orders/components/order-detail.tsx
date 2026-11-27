@@ -317,7 +317,7 @@ export function OrderDetailView({
               {formatCurrency(order.freightAmount)}
             </DetailRow>
             {Number(order.creditAmount) > 0 && (
-              <DetailRow label="Customer Credit">
+              <DetailRow label="Credit Applied">
                 −{formatCurrency(order.creditAmount)}
               </DetailRow>
             )}

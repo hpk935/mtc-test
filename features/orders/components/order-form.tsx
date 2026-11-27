@@ -34,7 +34,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { ReferenceCodeSelect } from '@/features/reference-codes/components/reference-code-select';
 import type { ReferenceCodeOption } from '@/features/reference-codes/types';
-import { formatDate } from '@/lib/utils';
+import { formatDate, roundCents } from '@/lib/utils';
 import { createOrder, updateOrder } from '../actions';
 import type { LastPricePaid } from '../queries';
 import type { ActionResult } from '@/types';
@@ -373,8 +373,9 @@ export function OrderForm({
     ];
   });
 
+  const selectedCustomerNumber = customer?.customerNumber ?? null;
+
   // --- Last price paid (reference for pricing each line) ---
-  const lastPriceCustomer = customer?.customerNumber ?? null;
   const selectedItemsKey = [
     ...new Set(lineItems.map((li) => li.itemNumber).filter(Boolean)),
   ]
@@ -386,9 +387,11 @@ export function OrderForm({
   });
 
   useEffect(() => {
-    if (!lastPriceCustomer || !selectedItemsKey) return;
+    if (!selectedCustomerNumber || !selectedItemsKey) return;
     const known =
-      lastPrices.customerNumber === lastPriceCustomer ? lastPrices.byItem : {};
+      lastPrices.customerNumber === selectedCustomerNumber
+        ? lastPrices.byItem
+        : {};
     const missing = selectedItemsKey
       .split('\n')
       .filter((itemNumber) => !(itemNumber in known));
@@ -398,7 +401,7 @@ export function OrderForm({
     const params = new URLSearchParams();
     for (const itemNumber of missing) params.append('items', itemNumber);
     fetch(
-      `/api/customers/${encodeURIComponent(lastPriceCustomer)}/last-prices?${params}`,
+      `/api/customers/${encodeURIComponent(selectedCustomerNumber)}/last-prices?${params}`,
     )
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
@@ -408,20 +411,22 @@ export function OrderForm({
         );
         setLastPrices((prev) => {
           const byItem =
-            prev.customerNumber === lastPriceCustomer ? { ...prev.byItem } : {};
+            prev.customerNumber === selectedCustomerNumber
+              ? { ...prev.byItem }
+              : {};
           for (const itemNumber of missing) {
             byItem[itemNumber] = found.get(itemNumber) ?? null;
           }
-          return { customerNumber: lastPriceCustomer, byItem };
+          return { customerNumber: selectedCustomerNumber, byItem };
         });
       });
     return () => {
       cancelled = true;
     };
-  }, [lastPriceCustomer, selectedItemsKey, lastPrices]);
+  }, [selectedCustomerNumber, selectedItemsKey, lastPrices]);
 
   function lastPriceFor(itemNumber: string) {
-    if (!itemNumber || lastPrices.customerNumber !== lastPriceCustomer) {
+    if (!itemNumber || lastPrices.customerNumber !== selectedCustomerNumber) {
       return undefined;
     }
     return lastPrices.byItem[itemNumber];
@@ -429,19 +434,18 @@ export function OrderForm({
 
   // Credit the selected customer can apply (this order's own counts).
   useEffect(() => {
-    if (!lastPriceCustomer) return;
+    if (!selectedCustomerNumber) return;
     let cancelled = false;
-    const params = orderNumber
-      ? `?excludeOrder=${encodeURIComponent(orderNumber)}`
-      : '';
+    const params = new URLSearchParams();
+    if (orderNumber) params.set('excludeOrder', orderNumber);
     fetch(
-      `/api/customers/${encodeURIComponent(lastPriceCustomer)}/credit${params}`,
+      `/api/customers/${encodeURIComponent(selectedCustomerNumber)}/credit?${params}`,
     )
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
-        if (cancelled || !json.success) return;
+        if (cancelled || !json?.success) return;
         setCreditInfo({
-          customerNumber: lastPriceCustomer,
+          customerNumber: selectedCustomerNumber,
           available: Number(json.data.available) || 0,
         });
       })
@@ -449,9 +453,11 @@ export function OrderForm({
     return () => {
       cancelled = true;
     };
-  }, [lastPriceCustomer, orderNumber]);
+  }, [selectedCustomerNumber, orderNumber]);
   const availableCredit =
-    creditInfo.customerNumber === lastPriceCustomer ? creditInfo.available : 0;
+    creditInfo.customerNumber === selectedCustomerNumber
+      ? creditInfo.available
+      : 0;
 
   // Load selected ship-to address for edit mode on mount
   useEffect(() => {
@@ -729,8 +735,7 @@ export function OrderForm({
   const tax = Number(salesTaxAmount) || 0;
   const totalBeforeCredit = subtotal + freight + tax;
   const credit = Number(creditApplied) || 0;
-  const maxCredit =
-    Math.round(Math.min(availableCredit, totalBeforeCredit) * 100) / 100;
+  const maxCredit = roundCents(Math.min(availableCredit, totalBeforeCredit));
   const total = totalBeforeCredit - credit;
 
   // --- Toast for action results ---
@@ -1277,7 +1282,7 @@ export function OrderForm({
           <div className="space-y-1 rounded-lg border p-4">
             {credit > 0 && (
               <div className="text-muted-foreground flex justify-between text-sm">
-                <span>Credit</span>
+                <span>Credit Applied</span>
                 <span>−{formatCurrency(credit)}</span>
               </div>
             )}
